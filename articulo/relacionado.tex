@@ -1,0 +1,53 @@
+% Trabajo relacionado. Cada referencia está comprobada contra su DOI (Crossref) o su fuente primaria.
+
+Bus arrival and travel time prediction has a long literature, recently reviewed by \textcite{kumar2025review} and, for
+models based on artificial intelligence, by \textcite{singh2022review}. \textcite{moreiramatias2015survey} survey the
+wider use of automatic vehicle location (AVL) data to evaluate and correct timetables.
+
+\paragraph{Historical and segment-based methods} The simplest predictors average historical travel times, by route,
+time of day or segment. \textcite{lin1999experimental} compared GPS-based algorithms for a rural service with long
+headways that use the schedule and time-check stops, a setting close to interurban buses. Splitting a trip into
+segments between consecutive stops and predicting each one is common: \textcite{gal2017journey} predict segment times
+with a queueing-based snapshot predictor and machine learning, and observe that outliers are a problem, and
+\textcite{mazloumi2010variability} show that travel-time variability depends strongly on the time window, which
+motivates learning by time band. The method of this paper belongs to this family, with three specific choices: it
+learns per segment and band rather than per line, it uses medians shrunk towards the all-day value of the segment,
+and the live position resets the prediction at each update.
+
+\paragraph{Kalman filters} Kalman filtering \parencite{kalman1960} updates a state, typically the vehicle's position
+and speed or its delay, with each new observation. \textcite{cathey2003prescription} proposed a tracker–filter–predictor
+framework for AVL data, \textcite{shalaby2004} combined AVL and passenger counts, \textcite{vanajakshi2009kalman}
+applied a Kalman filter to buses in heterogeneous traffic, and \textcite{achar2020spatial} model the spatial
+correlation between successive sections. Section~\ref{sec:evaluation} compares the method with two Kalman filters under
+the same protocol.
+
+\paragraph{Machine learning} Neural networks were applied to bus arrivals early on \parencite{chien2002}, and beat
+historical and regression models on a Houston route \parencite{jeong2005}; support vector regression uses segment-level
+inputs similar to ours \parencite{bin2006svm}. Recent work uses recurrent networks \parencite{pang2019rnn},
+convolutional LSTMs that predict all links of a route at once \parencite{petersen2019convlstm}, graph attention
+networks for sparse data \parencite{ma2022multiattention} and transformers trained on open data
+\parencite{jeong2024battransformer}. In road-traffic forecasting, deep learning is not always the best technique and
+strong simple baselines matter \parencite{manibardo2022deep}; our comparison points the same way.
+
+\paragraph{Open feeds, published timetables and published predictions} Several studies use the open GTFS and real-time
+feeds that agencies publish. \textcite{wessel2017retrospective} rebuild the timetable actually run from a public
+vehicle-location feed, much as our ground truth is reconstructed from the feed, and \textcite{wessel2019accuracy} show
+that published timetables overstate accessibility compared with what buses actually do. The accuracy of predictions
+already shown to passengers has also been measured: \textcite{cats2016realtime} evaluated a deployed prediction scheme
+in Stockholm and found that it underestimated the remaining wait, and \textcite{garciamaurino2024improving} correct the
+systematic errors of agency predictions in Madrid and Paris using only data from public APIs, a third-party setting
+close to ours. Real-time feeds have their own quality problems, such as latency \parencite{zhou2025latency}.
+
+\paragraph{Shrinkage and robust estimation} Shrinking noisy estimates towards a common value reduces their mean squared
+error \parencite{jamesstein1961,efronmorris1975}, and empirical Bayes estimation is standard in transport safety
+\parencite{hauer2002empirical}. \textcite{woodard2017predicting} model travel-time distributions with a trip-level
+effect and fall back to pooled parameters for links with few observations, a close analogue of our per-trip correction
+and shrinkage. Median-based statistics are robust to outliers and incidents \parencite{huber1964,clark2002cleaning}.
+
+\paragraph{Passenger value and evaluation} Real-time information improves satisfaction and perceived safety, and
+inaccurate predictions reduce ridership \parencite{gooze2013benefits,brakewood2019}; its value depends on the quality of
+the predictions \parencite{liu2020waiting} and is greatest on low-frequency services \parencite{rahman2013users}, such
+as interurban buses. Evaluating forecasts requires keeping the future out of the past: rolling-origin, out-of-sample
+evaluation \parencite{tashman2000outofsample}, order-preserving validation for non-stationary series
+\parencite{cerqueira2020evaluating} and strict separation of the data used to learn and to predict
+\parencite{kaufman2012leakage}. The method's daily recalibration and its day-by-day evaluation follow these principles.

@@ -1,0 +1,81 @@
+% Evaluación por días: contracción, corrección por viaje y comparación con otros métodos (memoria, capítulo 8).
+
+\subsection{Day-by-day evaluation of the components}
+\label{sec:day-by-day}
+
+Rules enter the method only after a day-by-day evaluation that reproduces how they will be used: for each of seven
+test days, everything is learned from the previous days only, and the prediction is evaluated end to end on chained
+runs of segments (the sum is what the user sees, and a change can improve each segment without improving the sum).
+A rule is adopted if it improves at every horizon and on almost every day.
+
+\paragraph{Shrinkage} Table~\ref{tab:shrinkage} compares the band median alone ($n_0=0$) with the shrunk value of
+Eq.~\eqref{eq:shrinkage} on 195,786 segment samples over 26 days (test days 25--31 October 2026). With $n_0=5$ every
+measure improves at every horizon. With $n_0=10$ the gain holds at short range, but at 12--20 minutes it is worse than
+not shrinking: too much shrinkage erases real differences between bands, which accumulate over many segments, as
+Proposition~\ref{prop:shrinkage} predicts.
+
+\begin{table}[t]
+\centering
+\caption{Day-by-day evaluation of the shrinkage towards the segment median: mean absolute error of the sum of
+segments and share within $\pm120$~s.}
+\label{tab:shrinkage}
+\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+& & \multicolumn{3}{c}{Mean error (s)} & \multicolumn{3}{c}{Within $\pm120$~s (\%)} \\
+\cmidrule(lr){3-5}\cmidrule(l){6-8}
+Horizon & Runs & $n_0=0$ & $n_0=5$ & $n_0=10$ & $n_0=0$ & $n_0=5$ & $n_0=10$ \\
+\midrule
+4--8 min   & 107,052 & 42.8 & \textbf{42.0} & 42.3 & 96.0 & \textbf{96.2} & 96.0 \\
+8--12 min  & 83,336  & 62.7 & \textbf{61.7} & 62.4 & 87.4 & \textbf{87.9} & 87.5 \\
+12--20 min & 113,581 & 89.3 & \textbf{88.2} & 89.4 & 73.6 & \textbf{74.1} & 73.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Per-trip correction} On 87,333 test passages (26 October--1 November 2026), the corrected timetable without
+any live data had a mean absolute error of 210~s, against 438~s for the published timetable, and arrived on average
+131~s before the bus. With the correction by trip and third of the route, the mean error fell to 158~s and the share
+within $\pm2$~minutes rose from 47\% to 54\%, while a single correction per band lowered the mean error but worsened
+the tight hit rates, because the bias is not the same for every line and trip. Splitting the route into fifths or stops
+did not help. Replacing the mean of the deviations by their 40th percentile, evaluated by reconstructing what the app
+would have shown on two days not seen during learning, raised the share within $\pm2$~minutes by 4.1 and 2.5 points
+and cut by a third the cases in which the bus passed more than two minutes before the time shown.
+
+\paragraph{Comparison with other methods} Table~\ref{tab:methods} compares the method, under the same protocol and on
+the same runs, with alternatives that, unlike it, also use what is happening that day: a single scale factor; the
+recent ratio of the last buses on each segment; a Kalman filter per segment in the spirit of \textcite{shalaby2004};
+a Kalman filter on the vehicle's own pace; and a neural network with two hidden layers of 32 and 16 units and 28
+inputs, in the spirit of \textcite{chien2002} and \textcite{jeong2005}, trained for each test day on the previous days.
+Hyper-parameters were tuned on the seven days before the test period. The method keeps almost all the gain over the
+timetable: at 4--8 minutes the mean error falls from 154~s to 42~s. The alternatives improve on it a little and on
+almost every day: buses that have just run the same segments, alone or through a Kalman filter, by 1--2\%; the
+vehicle's own pace by about 4\%; and the neural network, combining everything, by 6--7\%, the only one better on all
+seven days at all three horizons (95\% bootstrap intervals of the difference exclude zero). These comparisons are on
+sums of segments, not on the full arrival shown to the user.
+
+\begin{table}[t]
+\centering
+\caption{Comparison with other methods under the day-by-day protocol (test days 25--31 October 2026): mean absolute
+error of the sum of segments, share within $\pm120$~s at 12--20 minutes, and number of test days (of seven) on which
+the alternative beats the method, at each horizon.}
+\label{tab:methods}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.2cm}rrrrc@{}}
+\toprule
+& \multicolumn{3}{c}{Mean error (s)} & Within & Days \\
+\cmidrule(lr){2-4}
+Method & 4--8 min & 8--12 min & 12--20 min & $\pm120$~s (\%) & better \\
+\midrule
+Published timetable & 153.9 & 233.5 & 329.7 & 24.0 & 0 \\
+\textbf{This method} & \textbf{42.0} & \textbf{61.7} & \textbf{88.2} & \textbf{74.1} & --- \\
+Scaled by one factor & 42.6 & 61.9 & 86.9 & 74.9 & 2 · 4 · 5 \\
+Previous buses & 41.6 & 60.7 & 86.5 & 75.0 & 5 · 7 · 7 \\
+Kalman filter per segment & 41.7 & 60.7 & 86.4 & 75.0 & 5 · 7 · 7 \\
+Kalman filter on own pace & 40.4 & 59.3 & 84.6 & 76.0 & 6 · 7 · 7 \\
+Neural network, no same-day data & 40.7 & 58.8 & 82.5 & 77.2 & 6 · 6 · 6 \\
+Neural network & 39.5 & 57.5 & 81.7 & 77.4 & 7 · 7 · 7 \\
+\bottomrule
+\end{tabular}
+\end{table}

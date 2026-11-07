@@ -244,3 +244,385 @@
   doi     = {10.1080/01441647.2018.1472147},
   langid  = {english}
 }
+% Related-work bibliography for the Bizkaibus arrival-time article (biblatex, same conventions as bibliografia.bib).
+% 29 entries, none duplicating the 22 already in bibliografia.bib. Every entry was checked on 2026-11-07 against its
+% Crossref record (https://api.crossref.org/works/<DOI>) and its DOI was resolved at https://doi.org/<DOI>.
+% Authors, title, venue, volume, issue, pages/article number and year are taken from those records, not from memory.
+% Date convention: when a paper appeared online first and later in an issue, the issue year is used (e.g. cats2016).
+
+% ---------------------------------------------------------------------------------------------------------------
+% 1. Surveys and reviews
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{kumar2025review,
+  author  = {Kumar, B. Anil and Singh, Ramanand and Shaji, Hima Elsa and Vanajakshi, Lelitha},
+  title   = {Bus Arrival Time Prediction: A Comprehensive Review},
+  journal = {IEEE Transactions on Intelligent Transportation Systems},
+  volume  = {26},
+  number  = {6},
+  pages   = {7362--7379},
+  date    = {2025},
+  doi     = {10.1109/TITS.2025.3545695},
+  langid  = {english}
+}
+
+@article{singh2022review,
+  author  = {Singh, Nisha and Kumar, Kranti},
+  title   = {A Review of Bus Arrival Time Prediction Using Artificial Intelligence},
+  journal = {WIREs Data Mining and Knowledge Discovery},
+  volume  = {12},
+  number  = {4},
+  eid     = {e1457},
+  date    = {2022},
+  doi     = {10.1002/widm.1457},
+  langid  = {english}
+}
+
+@article{moreiramatias2015survey,
+  author  = {Moreira-Matias, Luis and Mendes-Moreira, Joao and de Sousa, Jorge Freire and Gama, Joao},
+  title   = {Improving Mass Transit Operations by Using {AVL}-Based Systems: A Survey},
+  journal = {IEEE Transactions on Intelligent Transportation Systems},
+  volume  = {16},
+  number  = {4},
+  pages   = {1636--1653},
+  date    = {2015},
+  doi     = {10.1109/TITS.2014.2376772},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 2. Historical-average, timetable-based and segment-based methods
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{lin1999experimental,
+  author  = {Lin, Wei-Hua and Zeng, Jian},
+  title   = {Experimental Study of Real-Time Bus Arrival Time Prediction with {GPS} Data},
+  journal = {Transportation Research Record: Journal of the Transportation Research Board},
+  volume  = {1666},
+  pages   = {101--109},
+  date    = {1999},
+  doi     = {10.3141/1666-12},
+  langid  = {english}
+}
+
+@article{gal2017journey,
+  author  = {Gal, Avigdor and Mandelbaum, Avishai and Schnitzler, François and Senderovich, Arik and Weidlich, Matthias},
+  title   = {Traveling Time Prediction in Scheduled Transportation with Journey Segments},
+  journal = {Information Systems},
+  volume  = {64},
+  pages   = {266--280},
+  date    = {2017},
+  doi     = {10.1016/j.is.2015.12.001},
+  langid  = {english}
+}
+
+@article{mazloumi2010variability,
+  author  = {Mazloumi, Ehsan and Currie, Graham and Rose, Geoffrey},
+  title   = {Using {GPS} Data to Gain Insight into Public Transport Travel Time Variability},
+  journal = {Journal of Transportation Engineering},
+  volume  = {136},
+  number  = {7},
+  pages   = {623--631},
+  date    = {2010},
+  doi     = {10.1061/(ASCE)TE.1943-5436.0000126},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 3. Kalman filter approaches
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{cathey2003prescription,
+  author  = {Cathey, F. W. and Dailey, D. J.},
+  title   = {A Prescription for Transit Arrival/Departure Prediction Using Automatic Vehicle Location Data},
+  journal = {Transportation Research Part C: Emerging Technologies},
+  volume  = {11},
+  number  = {3--4},
+  pages   = {241--264},
+  date    = {2003},
+  doi     = {10.1016/S0968-090X(03)00023-8},
+  langid  = {english}
+}
+
+@article{vanajakshi2009kalman,
+  author  = {Vanajakshi, L. and Subramanian, S. C. and Sivanandan, R.},
+  title   = {Travel Time Prediction under Heterogeneous Traffic Conditions Using Global Positioning System Data from Buses},
+  journal = {IET Intelligent Transport Systems},
+  volume  = {3},
+  number  = {1},
+  pages   = {1--9},
+  date    = {2009},
+  doi     = {10.1049/iet-its:20080013},
+  langid  = {english}
+}
+
+@article{achar2020spatial,
+  author  = {Achar, Avinash and Bharathi, Dhivya and Kumar, Bachu Anil and Vanajakshi, Lelitha},
+  title   = {Bus Arrival Time Prediction: A Spatial {Kalman} Filter Approach},
+  journal = {IEEE Transactions on Intelligent Transportation Systems},
+  volume  = {21},
+  number  = {3},
+  pages   = {1298--1307},
+  date    = {2020},
+  doi     = {10.1109/TITS.2019.2909314},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 4. Machine learning: SVR, LSTM, ConvLSTM, graph neural networks, transformers
+% ---------------------------------------------------------------------------------------------------------------
+
+% Name order as deposited by the publisher (Taylor & Francis/Crossref): the byline reads "Yu Bin, Yang Zhongzhen,
+% Yao Baozhen" in Chinese order, so the family names are arguably Yu, Yang and Yao. The paper is almost always cited
+% as "Bin, Zhongzhen and Baozhen (2006)"; keep the publisher form unless the journal asks otherwise.
+@article{bin2006svm,
+  author  = {Bin, Yu and Zhongzhen, Yang and Baozhen, Yao},
+  title   = {Bus Arrival Time Prediction Using Support Vector Machines},
+  journal = {Journal of Intelligent Transportation Systems},
+  volume  = {10},
+  number  = {4},
+  pages   = {151--158},
+  date    = {2006},
+  doi     = {10.1080/15472450600981009},
+  langid  = {english}
+}
+
+@article{pang2019rnn,
+  author  = {Pang, Junbiao and Huang, Jing and Du, Yong and Yu, Haitao and Huang, Qingming and Yin, Baocai},
+  title   = {Learning to Predict Bus Arrival Time from Heterogeneous Measurements via Recurrent Neural Network},
+  journal = {IEEE Transactions on Intelligent Transportation Systems},
+  volume  = {20},
+  number  = {9},
+  pages   = {3283--3293},
+  date    = {2019},
+  doi     = {10.1109/TITS.2018.2873747},
+  langid  = {english}
+}
+
+@article{petersen2019convlstm,
+  author  = {Petersen, Niklas Christoffer and Rodrigues, Filipe and Pereira, Francisco Camara},
+  title   = {Multi-Output Bus Travel Time Prediction with Convolutional {LSTM} Neural Network},
+  journal = {Expert Systems with Applications},
+  volume  = {120},
+  pages   = {426--435},
+  date    = {2019},
+  doi     = {10.1016/j.eswa.2018.11.028},
+  langid  = {english}
+}
+
+@article{ma2022multiattention,
+  author  = {Ma, Jiaman and Chan, Jeffrey and Rajasegarar, Sutharshan and Leckie, Christopher},
+  title   = {Multi-Attention Graph Neural Networks for City-Wide Bus Travel Time Estimation Using Limited Data},
+  journal = {Expert Systems with Applications},
+  volume  = {202},
+  eid     = {117057},
+  date    = {2022},
+  doi     = {10.1016/j.eswa.2022.117057},
+  langid  = {english}
+}
+
+@article{jeong2024battransformer,
+  author  = {Jeong, Suhyun and Oh, Changsong and Jeong, Jongpil},
+  title   = {{BAT-Transformer}: Prediction of Bus Arrival Time with Transformer Encoder for Smart Public Transportation System},
+  journal = {Applied Sciences},
+  volume  = {14},
+  number  = {20},
+  eid     = {9488},
+  date    = {2024},
+  doi     = {10.3390/app14209488},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 5. GTFS, GTFS-Realtime and AVL data; feed quality; accuracy of published predictions
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{wessel2017retrospective,
+  author  = {Wessel, Nate and Allen, Jeff and Farber, Steven},
+  title   = {Constructing a Routable Retrospective Transit Timetable from a Real-Time Vehicle Location Feed and {GTFS}},
+  journal = {Journal of Transport Geography},
+  volume  = {62},
+  pages   = {92--97},
+  date    = {2017},
+  doi     = {10.1016/j.jtrangeo.2017.04.012},
+  langid  = {english}
+}
+
+% Page range taken from the publisher's PDF (header "Vol. 12 No. 1 [2019] pp. 475-500"); Crossref has no pages.
+@article{wessel2019accuracy,
+  author  = {Wessel, Nate and Farber, Steven},
+  title   = {On the Accuracy of Schedule-Based {GTFS} for Measuring Accessibility},
+  journal = {Journal of Transport and Land Use},
+  volume  = {12},
+  number  = {1},
+  pages   = {475--500},
+  date    = {2019},
+  doi     = {10.5198/jtlu.2019.1502},
+  langid  = {english}
+}
+
+@article{cats2016realtime,
+  author  = {Cats, Oded and Loutos, Gerasimos},
+  title   = {Real-Time Bus Arrival Information System: An Empirical Evaluation},
+  journal = {Journal of Intelligent Transportation Systems},
+  volume  = {20},
+  number  = {2},
+  pages   = {138--151},
+  date    = {2016},
+  doi     = {10.1080/15472450.2015.1011638},
+  langid  = {english}
+}
+
+@article{garciamaurino2024improving,
+  author  = {García-Mauriño, Carlos and Zufiria, Pedro J. and Jarabo-Peñas, Alejandro},
+  title   = {Improving Bus Arrival Time Predictors Using Only Public Transport {API} Data},
+  journal = {Transportation Letters},
+  volume  = {16},
+  number  = {8},
+  pages   = {804--813},
+  date    = {2024},
+  doi     = {10.1080/19427867.2023.2245994},
+  langid  = {english}
+}
+
+@article{zhou2025latency,
+  author  = {Zhou, Joseph Q. and Jackson, Jay and Stravitz, Pam and Barlow, Gregory J. and Koonce, Peter},
+  title   = {Addressing Data Latency in {GTFS} ({General} {Transit} {Feed} {Specification}) {Realtime} to Improve Transit Signal Priority},
+  journal = {Transportation Research Record: Journal of the Transportation Research Board},
+  volume  = {2679},
+  number  = {1},
+  pages   = {1329--1341},
+  date    = {2025},
+  doi     = {10.1177/03611981241255027},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 6. Shrinkage, empirical Bayes, pooling and robust (median) estimation
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{hauer2002empirical,
+  author  = {Hauer, Ezra and Harwood, Douglas W. and Council, Forrest M. and Griffith, Michael S.},
+  title   = {Estimating Safety by the Empirical {Bayes} Method: A Tutorial},
+  journal = {Transportation Research Record: Journal of the Transportation Research Board},
+  volume  = {1784},
+  pages   = {126--131},
+  date    = {2002},
+  doi     = {10.3141/1784-16},
+  langid  = {english}
+}
+
+@article{woodard2017predicting,
+  author  = {Woodard, Dawn and Nogin, Galina and Koch, Paul and Racz, David and Goldszmidt, Moises and Horvitz, Eric},
+  title   = {Predicting Travel Time Reliability Using Mobile Phone {GPS} Data},
+  journal = {Transportation Research Part C: Emerging Technologies},
+  volume  = {75},
+  pages   = {30--44},
+  date    = {2017},
+  doi     = {10.1016/j.trc.2016.10.011},
+  langid  = {english}
+}
+
+@article{clark2002cleaning,
+  author  = {Clark, Stephen D. and Grant-Muller, S. and Chen, Haibo},
+  title   = {Cleaning of Matched License Plate Data},
+  journal = {Transportation Research Record: Journal of the Transportation Research Board},
+  volume  = {1804},
+  pages   = {1--7},
+  date    = {2002},
+  doi     = {10.3141/1804-01},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 7. Passenger value of real-time information and perceived accuracy
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{gooze2013benefits,
+  author  = {Gooze, Aaron and Watkins, Kari Edison and Borning, Alan},
+  title   = {Benefits of Real-Time Transit Information and Impacts of Data Accuracy on Rider Experience},
+  journal = {Transportation Research Record: Journal of the Transportation Research Board},
+  volume  = {2351},
+  pages   = {95--103},
+  date    = {2013},
+  doi     = {10.3141/2351-11},
+  langid  = {english}
+}
+
+@article{liu2020waiting,
+  author  = {Liu, Luyu and Miller, Harvey J.},
+  title   = {Does Real-Time Transit Information Reduce Waiting Time? {An} Empirical Analysis},
+  journal = {Transportation Research Part A: Policy and Practice},
+  volume  = {141},
+  pages   = {167--179},
+  date    = {2020},
+  doi     = {10.1016/j.tra.2020.09.014},
+  langid  = {english}
+}
+
+@article{rahman2013users,
+  author  = {Rahman, Md. Matiur and Wirasinghe, S. C. and Kattan, Lina},
+  title   = {Users' Views on Current and Future Real-Time Bus Information Systems},
+  journal = {Journal of Advanced Transportation},
+  volume  = {47},
+  number  = {3},
+  pages   = {336--354},
+  date    = {2013},
+  doi     = {10.1002/atr.1206},
+  langid  = {english}
+}
+
+% ---------------------------------------------------------------------------------------------------------------
+% 8. Evaluation methodology: temporal validation, leakage, benchmarking against simple baselines
+% ---------------------------------------------------------------------------------------------------------------
+
+@article{tashman2000outofsample,
+  author  = {Tashman, Leonard J.},
+  title   = {Out-of-Sample Tests of Forecasting Accuracy: An Analysis and Review},
+  journal = {International Journal of Forecasting},
+  volume  = {16},
+  number  = {4},
+  pages   = {437--450},
+  date    = {2000},
+  doi     = {10.1016/S0169-2070(00)00065-0},
+  langid  = {english}
+}
+
+@article{cerqueira2020evaluating,
+  author  = {Cerqueira, Vitor and Torgo, Luis and Mozetič, Igor},
+  title   = {Evaluating Time Series Forecasting Models: An Empirical Study on Performance Estimation Methods},
+  journal = {Machine Learning},
+  volume  = {109},
+  number  = {11},
+  pages   = {1997--2028},
+  date    = {2020},
+  doi     = {10.1007/s10994-020-05910-7},
+  langid  = {english}
+}
+
+% Crossref stores only the main title ("Leakage in data mining"); the subtitle comes from the ACM TKDD record
+% (Article 15, 6(4), December 2012). The 2011 KDD conference paper with the same title is a different publication.
+@article{kaufman2012leakage,
+  author  = {Kaufman, Shachar and Rosset, Saharon and Perlich, Claudia and Stitelman, Ori},
+  title   = {Leakage in Data Mining: Formulation, Detection, and Avoidance},
+  journal = {ACM Transactions on Knowledge Discovery from Data},
+  volume  = {6},
+  number  = {4},
+  eid     = {15},
+  date    = {2012},
+  doi     = {10.1145/2382577.2382579},
+  langid  = {english}
+}
+
+% Names as printed by IEEE (no diacritics); the second author usually signs "Ibai Laña".
+@article{manibardo2022deep,
+  author  = {Manibardo, Eric L. and Lana, Ibai and {Del Ser}, Javier},
+  title   = {Deep Learning for Road Traffic Forecasting: Does it Make a Difference?},
+  journal = {IEEE Transactions on Intelligent Transportation Systems},
+  volume  = {23},
+  number  = {7},
+  pages   = {6164--6188},
+  date    = {2022},
+  doi     = {10.1109/TITS.2021.3083957},
+  langid  = {english}
+}

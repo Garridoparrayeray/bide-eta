@@ -6,6 +6,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{microtype}
+\setlength{\emergencystretch}{2em}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs,tabularx}
 \usepackage{xcolor}
@@ -43,6 +44,7 @@
 \makeatother
 
 \newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
 
 \begin{document}
 
@@ -149,16 +151,7 @@ it uses the timetable corrected with what each trip usually does. Each predictio
 \section{Related work}
 \label{sec:related}
 
-% Se completa con la bibliografía verificada (related-work.bib): revisiones, métodos por tramos e históricos,
-% filtros de Kalman, aprendizaje automático, estudios con GTFS-Realtime y calidad de los feeds, contracción.
-
-Bus arrival time prediction has been studied with historical averages and regression, Kalman filters, artificial
-neural networks and, more recently, deep learning models. Early work used neural networks trained on automatic
-vehicle location data \parencite{chien2002} and combined them with Kalman filters to update predictions with the
-latest observations \parencite{shalaby2004}. Kalman filtering \parencite{kalman1960} remains a common baseline for
-the delay of a single vehicle. The relationship between published schedules, observed running times and the
-uncertainty of predictions has also been studied from the passenger's side
-\parencite{mishalani2006,watkins2011,brakewood2019}.
+\input{relacionado}
 
 % =====================================================================================================================
 \section{Data and problem setting}
@@ -221,8 +214,7 @@ pass increasingly early as the trip advances.}
 \section{Method}
 \label{sec:method}
 
-% PENDIENTE: se escribe a partir de la lectura completa de los capítulos 4 a 7 de la memoria (localización, modelo,
-% predicción en tres capas, aprendizaje), con las fórmulas, las constantes y el pseudocódigo.
+\input{metodo}
 
 % =====================================================================================================================
 \section{Evaluation}
@@ -333,8 +325,7 @@ lower in the second period than in the first.
 \paragraph{By day type} Weekday and weekend accuracy are similar (92\% and 92\% below three minutes, 67\% and 65\% at
 ten to twenty minutes).
 
-% PENDIENTE: comparación con el filtro de Kalman y la red neuronal (memoria, capítulo 8), y evaluación por días de la
-% contracción.
+\input{evaluacion-dias}
 
 % =====================================================================================================================
 \section{Reproducing and reusing the method}
@@ -365,13 +356,24 @@ the element $\lfloor p(n-1)\rfloor$ of the sorted values.
 \section{Discussion and limitations}
 \label{sec:discussion}
 
-% PENDIENTE: a partir del capítulo 9 de la memoria y de los resultados nuevos.
+\input{discusion}
 
 % =====================================================================================================================
 \section{Conclusions}
 \label{sec:conclusions}
 
-% PENDIENTE.
+Bus networks that publish vehicle positions but not delays, with intermediate times interpolated at constant speed,
+can still offer accurate arrival predictions. Working in timetable time, learning the real duration of every segment
+by time band with shrunk medians, and choosing for every stop the most reliable of three sources with explicit
+abstention rules, the method described here puts the arrival shown within $\pm2$~minutes in 92--96\% of cases below
+three minutes and in 67\% at ten to twenty minutes, against 23--25\% for the published timetable, and doubles the
+accuracy of the timetable even without live data. More complex models that use what happens each day improve the
+error of segment sums by only 4--7\%, which supports keeping a method that can be audited by hand.
+
+Every rule, constant and evaluation step is specified, and the reference implementation, the test vectors, the
+evaluator, the learned tables and the evaluation data are public, so that the method can be reproduced, applied to
+other networks and compared with new ones on equal terms. A comparison with the waiting times that the operator itself
+shows is under way with the same tools.
 
 \section*{Data and code availability}
 The reference implementation, test vectors, evaluator, learned tables and evaluation data are available at
@@ -379,5 +381,8 @@ The reference implementation, test vectors, evaluator, learned tables and evalua
 timetable and the live feed are open data of their publishers. The production engine of the app is not public.
 
 \printbibliography
+
+\appendix
+\input{apendice}
 
 \end{document}
