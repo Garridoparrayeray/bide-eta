@@ -1,0 +1,1806 @@
+{
+    "percentil": [
+        {
+            "valores": [
+                5,
+                1,
+                4,
+                2,
+                3
+            ],
+            "p": 0.5,
+            "resultado": 3.0
+        },
+        {
+            "valores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "p": 0.5,
+            "resultado": 2.0
+        },
+        {
+            "valores": [
+                10,
+                20,
+                30,
+                40,
+                50,
+                60,
+                70,
+                80,
+                90,
+                100
+            ],
+            "p": 0.9,
+            "resultado": 90.0
+        }
+    ],
+    "franja": [
+        {
+            "fecha": "2026-10-28",
+            "segundos": 28950,
+            "franja": "laborable.punta_manana"
+        },
+        {
+            "fecha": "2026-10-28",
+            "segundos": 21599,
+            "franja": "laborable.madrugada"
+        },
+        {
+            "fecha": "2026-10-28",
+            "segundos": 21600,
+            "franja": "laborable.punta_manana"
+        },
+        {
+            "fecha": "2026-10-31",
+            "segundos": 75600,
+            "franja": "fin_semana.noche"
+        },
+        {
+            "fecha": "2026-10-28",
+            "segundos": 90000,
+            "franja": "laborable.madrugada"
+        },
+        {
+            "fecha": "2026-11-01",
+            "segundos": 46800,
+            "franja": "fin_semana.mediodia"
+        }
+    ],
+    "factor_k": [
+        {
+            "linea": "3414",
+            "fecha": "2026-10-28",
+            "segundos": 28950,
+            "k": 1.2
+        },
+        {
+            "linea": "9999",
+            "fecha": "2026-10-28",
+            "segundos": 28950,
+            "k": 0.9
+        },
+        {
+            "linea": "9999",
+            "fecha": "2026-10-28",
+            "segundos": 79200,
+            "k": 0.6
+        },
+        {
+            "linea": "9999",
+            "fecha": "2026-10-28",
+            "segundos": 50400,
+            "k": 1.0
+        },
+        {
+            "linea": "03414",
+            "fecha": "2026-10-28",
+            "segundos": 28950,
+            "k": 1.2
+        }
+    ],
+    "proyeccion": [
+        {
+            "bus": [
+                43.2601,
+                -2.925
+            ],
+            "A": {
+                "lat": 43.26,
+                "lon": -2.93
+            },
+            "B": {
+                "lat": 43.26,
+                "lon": -2.92
+            },
+            "f": 0.5000000000000222,
+            "distancia_m": 11.132000000369544,
+            "largo_m": 810.6880955946056
+        },
+        {
+            "bus": [
+                43.2605,
+                -2.935
+            ],
+            "A": {
+                "lat": 43.26,
+                "lon": -2.93
+            },
+            "B": {
+                "lat": 43.26,
+                "lon": -2.92
+            },
+            "f": 0.0,
+            "distancia_m": 409.14505231598264,
+            "largo_m": 810.6827696075283
+        },
+        {
+            "bus": [
+                43.26,
+                -2.93
+            ],
+            "A": {
+                "lat": 43.26,
+                "lon": -2.93
+            },
+            "B": {
+                "lat": 43.26,
+                "lon": -2.93
+            },
+            "f": 0.0,
+            "distancia_m": 0.0,
+            "largo_m": 0.0
+        }
+    ],
+    "cubo_largo": [
+        {
+            "metros": 0,
+            "cubo": 0
+        },
+        {
+            "metros": 299.9,
+            "cubo": 0
+        },
+        {
+            "metros": 300,
+            "cubo": 1
+        },
+        {
+            "metros": 999.9,
+            "cubo": 2
+        },
+        {
+            "metros": 1000,
+            "cubo": 3
+        },
+        {
+            "metros": 1499.9,
+            "cubo": 3
+        },
+        {
+            "metros": 1500,
+            "cubo": 4
+        },
+        {
+            "metros": 2999.9,
+            "cubo": 4
+        },
+        {
+            "metros": 3000,
+            "cubo": 5
+        },
+        {
+            "metros": 12000,
+            "cubo": 5
+        }
+    ],
+    "respaldo_largo": [
+        {
+            "horario_s": 120,
+            "metros": 800,
+            "franja": "laborable.punta_manana",
+            "segundos": 97.32000000000001
+        },
+        {
+            "horario_s": 120,
+            "metros": 800,
+            "franja": "fin_semana.noche",
+            "segundos": 92.28
+        },
+        {
+            "horario_s": 300,
+            "metros": 2000,
+            "franja": "laborable.manana",
+            "segundos": 450.0
+        },
+        {
+            "horario_s": 300,
+            "metros": 5000,
+            "franja": "laborable.manana",
+            "segundos": 90.0
+        },
+        {
+            "horario_s": 300,
+            "metros": 100,
+            "franja": "laborable.manana",
+            "segundos": null
+        },
+        {
+            "horario_s": 300,
+            "metros": null,
+            "franja": "laborable.manana",
+            "segundos": null
+        }
+    ],
+    "tiempos_tramo": {
+        "muestras": [
+            {
+                "track": "b1",
+                "band": "laborable.punta_manana",
+                "from": "A",
+                "to": "B",
+                "actual": 90.0
+            },
+            {
+                "track": "b2",
+                "band": "laborable.punta_manana",
+                "from": "A",
+                "to": "B",
+                "actual": 100.0
+            },
+            {
+                "track": "m0",
+                "band": "laborable.mediodia",
+                "from": "A",
+                "to": "B",
+                "actual": 60.0
+            },
+            {
+                "track": "m1",
+                "band": "laborable.mediodia",
+                "from": "A",
+                "to": "B",
+                "actual": 58.0
+            },
+            {
+                "track": "m2",
+                "band": "laborable.mediodia",
+                "from": "A",
+                "to": "B",
+                "actual": 62.0
+            },
+            {
+                "track": "m3",
+                "band": "laborable.mediodia",
+                "from": "A",
+                "to": "B",
+                "actual": 64.0
+            },
+            {
+                "track": "m4",
+                "band": "laborable.mediodia",
+                "from": "A",
+                "to": "B",
+                "actual": 59.0
+            },
+            {
+                "track": "m5",
+                "band": "laborable.mediodia",
+                "from": "A",
+                "to": "B",
+                "actual": 61.0
+            },
+            {
+                "track": "b1",
+                "band": "laborable.punta_manana",
+                "from": "B",
+                "to": "C",
+                "actual": 75.0
+            },
+            {
+                "track": "c0",
+                "band": "laborable.noche",
+                "from": "C",
+                "to": "D",
+                "actual": 200.0
+            },
+            {
+                "track": "c1",
+                "band": "laborable.noche",
+                "from": "C",
+                "to": "D",
+                "actual": 210.0
+            },
+            {
+                "track": "c2",
+                "band": "laborable.noche",
+                "from": "C",
+                "to": "D",
+                "actual": 190.0
+            },
+            {
+                "track": "d1",
+                "band": "laborable.manana",
+                "from": "D",
+                "to": "E",
+                "actual": 50.0
+            },
+            {
+                "track": "d1",
+                "band": "laborable.manana",
+                "from": "D",
+                "to": "E",
+                "actual": 70.0
+            },
+            {
+                "track": "d2",
+                "band": "laborable.manana",
+                "from": "D",
+                "to": "E",
+                "actual": 60.0
+            }
+        ],
+        "resultado": {
+            "A>B": {
+                "n": 8,
+                "all": 61,
+                "laborable.punta_manana": 69,
+                "laborable.mediodia": 60
+            },
+            "C>D": {
+                "n": 3,
+                "laborable.noche": 200
+            },
+            "D>E": {
+                "n": 2,
+                "laborable.manana": 60
+            }
+        }
+    },
+    "k_calibrado": [
+        {
+            "cocientes_por_bus": [
+                0.8,
+                0.82,
+                0.84,
+                0.86,
+                0.88,
+                0.9,
+                0.92,
+                0.94
+            ],
+            "k": 0.938
+        },
+        {
+            "cocientes_por_bus": [
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85,
+                0.85
+            ],
+            "k": 0.88
+        },
+        {
+            "cocientes_por_bus": [
+                1.6,
+                1.7,
+                1.8,
+                1.9,
+                2.0,
+                2.1,
+                2.2,
+                2.3,
+                2.4,
+                2.5
+            ],
+            "k": 1.2
+        }
+    ],
+    "k_un_bus": {
+        "muestras": [
+            [
+                100,
+                200
+            ],
+            [
+                300,
+                200
+            ]
+        ],
+        "k_sin_encoger": 1
+    },
+    "paso_real": [
+        {
+            "pista": [
+                {
+                    "t": 28900,
+                    "sched": 28880
+                },
+                {
+                    "t": 28960,
+                    "sched": 28940
+                },
+                {
+                    "t": 29020,
+                    "sched": 29030
+                }
+            ],
+            "llegada_programada": 28950,
+            "paso_real": 28966.666666666668
+        },
+        {
+            "pista": [
+                {
+                    "t": 28900,
+                    "sched": 28880
+                },
+                {
+                    "t": 28960,
+                    "sched": 28940
+                },
+                {
+                    "t": 29020,
+                    "sched": 29030
+                }
+            ],
+            "llegada_programada": 28800,
+            "paso_real": null
+        }
+    ],
+    "aclarado": {
+        "n": 100,
+        "tope": 30,
+        "indices": [
+            0,
+            3,
+            6,
+            10,
+            13,
+            16,
+            20,
+            23,
+            26,
+            30,
+            33,
+            36,
+            40,
+            43,
+            46,
+            50,
+            53,
+            56,
+            60,
+            63,
+            66,
+            70,
+            73,
+            76,
+            80,
+            83,
+            86,
+            90,
+            93,
+            96
+        ]
+    },
+    "correccion_viaje": {
+        "tabla": {
+            "trips": {
+                "9999|S0|S4|28800|5": {
+                    "laborable": [
+                        20,
+                        40,
+                        60
+                    ],
+                    "fin_semana": [
+                        -30,
+                        0,
+                        30
+                    ]
+                }
+            },
+            "lines": {
+                "L2": {
+                    "laborable.punta_manana": 15
+                }
+            },
+            "global": {
+                "laborable.punta_manana": 25,
+                "fin_semana.noche": -10
+            }
+        },
+        "clave": "9999|S0|S4|28800|5",
+        "tercios": [
+            [
+                0,
+                5,
+                0
+            ],
+            [
+                1,
+                5,
+                0
+            ],
+            [
+                2,
+                5,
+                1
+            ],
+            [
+                3,
+                5,
+                1
+            ],
+            [
+                4,
+                5,
+                2
+            ],
+            [
+                1,
+                3,
+                1
+            ],
+            [
+                2,
+                3,
+                2
+            ],
+            [
+                9,
+                5,
+                2
+            ],
+            [
+                0,
+                0,
+                0
+            ]
+        ],
+        "dia_servicio": [
+            [
+                "2026-10-12",
+                true,
+                "2026-10-18"
+            ],
+            [
+                "2026-10-12",
+                false,
+                "2026-10-12"
+            ],
+            [
+                "2026-10-17",
+                true,
+                "2026-10-18"
+            ],
+            [
+                "2026-11-01",
+                true,
+                "2026-11-01"
+            ],
+            [
+                "2026-12-08",
+                true,
+                "2026-12-13"
+            ]
+        ],
+        "consultas": [
+            {
+                "clave": "9999|S0|S4|28800|5",
+                "linea": "9999",
+                "fecha": "2026-10-28",
+                "salida": 28800,
+                "indice": 4,
+                "paradas": 5,
+                "segundos": 60.0
+            },
+            {
+                "clave": "9999|S0|S4|28800|5",
+                "linea": "9999",
+                "fecha": "2026-10-28",
+                "salida": 28800,
+                "indice": 2,
+                "paradas": 5,
+                "segundos": 40.0
+            },
+            {
+                "clave": "9999|S0|S4|28800|5",
+                "linea": "9999",
+                "fecha": "2026-10-31",
+                "salida": 28800,
+                "indice": 1,
+                "paradas": 5,
+                "segundos": -30.0
+            },
+            {
+                "clave": "L2|A|B|28800|3",
+                "linea": "L2",
+                "fecha": "2026-10-28",
+                "salida": 28800,
+                "indice": 1,
+                "paradas": 3,
+                "segundos": 15.0
+            },
+            {
+                "clave": "L2|A|B|72000|3",
+                "linea": "L2",
+                "fecha": "2026-10-31",
+                "salida": 72000,
+                "indice": 1,
+                "paradas": 3,
+                "segundos": -10.0
+            },
+            {
+                "clave": "L3|A|B|28800|3",
+                "linea": "L3",
+                "fecha": "2026-10-28",
+                "salida": 28800,
+                "indice": 1,
+                "paradas": 3,
+                "segundos": 25.0
+            },
+            {
+                "clave": "L3|A|B|50400|3",
+                "linea": "L3",
+                "fecha": "2026-10-28",
+                "salida": 50400,
+                "indice": 1,
+                "paradas": 3,
+                "segundos": 0.0
+            },
+            {
+                "clave": "09999|S0|S4|28800|5",
+                "linea": "09999",
+                "fecha": "2026-10-28",
+                "salida": 28800,
+                "indice": 4,
+                "paradas": 5,
+                "segundos": 60.0
+            }
+        ]
+    },
+    "calibracion_viaje": {
+        "desvios": [
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|4",
+                "line": "L1",
+                "departure": 28800,
+                "index": 1,
+                "count": 4,
+                "error": 100.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|4",
+                "line": "L1",
+                "departure": 28800,
+                "index": 2,
+                "count": 4,
+                "error": 160.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|4",
+                "line": "L1",
+                "departure": 28800,
+                "index": 3,
+                "count": 4,
+                "error": 220.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|4",
+                "line": "L1",
+                "departure": 28800,
+                "index": 1,
+                "count": 4,
+                "error": 140.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|4",
+                "line": "L1",
+                "departure": 28800,
+                "index": 3,
+                "count": 4,
+                "error": 2000.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|32400|4",
+                "line": "L1",
+                "departure": 32400,
+                "index": 2,
+                "count": 4,
+                "error": -60.0
+            },
+            {
+                "date": "2026-10-31",
+                "serviceDate": "2026-10-31",
+                "trip": "L1|A|D|32400|4",
+                "line": "L1",
+                "departure": 32400,
+                "index": 1,
+                "count": 4,
+                "error": 30.0
+            },
+            {
+                "date": "2026-10-12",
+                "serviceDate": "2026-10-18",
+                "trip": "L1|A|D|32400|4",
+                "line": "L1",
+                "departure": 32400,
+                "index": 3,
+                "count": 4,
+                "error": 50.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L2|X|Y|61200|6",
+                "line": "L2",
+                "departure": 61200,
+                "index": 5,
+                "count": 6,
+                "error": 300.0
+            }
+        ],
+        "resultado": {
+            "trips": {
+                "L1|A|D|28800|4": {
+                    "laborable": [
+                        127,
+                        150,
+                        420
+                    ]
+                },
+                "L1|A|D|32400|4": {
+                    "laborable": [
+                        -60,
+                        -60,
+                        -60
+                    ],
+                    "fin_semana": [
+                        30,
+                        30,
+                        40
+                    ]
+                },
+                "L2|X|Y|61200|6": {
+                    "laborable": [
+                        300,
+                        300,
+                        300
+                    ]
+                }
+            },
+            "lines": {
+                "L1": {
+                    "laborable.punta_manana": 140,
+                    "laborable.manana": -60,
+                    "fin_semana.manana": 30
+                },
+                "L2": {
+                    "laborable.punta_tarde": 300
+                }
+            },
+            "global": {
+                "fin_semana.manana": 30,
+                "laborable.manana": -60,
+                "laborable.punta_manana": 140,
+                "laborable.punta_tarde": 300
+            }
+        }
+    },
+    "viaje": {
+        "paradas": [
+            {
+                "id": "S0",
+                "lat": 43.26,
+                "lon": -2.93,
+                "dist_m": 0,
+                "llegada": 28800,
+                "salida": 28800
+            },
+            {
+                "id": "S1",
+                "lat": 43.26,
+                "lon": -2.925065928003549,
+                "dist_m": 400,
+                "llegada": 28890,
+                "salida": 28890
+            },
+            {
+                "id": "S2",
+                "lat": 43.26,
+                "lon": -2.917664820008872,
+                "dist_m": 1000,
+                "llegada": 29010,
+                "salida": 29010
+            },
+            {
+                "id": "S3",
+                "lat": 43.26,
+                "lon": -2.8991620500221806,
+                "dist_m": 2500,
+                "llegada": 29310,
+                "salida": 29310
+            },
+            {
+                "id": "S4",
+                "lat": 43.26,
+                "lon": -2.890527424028391,
+                "dist_m": 3200,
+                "llegada": 29430,
+                "salida": 29430
+            }
+        ],
+        "tramos_aprendidos": {
+            "S0>S1": {
+                "n": 10,
+                "all": 100,
+                "laborable.punta_manana": 110
+            },
+            "S1>S2": {
+                "n": 6,
+                "all": 150,
+                "laborable.punta_manana": 140
+            }
+        },
+        "proporciones": {
+            "4": {
+                "all": 0.64,
+                "laborable.punta_manana": 0.668
+            },
+            "2": {
+                "all": 0.769,
+                "laborable.punta_manana": 0.811
+            }
+        },
+        "k": {
+            "laborable.punta_manana": 0.9
+        },
+        "fecha": "2026-10-28"
+    },
+    "escenarios": [
+        {
+            "escenario": "Capa 1: GPS a 700 m, 11 m del trazado",
+            "ahora": 28980,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.9213653740062107,
+                "locationSeconds": 28950,
+                "recordedSeconds": 28950,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": {
+                "scheduledSeconds": 28950,
+                "locationSeconds": 28950,
+                "offRouteMeters": 11.132000000369544,
+                "method": "shape"
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "live",
+                    "llegada_estimada": 29020,
+                    "retraso_s": 10
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "live",
+                    "llegada_estimada": 29220,
+                    "retraso_s": -90
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "live",
+                    "llegada_estimada": 29318,
+                    "retraso_s": -112
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 1 sin trazado: proyección sobre la recta entre paradas",
+            "ahora": 28980,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.9213653740062107,
+                "locationSeconds": 28950,
+                "recordedSeconds": 28950,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": false,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": {
+                "scheduledSeconds": 28950,
+                "locationSeconds": 28950,
+                "offRouteMeters": 11.132000000369544,
+                "method": "segment"
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "live",
+                    "llegada_estimada": 29020,
+                    "retraso_s": 10
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "live",
+                    "llegada_estimada": 29290,
+                    "retraso_s": -20
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "live",
+                    "llegada_estimada": 29398,
+                    "retraso_s": -32
+                }
+            ]
+        },
+        {
+            "escenario": "GPS a 60 m del trazado: no se usa (pasillo de 50 m); capa 2",
+            "ahora": 28980,
+            "entrada": {
+                "lat": 43.260538986704994,
+                "lon": -2.9213653740062107,
+                "locationSeconds": 28950,
+                "recordedSeconds": 28950,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": null,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28860,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28950,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29020,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29220,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29318,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 2: sin GPS, próxima parada S2 y hora del dato",
+            "ahora": 28980,
+            "entrada": {
+                "recordedSeconds": 28950,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3,
+                "lat": null,
+                "lon": null,
+                "locationSeconds": null
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": null,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28860,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28950,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29020,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29220,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29318,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "GPS y parada registrada discrepan más de 6 min: capa 3",
+            "ahora": 29420,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.895461496024842,
+                "locationSeconds": 29400,
+                "recordedSeconds": 29400,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": null,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29010,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29430,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 3: ningún dato del bus, antes de salir",
+            "ahora": 28700,
+            "entrada": null,
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "estimated",
+                    "llegada_estimada": 28970,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29110,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29408,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 3: ningún dato, el horario corregido ya pasó",
+            "ahora": 29600,
+            "entrada": null,
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29010,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29430,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 3: horario publicado muy lento, el bus probablemente ya pasó",
+            "ahora": 31200,
+            "entrada": null,
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29010,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 30810,
+                    "estado": "likely_departed",
+                    "llegada_estimada": 30810,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 30930,
+                    "estado": "likely_departed",
+                    "llegada_estimada": 30930,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Dato GPS de hace más de 10 min: no se usa",
+            "ahora": 28980,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.9213653740062107,
+                "locationSeconds": 28300,
+                "recordedSeconds": 28300,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": null,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29110,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29408,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 3 con la corrección por viaje de la tabla 10, antes de salir",
+            "ahora": 28700,
+            "entrada": null,
+            "trazado": true,
+            "correccion_viaje": true,
+            "festivo": false,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "estimated",
+                    "llegada_estimada": 28990,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29150,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29350,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29468,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 3 con corrección por viaje en un festivo: tramos y corrección de fin de semana",
+            "ahora": 28700,
+            "entrada": null,
+            "trazado": true,
+            "correccion_viaje": true,
+            "festivo": true,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "estimated",
+                    "llegada_estimada": 28930,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29110,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29302,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29424,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Capa 1 en la primera parada: el bus espera 10 min antes de salir; llegada de la capa 3",
+            "ahora": 28210,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.93,
+                "locationSeconds": 28200,
+                "recordedSeconds": 28200,
+                "order": 2,
+                "currentStopId": "S1",
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1"
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": {
+                "scheduledSeconds": 28800,
+                "locationSeconds": 28800,
+                "offRouteMeters": 11.132000000369544,
+                "method": "origin"
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "live",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "live",
+                    "llegada_estimada": 28970,
+                    "retraso_s": 80
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "live",
+                    "llegada_estimada": 29110,
+                    "retraso_s": 100
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "live",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "live",
+                    "llegada_estimada": 29408,
+                    "retraso_s": -22
+                }
+            ]
+        },
+        {
+            "escenario": "Esperando a 600 m de la primera parada antes de salir: no se sitúa",
+            "ahora": 28210,
+            "entrada": {
+                "lat": 43.26538986704995,
+                "lon": -2.93,
+                "locationSeconds": 28200,
+                "recordedSeconds": 28200,
+                "order": 2,
+                "currentStopId": "S1",
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1"
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": null,
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "estimated",
+                    "llegada_estimada": 28970,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29110,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29408,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "Llegando: la llegada a S2 ya pasó hace 80 s sin confirmar el paso; «0 min»",
+            "ahora": 29100,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.9213653740062107,
+                "locationSeconds": 28950,
+                "recordedSeconds": 28950,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": {
+                "scheduledSeconds": 28950,
+                "locationSeconds": 28950,
+                "offRouteMeters": 11.132000000369544,
+                "method": "shape"
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "live",
+                    "llegada_estimada": 29100,
+                    "retraso_s": 90
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "live",
+                    "llegada_estimada": 29220,
+                    "retraso_s": -90
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "live",
+                    "llegada_estimada": 29318,
+                    "retraso_s": -112
+                }
+            ]
+        },
+        {
+            "escenario": "GPS 50 m pasada S2 y el feed aún en S2: no se da por pasada (regla de 150 m)",
+            "ahora": 29040,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.917048061009316,
+                "locationSeconds": 29020,
+                "recordedSeconds": 29020,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": {
+                "scheduledSeconds": 29020,
+                "locationSeconds": 29020,
+                "offRouteMeters": 11.132000000369544,
+                "method": "shape"
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "live",
+                    "llegada_estimada": 29040,
+                    "retraso_s": 30
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "live",
+                    "llegada_estimada": 29214,
+                    "retraso_s": -96
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "live",
+                    "llegada_estimada": 29311,
+                    "retraso_s": -119
+                }
+            ]
+        },
+        {
+            "escenario": "Llegando hace más de 3 min sin confirmar el paso: «puede que ya haya pasado»",
+            "ahora": 29320,
+            "entrada": {
+                "lat": 43.2601,
+                "lon": -2.9213653740062107,
+                "locationSeconds": 28950,
+                "recordedSeconds": 28950,
+                "tripRef": "trp_A9999_101_X_28800",
+                "lineId": "9999",
+                "departureSeconds": 28800,
+                "delaySeconds": 0,
+                "vehicleRef": "V1",
+                "currentStopId": "S2",
+                "order": 3
+            },
+            "trazado": true,
+            "correccion_viaje": false,
+            "festivo": false,
+            "posicion": {
+                "scheduledSeconds": 28950,
+                "locationSeconds": 28950,
+                "offRouteMeters": 11.132000000369544,
+                "method": "shape"
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28800,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "likely_departed",
+                    "llegada_estimada": 29320,
+                    "retraso_s": 310
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "live",
+                    "llegada_estimada": 29320,
+                    "retraso_s": 10
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "live",
+                    "llegada_estimada": 29320,
+                    "retraso_s": -110
+                }
+            ]
+        }
+    ]
+}

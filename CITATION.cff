@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this method, code or data, please cite it as below."
+title: "bide-eta: bus arrival prediction from position-only real-time feeds and interpolated timetables"
+abstract: >-
+  Reference implementation, test vectors, public evaluator and data of the arrival prediction method used by the
+  Bizkaibus+ app (Bide+). The method works with timetable differences, learns the travel time of every segment by
+  time band with shrunk medians and predicts in three layers with explicit abstention rules.
+authors:
+  - family-names: Garrido
+    given-names: Yeray
+    orcid: "https://orcid.org/0009-0008-0459-0294"
+version: 0.1.0
+date-released: 2026-11-07
+license: MIT
+repository-code: "https://github.com/Garridoparrayeray/bide-eta"
+url: "https://www.bideplus.eus"
+keywords:
+  - arrival time prediction
+  - public transport
+  - GPS positioning
+  - GTFS
+  - SIRI
+  - robust estimation
+  - shrinkage
+  - temporal validation
