@@ -2,10 +2,10 @@
 \label{ap:vectores}
 
 Los vectores de prueba son entradas concretas con la salida \emph{exacta} del código de producción. Los genera
-\texttt{vectores.php}, un programa que va con el código privado: carga el motor tal como está (las clases del
-emparejador, los factores y los tiempos por tramo, y las funciones de calibración del script de aprendizaje, sin ejecutar su programa principal) y
-escribe \texttt{referencia/vectores.json}. Una implementación en cualquier lenguaje puede darse por correcta cuando
-reproduce todos los vectores; \texttt{referencia/comprobar.py} lo hace para la implementación de referencia del
+\texttt{referencia/vectores.php}, que se publica aunque no puede ejecutarse sin el código privado: carga el motor tal
+como está (las clases del emparejador, los factores y los tiempos por tramo, y las funciones de calibración del script
+de aprendizaje, sin ejecutar su programa principal) y escribe \texttt{referencia/vectores.json}. Una implementación
+en cualquier lenguaje puede darse por correcta cuando reproduce todos los vectores; \texttt{referencia/comprobar.py} lo hace para la implementación de referencia del
 Apéndice~\ref{ap:referencia}.
 
 Los valores reales se dan con todos sus decimales para comprobar también los cálculos en coma flotante; los
