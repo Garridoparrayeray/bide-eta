@@ -1,0 +1,281 @@
+\chapter{Pseudocódigo}
+\label{ap:algoritmos}
+
+Este apéndice reúne el pseudocódigo de las funciones del método, en el orden en que se usan (el de la
+decisión de cada fila está en el capítulo «\nameref{cap:prediccion}»). Los índices de
+paradas empiezan en 1, como en el texto: el viaje tiene paradas $p_1,\dots,p_N$ y el tramo $i$ va de $p_i$ a
+$p_{i+1}$. $\redondeo$ es el redondeo con las mitades alejándose del cero, $\mediana$ la mediana baja y $\clamp$ la
+acotación (sección «\nameref{sec:convenciones}»). «Nulo» significa que el valor no existe.
+
+\begin{figure}[ht]
+\caption{Proyección de un Punto Sobre un Segmento}\label{alg:proyeccion}
+\begin{algorithmic}[1]
+\Function{Proyectar}{$\varphi,\lambda,A,B$}
+  \State $m_\lambda\gets\cos(\varphi\cdot\pi/180)\cdot111\,320$;\quad $m_\varphi\gets111\,320$
+  \State $x_A\gets(\lambda_A-\lambda)\,m_\lambda$;\ $y_A\gets(\varphi_A-\varphi)\,m_\varphi$;\
+         $x_B\gets(\lambda_B-\lambda)\,m_\lambda$;\ $y_B\gets(\varphi_B-\varphi)\,m_\varphi$
+  \State $\Delta x\gets x_B-x_A$;\ $\Delta y\gets y_B-y_A$;\ $\ell^2\gets\Delta x^2+\Delta y^2$
+  \State $f\gets0$
+  \If{$\ell^2>0$} $f\gets\clamp\big(-(x_A\Delta x+y_A\Delta y)/\ell^2,\ 0,\ 1\big)$ \EndIf
+  \State \Return $\big(f,\ \sqrt{(x_A+f\Delta x)^2+(y_A+f\Delta y)^2},\ \sqrt{\ell^2}\big)$ \Comment{fracción, distancia, longitud}
+\EndFunction
+\end{algorithmic}
+\nota{En un plano local centrado en el punto.}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Posición del Autobús en el Horario (Capa 1, sin el Contraste)}\label{alg:posicion}
+\begin{algorithmic}[1]
+\Function{Posición}{$J$, entrada $e$, $\tnow$}
+  \If{$e$ no tiene $\varphi$, $\lambda$, $\tgps$ o $n$} \Return nulo \EndIf
+  \If{$\tnow-\tgps>600$ \textbf{o} $N<2$} \Return nulo \EndIf
+  \If{$\tgps<d_1-60$} \Return la posición en la cabecera~\eqref{eq:cabecera} si $d_1-\tgps\le3\,600$ y el GPS está a 150~m o menos de $p_1$; si no, nulo \EndIf
+  \State $\nu\gets$ el índice con orden de parada igual a $n$; \textbf{si} no existe, \Return nulo
+  \State $i_0\gets\max(1,\nu-3)$;\quad $i_1\gets\min(N-1,\nu+2)$
+  \If{$J$ tiene trazado $\Sigma$ \textbf{y} $s_i$ existe para $i=i_0,\dots,i_1+1$}
+    \State $\sigma_0\gets s_{i_0}$;\ $\sigma_1\gets s_{i_1+1}$;\ $\sigma_{\lim}\gets s_\nu+100$;\ $E\gets$ nulo;\ $M\gets$ nulo
+    \For{$j=1,\dots,M_\Sigma-1$} \Comment{segmentos del trazado, en orden}
+      \If{$\sigma_{j+1}<\sigma_0$ \textbf{o} $\sigma_j>\sigma_1$} \textbf{continuar} \EndIf
+      \State $(f,d,\cdot)\gets$ \Call{Proyectar}{$\varphi,\lambda,\Sigma_j,\Sigma_{j+1}$};\quad $s^\ast\gets\sigma_j+f(\sigma_{j+1}-\sigma_j)$
+      \If{$s^\ast\le\sigma_{\lim}$}
+        \If{$E$ es nulo \textbf{o} $d<E.d$} $E\gets(d,s^\ast)$ \EndIf
+      \ElsIf{$M$ es nulo \textbf{o} $d<M.d$} $M\gets(d,s^\ast)$
+      \EndIf
+    \EndFor
+    \State $B\gets E$
+    \If{$M$ no es nulo \textbf{y} ($B$ es nulo \textbf{o} $M.d+20<B.d$)} $B\gets M$ \EndIf
+    \If{$B$ es nulo \textbf{o} $B.d>50$} \Return nulo \EndIf
+    \State $s^\ast\gets\clamp(B.s^\ast,\sigma_0,\sigma_1)$
+    \For{$i=i_0,\dots,i_1$}
+      \If{$s^\ast>s_{i+1}$ \textbf{y} $i<i_1$} \textbf{continuar} \EndIf
+      \State $f\gets0$; \textbf{si} $s_{i+1}>s_i$ \textbf{entonces} $f\gets\clamp\big((s^\ast-s_i)/(s_{i+1}-s_i),0,1\big)$
+      \State \Return $\big(\Tpos=\redondeo(d_i+f(a_{i+1}-d_i)),\ \tgps,\ B.d\big)$
+    \EndFor
+  \Else \Comment{sin trazado: rectas entre paradas}
+    \State $B\gets$ nulo
+    \For{$i=i_0,\dots,i_1$}
+      \State $(f,d,L)\gets$ \Call{Proyectar}{$\varphi,\lambda,p_i,p_{i+1}$}
+      \If{$B$ es nulo \textbf{o} $d<B.d$} $B\gets\big(d,\ \max(150,0{,}15L),\ d_i+f(a_{i+1}-d_i)\big)$ \EndIf
+    \EndFor
+    \If{$B.d>B.c$} \Return nulo \EndIf
+    \State \Return $\big(\Tpos=\redondeo(B.t),\ \tgps,\ B.d\big)$
+  \EndIf
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Tiempo de un Tramo y Tiempo Esperado Entre Dos Horas del Horario}\label{alg:esperado}
+\begin{algorithmic}[1]
+\Function{TiempoTramo}{$i,b,k$}
+  \State $h\gets a_{i+1}-a_i$
+  \State $\tau\gets$ valor de $\kappa_i=u_i{>}u_{i+1}$ en la franja $b$; si no existe, el valor \texttt{all}; si no, nulo
+  \If{$\tau$ no es nulo} \Return $\tau$ \EndIf
+  \If{$s_i$ y $s_{i+1}$ existen \textbf{y} $L=s_{i+1}-s_i>0$ \textbf{y} hay proporciones}
+    \State $r\gets$ proporción del cubo $c(L)$ en la franja $b$; si no existe, la \texttt{all}; si no, nulo
+    \If{$r$ no es nulo} \Return $\clamp(r,0{,}3,1{,}5)\cdot h$ \EndIf
+  \EndIf
+  \State \Return $k\cdot h$
+\EndFunction
+\Statex
+\Function{Esperado}{$J,t_0,t_1,b,k$}
+  \If{la tabla de tramos está vacía} \Return $k\,(t_1-t_0)$ \EndIf
+  \State $S\gets0$
+  \For{$i=1,\dots,N-1$}
+    \If{$a_{i+1}\le t_0$} \textbf{continuar} \EndIf
+    \If{$a_i\ge t_1$} \textbf{terminar} \EndIf
+    \State $h\gets a_{i+1}-a_i$;\quad $w\gets1$
+    \If{$h>0$} $w\gets\big(\min(a_{i+1},t_1)-\max(a_i,t_0)\big)/h$ \EndIf
+    \State $S\gets S+\max(0,w)\cdot$\Call{TiempoTramo}{$i,b,k$}
+  \EndFor
+  \State \Return $S$
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Registro (Capa 2), Llegada Desde el Registro y Hora de Paso}\label{alg:registro}
+\begin{algorithmic}[1]
+\Function{Registro}{$J,e,\tnow$}
+  \If{falta $n$ \textbf{o} el par $(J,v)$ no es fiable \textbf{o} $n<2$} \Return nulo \EndIf
+  \State $\tref\gets\tgps$ si existe; si no, $t_{\mathrm{rec}}$
+  \If{$\tref$ no existe \textbf{o} $\tnow-\tref>600$ \textbf{o} $\tref<d_1-60$} \Return nulo \EndIf
+  \If{no hay paradas de orden $n-1$ y $n$ \textbf{o} $a_n-a_{n-1}>1\,200$} \Return nulo \EndIf
+  \State $b\gets\franja(D,\tref)$;\ $k\gets k(\ell,D,\tref)$
+  \State $\theta\gets\redondeo\big(0{,}5\cdot$\Call{Esperado}{$J,a_{n-1},a_n,b,k$}$\big)$
+  \State \Return $\big(n,\ \tref,\ a_{n-1},\ a_n,\ \theta,\ \delta_{\mathrm{reg}}=\tref+\theta-a_n,\ g=a_n-a_{n-1}\big)$
+\EndFunction
+\Statex
+\Function{LlegadaRegistro}{$J,e,q,a_\dest$}
+  \State $G\gets$\Call{Registro}{$J,e,\tnow$}; \textbf{si} $G$ es nulo \textbf{o} $q<G.n$, \Return nulo
+  \State $X\gets0$
+  \If{$a_\dest>G.a_n$}
+    \State $b\gets\franja(D,G.\tref)$;\ $k\gets k(\ell,D,G.\tref)$
+    \State $X\gets$\Call{Esperado}{$J,G.a_n,a_\dest,b,k$}
+  \EndIf
+  \State \Return $\redondeo(G.\tref+G.\theta+X)$
+\EndFunction
+\Statex
+\Function{HoraDePaso}{$J,e,q,a_\dest$}
+  \State $P\gets$ posición con contraste
+  \If{$P$ no es nulo}
+    \If{$P$ es de cabecera} \Return nulo \EndIf
+    \If{$a_\dest<P.\Tpos$ \textbf{y} ($q<n$ \textbf{o} $\mathrm{dist}(e,p_q)>150$)}
+      \State \Return $P.\tgps-(P.\Tpos-a_\dest)$
+    \EndIf
+    \If{$q<n$} \Return $P.\tgps$ \EndIf
+    \State \Return nulo
+  \EndIf
+  \If{$q<n$ \textbf{y} $G\gets$\Call{Registro}{$J,e,\tnow$} no es nulo} \Return $G.\tref-\max(0,G.a_{n-1}-a_\dest)$ \EndIf
+  \State \Return nulo
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Posición con Contraste (Se Evalúa Antes que Cualquier Uso del Registro)}\label{alg:contraste}
+\begin{algorithmic}[1]
+\Function{PosiciónConContraste}{$J,e,\tnow$}
+  \State $P\gets$\Call{Posición}{$J,e,\tnow$}
+  \If{$P$ no es nulo}
+    \State $G\gets$\Call{Registro}{$J,e,\tnow$}
+    \If{$G$ no es nulo \textbf{y} $G.g\le360$ \textbf{y} $|(P.\tgps-P.\Tpos)-G.\delta_{\mathrm{reg}}|>360$}
+      \State marcar el par $(J,v)$ como no fiable durante esta petición;\quad $P\gets$ nulo
+    \EndIf
+  \EndIf
+  \State \Return $P$
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Capa 3: Horario Corregido, Corrección por Viaje y Parte Aprendida}\label{alg:capa3}
+\begin{algorithmic}[1]
+\Function{SinDatos}{$J,q,a_\dest,\tnow$}
+  \If{$J$ no tiene entrada en el feed \textbf{y} el registro de pasos de $J$ tiene $(n,t)$ con $q<n$} \Return $(\texttt{departed},\min(t,\tnow),0)$ \EndIf
+  \State $R\gets(\texttt{scheduled},a_\dest,0)$
+  \If{la tabla de tramos está vacía \textbf{o} $J$ no tiene paradas \textbf{o} $a_\dest\le d_1$} \Return $R$ \EndIf
+  \State $D'\gets D$, o el domingo de esa semana si $D$ es festivo entre semana
+  \State $t_{\mathrm{mid}}\gets\lfloor(d_1+a_\dest)/2\rfloor$;\ $b\gets\franja(D',t_{\mathrm{mid}})$;\ $k\gets k(\ell,D',t_{\mathrm{mid}})$
+  \State $C\gets d_1+60+\redondeo\big($\Call{Esperado}{$J,d_1-1,a_\dest,b,k$}$\big)+\redondeo\big($\Call{Corrección}{$J,q,D'$}$\big)$
+  \If{$C\ge\tnow$} \Return $(\texttt{estimated},C,0)$ \EndIf
+  \If{$C<\tnow-600$ \textbf{y} $a_\dest-C\ge600$ \textbf{y} \Call{ParteAprendida}{$J,d_1-1,a_\dest,b$}$\ \ge0{,}8$}
+    \State \Return $(\texttt{likely\_departed},a_\dest,0)$
+  \EndIf
+  \State \Return $R$
+\EndFunction
+\Statex
+\Function{Corrección}{$J,q,D'$}
+  \If{la tabla de correcciones está vacía \textbf{o} ninguna parada de $J$ tiene orden $q$} \Return $0$ \EndIf
+  \State $i\gets$ posición de la parada de orden $q$ (0 la cabecera);\ $p\gets\min(2,\lfloor3i/N\rfloor)$
+  \State $v\gets(\ell,p_1,p_N,d_1,N)$;\ $\theta\gets$ tipo de día de $D'$;\ $b_1\gets\franja(D',d_1)$
+  \If{la tabla tiene $\Delta(v,\theta,\cdot)$} \Return $\Delta(v,\theta,p)$ \EndIf
+  \If{la tabla tiene $l(\ell,b_1)$} \Return $l(\ell,b_1)$ \EndIf
+  \If{la tabla tiene $g(b_1)$} \Return $g(b_1)$ \EndIf
+  \State \Return $0$
+\EndFunction
+\Statex
+\Function{ParteAprendida}{$J,t_0,t_1,b$}
+  \State $T\gets0$;\ $A\gets0$
+  \For{$i=1,\dots,N-1$}
+    \If{$a_{i+1}\le t_0$} \textbf{continuar} \EndIf
+    \If{$a_i\ge t_1$} \textbf{terminar} \EndIf
+    \State $T\gets T+(a_{i+1}-a_i)$
+    \If{$\kappa_i$ tiene valor en $b$ o \texttt{all}} $A\gets A+(a_{i+1}-a_i)$ \EndIf
+  \EndFor
+  \State \Return $0$ si $T\le0$; si no, $A/T$
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Paso Real por una Parada y Aclarado de Muestras}\label{alg:paso-real}
+\begin{algorithmic}[1]
+\Function{PasoReal}{pista $((t_k,\theta_k))_{k=1}^{K}$, $a$}
+  \For{$k=2,\dots,K$}
+    \If{$\theta_k\le\theta_{k-1}$ \textbf{o} $t_k-t_{k-1}>300$} \textbf{continuar} \EndIf
+    \If{$\theta_{k-1}\le a\le\theta_k$}
+      \State \Return $t_{k-1}+(a-\theta_{k-1})/(\theta_k-\theta_{k-1})\cdot(t_k-t_{k-1})$
+    \EndIf
+  \EndFor
+  \State \Return nulo
+\EndFunction
+\Statex
+\Function{Aclarar}{lista $x_0,\dots,x_{c-1}$}
+  \If{$c\le30$} \Return la lista \EndIf
+  \State \Return $\big(x_{\lfloor i\,c/30\rfloor}\big)_{i=0}^{29}$ \Comment{división entera}
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Ajuste de los Tiempos por Tramo y de las Proporciones por Longitud}\label{alg:ajuste-tramos}
+\begin{algorithmic}[1]
+\Function{AjustarTramos}{muestras de tramo, en orden}
+  \For{cada muestra $(\kappa,j,b,y)$}
+    \State $V[\kappa][\texttt{all}][j]\gets y$;\quad $V[\kappa][b][j]\gets y$ \Comment{la última de cada pista gana}
+  \EndFor
+  \State $T\gets$ diccionario vacío
+  \For{cada tramo $\kappa$ de $V$, con sus grupos en orden de aparición (\texttt{all} primero)}
+    \If{$|V[\kappa][\texttt{all}]|<2$} \textbf{continuar} \EndIf
+    \State $t\gets\{\texttt{n}:|V[\kappa][\texttt{all}]|\}$;\quad $m\gets\mediana(V[\kappa][\texttt{all}])$
+    \State $\mathit{varias}\gets$ (hay al menos dos franjas en $V[\kappa]$)
+    \For{cada grupo $g$ de $V[\kappa]$}
+      \If{$g=\texttt{all}$ \textbf{y no} $\mathit{varias}$} \textbf{continuar} \EndIf
+      \State $n_g\gets|V[\kappa][g]|$; \textbf{si} $n_g<2$, \textbf{continuar}
+      \State $x\gets\mediana(V[\kappa][g])$
+      \If{$g\ne\texttt{all}$} $x\gets(n_g\,x+5\,m)/(n_g+5)$ \EndIf
+      \State $t[g]\gets\redondeo(x)$
+    \EndFor
+    \If{$t$ tiene algún grupo además de \texttt{n}} $T[\kappa]\gets t$ \EndIf
+  \EndFor
+  \State \Return $T$ ordenado por clave
+\EndFunction
+\Statex
+\Function{AjustarProporciones}{muestras de tramo, longitudes $L[\kappa]$}
+  \For{cada muestra con $L[\kappa]>0$ y $h>0$}
+    \State $c\gets c(L[\kappa])$;\ añadir $y/h$ a $Q[c][\texttt{all}]$ y a $Q[c][b]$
+  \EndFor
+  \State \Return $\{c:\{g:\redondeo_3(\mediana Q[c][g])\ \text{para cada } g \text{ con } |Q[c][g]|\ge20\}\}$
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Ajuste del Factor de Ritmo}\label{alg:ajuste-k}
+\begin{algorithmic}[1]
+\Function{FactorContraído}{pistas $\mathcal J$, cada una con sus muestras $(H,Y)$}
+  \For{cada pista $j$} $\rho_j\gets\sum Y/\sum H$ \EndFor
+  \State $m\gets|\mathcal J|$;\quad $\tilde\rho\gets\mediana_j\rho_j$
+  \State \Return $\redondeo_3\big(\clamp(1+(\tilde\rho-1)\,m/(m+10),\ 0{,}6,\ 1{,}2)\big)$
+\EndFunction
+\Statex
+\Function{AjustarFactores}{muestras de ritmo}
+  \For{cada franja $b$ con $\ge8$ pistas} $k_b\gets$\Call{FactorContraído}{pistas de $b$} \EndFor
+  \For{cada línea $\ell\ne$ vacía y franja $b$ con $\ge25$ pistas y $\ge5$ vehículos}
+    \State $k_{\ell,b}\gets$\Call{FactorContraído}{pistas de $\ell$ en $b$}
+  \EndFor
+  \State \Return $\{\texttt{global}:k_b,\ \texttt{lines}:k_{\ell,b}\}$
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\begin{figure}[ht]
+\caption{Validación Cruzada y Escritura de los Tiempos por Tramo}\label{alg:validacion}
+\begin{algorithmic}[1]
+\Function{RecalibrarTramos}{muestras $X$, factores vigentes}
+  \State $S_a\gets0$;\ $S_d\gets0$;\ $c\gets0$
+  \For{$f\in\{0,1\}$}
+    \State $T_f\gets$\Call{AjustarTramos}{$\{x\in X:\mathrm{crc32}(x.\texttt{track})\bmod2\ne f\}$}
+    \For{cada $x\in X$ con $\mathrm{crc32}(x.\texttt{track})\bmod2=f$ y $\tau\gets T_f(x.\kappa,x.b)$ definido}
+      \State $k\gets k(x.\ell,x.D,x.\texttt{at})$;\ $S_a\gets S_a+|k\,x.h-x.y|/60$;\ $S_d\gets S_d+|\tau-x.y|/60$;\ $c\gets c+1$
+    \EndFor
+  \EndFor
+  \State validar igual las proporciones; incluirlas solo si su suma de errores baja
+  \If{$c=0$ \textbf{o} $S_d\ge S_a$} \Return sin escribir \EndIf
+  \State $T\gets$\Call{AjustarTramos}{$X$}
+  \If{$T$ y las proporciones son iguales a las del fichero actual} \Return sin escribir \EndIf
+  \State escribir $\{\texttt{generated},\ \texttt{samples}:|X|,\ \texttt{segments}:T,\ \texttt{lengthRatios}\}$
+\EndFunction
+\end{algorithmic}
+\end{figure}

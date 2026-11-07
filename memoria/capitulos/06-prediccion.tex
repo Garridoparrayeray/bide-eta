@@ -1,0 +1,622 @@
+\chapter{Predicción en Tres Capas}
+\label{cap:prediccion}
+
+Este capítulo combina la localización (capítulo «\nameref{cap:localizacion}») y el modelo de tiempos
+(capítulo «\nameref{cap:modelo}») en la predicción que ve el usuario. La idea organizadora es una jerarquía de fuentes,
+cada una con una regla explícita para abstenerse:
+
+\begin{description}
+  \item[Capa 1 · GPS.] La posición proyectada sobre el recorrido. Es la fuente más precisa y la que permite afirmar un
+        adelanto o un retraso.
+  \item[Capa 2 · Parada registrada.] Cuando el GPS no es utilizable pero el feed dice cuál es la próxima parada y a qué
+        hora se tomó el dato, se supone al autobús a mitad del tramo que lleva a esa parada.
+  \item[Capa 3 · Horario corregido.] Cuando no hay ningún dato del vehículo, se recalcula el horario desde la cabecera
+        con los tiempos aprendidos.
+\end{description}
+
+\noindent Si ninguna capa puede sostener una estimación, se muestra el horario publicado, marcado como tal. Ninguna
+capa inventa: cada una se usa solo en las condiciones en que se ha medido que mejora a la siguiente.
+
+\section{Entradas, Salidas y Estados}
+\label{sec:estados}
+
+La unidad de trabajo es una \emph{fila}: una salida concreta de una parada. Una fila identifica un viaje $J$ (su
+línea, número de viaje y salida de cabecera $d_1$) y una parada de ese viaje, la parada de \emph{destino} de la
+predicción, con su orden $q$ y su hora publicada $a_\dest$. Para cada fila el motor devuelve:
+
+\begin{itemize}
+  \item un \textbf{estado}, de la Tabla~\ref{tab:estados};
+  \item una \textbf{llegada estimada} $\ETA$, en segundos desde medianoche;
+  \item un \textbf{retraso} $\delta$ en segundos, que puede ser \emph{nulo} (no se afirma retraso alguno);
+  \item el vehículo y su parada actual, si se conocen.
+\end{itemize}
+
+\begin{table}[ht]
+\centering
+\caption{Estados de una Fila y lo que Muestra la Aplicación}\label{tab:estados}
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Estado & Significado & Texto en la aplicación\\
+\midrule
+\texttt{live} & Capa 1: el GPS sitúa al autobús en el recorrido. & «En hora», «Retraso $+N$m» o «Adelantado $-N$m»; distintivo «En ruta», «Llegando» o «En la parada» (también mientras espera en la cabecera). \\
+\texttt{estimated} & Capa 2 o capa 3: estimación sin seguimiento en directo; retraso $0$. & «Estimado con lo que tardan de verdad los buses»; distintivo «Estimado». \\
+\texttt{departed} & El autobús ya pasó por la parada. & «Ya salió»; distintivo «Saliendo». \\
+\texttt{likely\_departed} & Sin datos del autobús, el horario corregido indica que ya debió de pasar; o, con GPS, la hora estimada de llegada pasó hace más de 3~min sin que el feed ni el GPS confirmen el paso. & «Sin datos del bus: puede que ya haya pasado»; distintivo «Sin datos del bus»; se ordena al final. \\
+\texttt{scheduled} & Ninguna capa puede sostener una estimación. & «Horario, sin seguimiento en vivo»; distintivo «Solo horario». Si el feed trae autobuses con hora de hoy y todavía no es la hora del viaje, la ficha dice que aún no tiene autobús asignado. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La fila se empareja con una entrada del feed como se explicó en la sección «\nameref{sec:emparejamiento}»: primero de forma
+exacta por los alias de viaje y, si no, por línea, número de viaje y salida de cabecera con una tolerancia de 180~s.
+Si no hay entrada, la fila se resuelve sin datos del vehículo: con el registro de pasos (sección
+«\nameref{sec:registro-pasos}») o, si este no la da por pasada, con la capa~3.
+
+En todo el capítulo, $D$ es la fecha de servicio del viaje (de madrugada, la de ayer para los viajes que pasan de las 24:00; sección «\nameref{sec:mas-de-24h}»), $\ell$ la línea, $n$ el orden de la próxima parada que declara el
+feed y $E(\cdot)$ el tiempo esperado de la definición~\ref{def:tiempo-esperado} aplicada al viaje $J$.
+
+\section{Capa 1: Llegada Desde el GPS}
+\label{sec:capa1}
+
+Si existe la posición $(\Tpos,\tgps)$ (sección «\nameref{sec:condiciones-gps}»), la franja y el factor se toman en el
+instante de la posición,
+\[
+b=\franja(D,\tgps),\qquad k=k(\ell,D,\tgps),
+\]
+y la llegada a la parada de destino es
+\begin{equation}
+\label{eq:eta-capa1}
+\boxed{\;\ETA=\redondeo\big(\tgps+E(J,\Tpos,a_\dest,b,k)\big),\qquad \delta=\ETA-a_\dest\qquad(a_\dest\ge\Tpos).\;}
+\end{equation}
+Si $a_\dest<\Tpos$, la parada ya ha quedado atrás según el horario y
+\begin{equation}
+\label{eq:paso-capa1}
+\ETA=\tgps-(\Tpos-a_\dest),\qquad\delta=\delta_{\mathrm{pos}}=\tgps-\Tpos,
+\end{equation}
+que es la hora a la que se estima que pasó: la distancia programada entre la parada y el autobús, contada hacia atrás
+desde la hora de la posición.
+
+La llegada parte de $\tgps$, no de $\tnow$. Cada posición llega al motor un minuto o más después de tomarse (66~s
+de mediana y 92~s en el percentil 90 el 5 de noviembre de 2026; sección «\nameref{sec:llegando}»); sumar el tiempo
+restante a $\tnow$ retrasaría todas las llegadas estimadas en lo que tarda en recibirse el dato. Partiendo de $\tgps$, la antigüedad
+del dato no sesga la predicción: solo la hace algo menos precisa. Una consecuencia es que $\ETA$ puede ser anterior a $\tnow$ si el autobús estaba muy cerca
+de la parada cuando se tomó la posición.
+
+\section{Capa 1 en la Cabecera}
+\label{sec:cabecera-eta}
+
+Con la posición en la cabecera~\eqref{eq:cabecera}, la ecuación~\eqref{eq:eta-capa1} daría $d_1+E(J,a_1,a_\dest,b,k)$,
+lo que supone que el autobús sale exactamente a su hora. Los autobuses no salen así, y la medida lo confirmó: con esa
+suposición, las llegadas a 10--20~min vista se adelantaban 1~min de media y los aciertos dentro de $\pm2$~min bajaban
+del 67{,}0 al 64{,}0\,\% (sección «\nameref{sec:eval-trazados}»). La llegada es, por tanto, la de la capa 3,
+\begin{equation}
+\label{eq:eta-cabecera}
+\ETA=\max\big(C(J,a_\dest),\ \tnow\big),\qquad \delta=\ETA-a_\dest\qquad(a_\dest>d_1),
+\end{equation}
+con $C$ el horario corregido~\eqref{eq:capa3}, cuyos 60~s iniciales y cuya corrección por viaje
+$\Delta_v$~\eqref{eq:correccion-viaje} recogen lo tarde que salen de verdad los autobuses. La fila es «en directo»
+porque se sabe que el autobús está allí; si no hay tiempos aprendidos, se usa la ecuación~\eqref{eq:eta-capa1}. La
+parada de cabecera ($a_\dest\le d_1$) tiene como llegada la hora de salida, $d_1$.
+
+\section{Capa 2: Llegada Desde la Parada Registrada}
+\label{sec:capa2}
+
+Muchas entradas del feed traen la próxima parada y la hora del registro, pero no una posición utilizable: sin
+coordenadas, con un GPS fuera del pasillo o con una hora de posición que no es de hoy. La capa 2 aprovecha lo que sí
+es un dato real: el autobús ha dejado atrás la parada $p_{n-1}$ y va hacia $p_n$, y eso se sabía a la hora $\tref$.
+
+\subsection{El Registro}
+
+El \emph{registro} de una entrada existe solo si se cumplen todas estas condiciones:
+
+\begin{enumerate}
+  \item la entrada tiene viaje y orden $n$, y el par (viaje, vehículo) no está marcado como no fiable (sección
+        «\nameref{sec:desconfianza}»);
+  \item $n\ge2$: hay una parada anterior;
+  \item hay hora de referencia $\tref$ ($\tgps$ si existe y, si no, $t_{\mathrm{rec}}$) y es reciente:
+        $\tnow-\tref\le600$~s;
+  \item el viaje ha empezado: $\tref\ge d_1-60$~s;
+  \item el viaje tiene paradas de orden $n-1$ y $n$;
+  \item el tramo es corto: $a_n-a_{n-1}\le1\,200$~s (\texttt{REGISTRATION\_MAX\_SEGMENT\_SECONDS}).
+\end{enumerate}
+
+\noindent Entonces, con $b=\franja(D,\tref)$ y $k=k(\ell,D,\tref)$,
+\begin{align}
+\label{eq:registro}
+\theta&=\redondeo\Big(\tfrac12\,E(J,a_{n-1},a_n,b,k)\Big) &&\text{(lo que le falta para llegar a $p_n$)},\\
+\delta_{\mathrm{reg}}&=\tref+\theta-a_n &&\text{(retraso estimado en $p_n$)},\\
+g&=a_n-a_{n-1} &&\text{(duración programada del tramo)}.
+\end{align}
+
+\noindent Si el tramo de $p_{n-1}$ a $p_n$ tiene duración programada nula ($a_{n-1}=a_n$, frecuente cuando dos paradas
+comparten minuto), $E(J,a_{n-1},a_n,b,k)=0$ por la regla de los tramos de duración nula (sección
+«\nameref{sec:tiempo-esperado}»), aunque ese tramo tenga tiempo aprendido. Entonces $\theta=0$ y $g=0$: el autobús se
+supone ya en $p_n$, y el contraste de la sección «\nameref{sec:desconfianza}» se hace con
+$\delta_{\mathrm{reg}}=\tref-a_n$.
+
+\subsubsection{Por Qué la Mitad} El feed no dice en qué punto del tramo está el autobús. Si el instante de la observación
+es independiente de la posición, el autobús está en cualquier punto del tramo con la misma probabilidad, y el valor
+esperado del tiempo que le falta es la mitad del tiempo del tramo. Se midieron repartos de 0,35 a 0,65 y el óptimo fue
+0,5 (sección «\nameref{sec:descartadas}»).
+
+\subsubsection{Por Qué Tramos de Hasta 20 Minutos} En tramos largos (salidas de cabecera, regulaciones) la incertidumbre
+de «a mitad del tramo» es de muchos minutos. Contrastada con el GPS en 201 autobuses, la estimación de la parada
+registrada se desvía 0,7~min de mediana y 1,7~min en el percentil 90 en tramos de hasta 5~min, pero 10~min de mediana
+en tramos de más de 10~min. Con el umbral de 20~min, la capa 2 mejora con claridad al horario en todas las longitudes de tramo
+en que se usa; por encima, apenas (el 7 frente al 1\,\% dentro de $\pm2$~min; capítulo «\nameref{cap:evaluacion}»).
+
+\subsection{La Llegada}
+
+Para una parada de destino con orden $q\ge n$,
+\begin{equation}
+\label{eq:eta-capa2}
+\boxed{\;\ETA=\redondeo\big(\tref+\theta+E(J,a_n,a_\dest,b,k)\big)\;}
+\end{equation}
+donde el último término es cero si $a_\dest\le a_n$. Para $q<n$, el registro no da llegada (la parada ya ha quedado
+atrás; véase la sección «\nameref{sec:paso}»).
+
+\section{Contraste Entre el GPS y la Parada Registrada}
+\label{sec:desconfianza}
+
+Cuando una entrada tiene a la vez posición y registro, las dos fuentes deberían coincidir. Si no coinciden, una de
+ellas está equivocada (un GPS que pertenece a otro vehículo, un orden de parada que no se actualizó) y no
+hay forma de saber cuál. La regla es que el par (viaje, vehículo) deja de ser fiable si
+
+\begin{equation}
+\label{eq:contraste}
+g\le360\ \text{s}\qquad\text{y}\qquad\big|\delta_{\mathrm{pos}}-\delta_{\mathrm{reg}}\big|>360\ \text{s}.
+\end{equation}
+Los dos umbrales son las constantes \texttt{REGISTRATION\_CROSSCHECK\_MAX\_SEGMENT\_SECONDS} y
+\texttt{MAX\_GPS\_VS\_STOP\_DISAGREEMENT\_SECONDS}. Un par no
+fiable no tiene posición ni registro durante el resto de la petición, de modo que sus filas pasan a la capa 3. El
+contraste solo se hace en tramos de hasta 6~minutos, porque en los largos el registro es demasiado impreciso para
+contradecir al GPS.
+
+Para que el resultado sea reproducible, la posición (con su contraste) debe evaluarse antes que cualquier uso del
+registro. En el código, cada consulta del estado de una fila empieza por la posición; el registro que se usa dentro del
+contraste se calcula antes de marcar el par y, una vez marcado, todas las consultas posteriores lo tratan como
+inexistente.
+
+\begin{ejemplo}
+En el viaje sintético, un autobús declara $n=3$ (va hacia $S2$, a 1\,000~m), pero su GPS está a 2\,800~m, entre $S3$ y
+$S4$, a las $29\,400$~s. La proyección elige el candidato «más allá» (a 11~m del trazado, frente a 1\,800~m del mejor
+«esperado») y da $\Tpos=29\,361$, luego $\delta_{\mathrm{pos}}=39$~s. El registro da $\theta=70$ y
+$\delta_{\mathrm{reg}}=29\,400+70-29\,010=460$~s. Como $g=120\le360$ y $|39-460|=421>360$, el par se marca como no
+fiable y todas las filas de ese viaje se resuelven sin datos del vehículo.
+\end{ejemplo}
+
+\section{Capa 3: Horario Corregido}
+\label{sec:capa3}
+
+Sin ningún dato fiable del vehículo, la mejor estimación de su llegada es la de un autobús que sale de la cabecera poco
+después de su hora y recorre cada tramo en el tiempo aprendido. Si la red tiene tabla de tiempos por tramo, el viaje
+tiene paradas y $a_\dest>d_1$, se toman la franja y el factor a mitad de camino,
+\[
+t_{\mathrm{mid}}=\Big\lfloor\frac{d_1+a_\dest}{2}\Big\rfloor,\qquad b=\franja(D',t_{\mathrm{mid}}),\qquad
+k=k(\ell,D',t_{\mathrm{mid}}),
+\]
+donde $D'$ es la fecha de servicio $D$, salvo en un festivo entre semana, en que es el domingo de esa semana. Las
+franjas solo dependen del día de la semana, así que en un festivo se usan las de fin de semana. El \emph{horario
+corregido} es
+\begin{equation}
+\label{eq:capa3}
+\boxed{\;C=d_1+60+\redondeo\big(E(J,\,d_1-1,\,a_\dest,\,b,\,k)\big)+\redondeo(\Delta_v).\;}
+\end{equation}
+Los $60$~s (\texttt{SCHEDULE\_ORIGIN\_OFFSET\_SECONDS}) recogen que los autobuses salen de la cabecera algo después de
+la hora publicada; el resumen de cada captura vigila que este sesgo siga siendo el medido. El inicio en $d_1-1$ incluye
+los tramos de duración nula del principio del viaje (sección «\nameref{sec:tiempo-esperado}»). El último término,
+$\Delta_v$, es la corrección por viaje de la sección «\nameref{sec:correccion-viaje}»; sin tabla de correcciones vale 0.
+
+La decisión es:
+
+\begin{enumerate}
+  \item Si $C\ge\tnow$: estado \texttt{estimated}, $\ETA=C$, $\delta=0$. El autobús todavía no debería haber pasado y
+        $C$ es una estimación mejor que el horario publicado.
+  \item Si no, y además
+        \begin{equation}
+        \label{eq:probablemente}
+        C<\tnow-600,\qquad a_\dest-C\ge600,\qquad \lambda\ge0{,}8
+        \end{equation}
+        (constantes \texttt{WRONG\_SCHEDULE\_PASSED\_SECONDS}, \texttt{WRONG\_SCHEDULE\_GAP\_SECONDS} y
+        \texttt{WRONG\_SCHEDULE\_LEARNED\_SHARE}): estado \texttt{likely\_departed}, $\ETA=a_\dest$, $\delta=0$.
+  \item En otro caso, estado \texttt{scheduled}, $\ETA=a_\dest$, $\delta=0$.
+\end{enumerate}
+
+\noindent La \emph{parte aprendida} $\lambda$ del camino es la fracción de su duración programada que recorre tramos
+aprendidos en la franja $b$:
+\begin{equation}
+\label{eq:parte-aprendida}
+\lambda=\frac{\sum_{i\in I(d_1-1,\,a_\dest)}\mathbf{1}\big[\tau(\kappa_i,b)\text{ definido}\big]\,h_i}{\sum_{i\in I(d_1-1,\,a_\dest)}h_i},
+\qquad\lambda=0\ \text{si el denominador es }0,
+\end{equation}
+con el mismo conjunto de tramos $I$ de la definición~\ref{def:tiempo-esperado} y las duraciones programadas completas
+$h_i$ (sin los pesos $w_i$).
+
+Las tres condiciones de~\eqref{eq:probablemente}, que llevan al estado \texttt{likely\_departed}, identifican un caso
+concreto y frecuente: un horario publicado mucho más lento que la realidad (típicamente, un viaje con un tramo largo de
+autopista). En él, el horario corregido dice que el autobús pasó hace más de diez minutos, la hora publicada queda al
+menos diez minutos después de esa hora corregida (a menudo, todavía no ha llegado), y la corrección se apoya en tramos medidos en al menos el 80\,\% del camino. Mostrar la
+hora publicada como si el autobús fuera a venir haría que alguien esperase un autobús que ya se fue. No se oculta
+porque no hay ningún dato del vehículo que lo confirme: se muestra al final de la lista, con su hora publicada y el
+texto «Sin datos del bus: puede que ya haya pasado», y las alertas de llegada lo tratan como pasado. El texto dice lo que
+se sabe: en las capturas del 3 de noviembre de 2026, el 97{,}8\,\% de los viajes con este estado no apareció en el feed
+en todo el día (sección «\nameref{sec:fiabilidad-estados}»).
+
+\subsection{Corrección por Viaje}
+\label{sec:correccion-viaje}
+
+Sin la corrección, el horario corregido llegaba de media 131~s antes que el autobús (sección
+«\nameref{sec:eval-correccion}»). Hay dos razones. La suma de las medianas de los tramos queda por debajo del tiempo
+medio del recorrido, porque el tiempo de cada tramo tiene una cola larga hacia arriba. Además, algunos viajes salen tarde
+o se retrasan en el mismo sitio casi todos los días. La corrección $\Delta_v$ recoge cuánto se aparta habitualmente cada
+viaje del horario corregido.
+
+Un viaje se reconoce por la clave $v=(\ell,\,p_1,\,p_N,\,d_1,\,N)$: su línea, su primera y su última parada, su
+salida de cabecera y su número de paradas. A diferencia del identificador del GTFS, esta clave no cambia cuando el
+operador publica un horario nuevo con los mismos viajes. Como en el factor de ritmo (sección «\nameref{sec:k}»), la
+línea, tanto en la clave como en la tabla por línea, se compara sin ceros a la izquierda. El tipo de día $\theta$ es
+laborable o fin de semana según $D'$, de modo que un festivo entre semana cuenta como fin de semana. La parada de destino, en la posición $i$ del
+recorrido (0 es la cabecera), cae en el tercio
+\begin{equation}
+\label{eq:tercio}
+p=\min\big(2,\ \lfloor 3i/N\rfloor\big).
+\end{equation}
+La corrección se busca de lo más fino a lo más general:
+\begin{equation}
+\label{eq:correccion-viaje}
+\Delta_v=\begin{cases}
+\Delta(v,\theta,p) & \text{si el viaje tiene valor para ese tipo de día},\\
+l(\ell,b_1) & \text{si no, y su línea lo tiene en la franja } b_1=\franja(D',d_1),\\
+g(b_1) & \text{si no, y la franja lo tiene},\\
+0 & \text{en otro caso.}
+\end{cases}
+\end{equation}
+Las tres tablas se aprenden cada día (sección «\nameref{sec:recalibracion}»). Un día es festivo entre semana si el
+horario hace circular ese día, por excepción, algún calendario de solo domingo (máscara de días $64$), que es como
+publica Bizkaibus sus festivos. La corrección solo afecta a la capa 3: las capas 1 y 2 parten de donde está el autobús
+y ya recogen lo que le pasa ese día.
+
+\subsection{Sin Conexión}
+\label{sec:sin-conexion}
+
+La aplicación puede guardar en el móvil el horario completo de cada red para usarlo sin cobertura. En Bizkaibus, cada
+viaje lleva además su horario corregido~\eqref{eq:capa3}, ya con $\Delta_v$, calculado una vez para un laborable y otra
+para un fin de semana. El móvil usa el de fin de semana en sábado, en domingo y en los festivos, que reconoce con la
+misma regla de los calendarios de solo domingo. Aplica las reglas de estado del servidor, con la parte aprendida
+$\lambda$ calculada sobre el recorrido entero: \texttt{estimated} si $C\ge\tnow$ y \texttt{likely\_departed} con las
+condiciones~\eqref{eq:probablemente}. En 1\,200 paradas al azar de un laborable, un sábado y un festivo, las horas del
+móvil y del servidor difieren como mucho 6~s, por el orden de los redondeos y por cómo se cuenta el primer tramo
+cuando la salida de cabecera va unos segundos después de su llegada.
+
+\section{Paradas Ya Pasadas}
+\label{sec:paso}
+
+Antes de calcular una llegada, se comprueba si el autobús ya pasó por la parada de destino. La hora de paso
+$t_{\mathrm{paso}}$ se calcula así:
+
+\begin{itemize}
+  \item Con posición en la cabecera (sección «\nameref{sec:cabecera}»): el autobús aún no ha pasado por ninguna
+        parada.
+  \item Con otra posición: si $a_\dest<\Tpos$ y además el feed ya ha dejado atrás esa parada ($q<n$) o el GPS está a más
+        de 150~m de ella (\texttt{PASSED\_DISTANCE\_METERS}), $t_{\mathrm{paso}}=\tgps-(\Tpos-a_\dest)$
+        (ecuación~\eqref{eq:paso-capa1}); si no, pero $q<n$ (el feed ya ha dejado atrás esa parada aunque la proyección
+        ponga al autobús antes de ella), $t_{\mathrm{paso}}=\tgps$; si no, no ha pasado.
+  \item Sin posición, con registro y $q<n$: $t_{\mathrm{paso}}=\tref-\max(0,\ a_{n-1}-a_\dest)$.
+\end{itemize}
+
+\noindent Si hay hora de paso, la fila sale como \texttt{departed} con $\ETA=\min(t_{\mathrm{paso}},\tnow)$ y
+$\delta=0$.
+
+\section{Llegando sin Confirmar el Paso}
+\label{sec:llegando}
+
+El feed de Bizkaibus publica una versión cada 64~s de mediana (de 58 a 72~s) y cada posición llega 66~s después de
+tomarse (mediana; 92~s en el percentil 90), según las capturas del 5 de noviembre de 2026 de 7:00 a 9:00. La posición
+que se usa es, por tanto, de hace un minuto o más. Si el autobús va algo más lento de lo esperado, la llegada calculada
+desde esa posición con la ecuación~\eqref{eq:eta-capa1} puede quedar ya en el pasado sin que el autobús haya llegado a
+la parada. Antes, la fila salía en directo con esa hora ya pasada y la lista la retiraba al quedar atrás (sección
+«\nameref{sec:retraso-mostrado}»): en esas dos horas, el autobús desaparecía de la lista antes de llegar en 170 de las
+5\,041 llegadas a parada que el GPS ve a menos de 40~m (el 3{,}4\,\%).
+
+Con posición y sin hora de paso, si $\ETA<\tnow$, la fila sale con $\ETA=\tnow$ (en la aplicación, «0~min») y un
+retraso de al menos $\tnow-a_\dest$, hasta que el feed o el GPS confirmen el paso. Si $\tnow-\ETA$ pasa de 180~s
+(\texttt{ARRIVING\_MAX\_SECONDS}) sin confirmación, la fila sale como \texttt{likely\_departed} («puede que ya haya
+pasado») con $\ETA=\tnow$, en vez de desaparecer. Con las mismas capturas, el autobús desaparece antes de llegar en
+22 de las 5\,041 llegadas (el 0{,}4\,\%; recorridos que pasan dos veces cerca de la parada o un feed que salta
+paradas) y, a cambio, tarda algo más en dejar de mostrarse después de irse: 104~s de mediana y 152~s en el percentil
+90, frente a 61 y 98~s. La ficha del viaje usa la misma regla de paso y la misma llegada. El estado \texttt{likely\_departed} tiene
+así dos usos: en la capa 3 lleva la hora publicada y retraso 0; aquí, la hora actual y el retraso que da el GPS. Quien
+use la API no debe tratar igual su llegada en los dos casos.
+
+\section{Registro de Pasos}
+\label{sec:registro-pasos}
+
+Un viaje que ya terminó, o que ha dejado de aparecer en el feed, no tiene entrada, y sus filas irían a la capa 3 como
+si el autobús no hubiera salido. Para evitarlo, un proceso externo guarda cada minuto, para cada referencia de viaje
+del feed, el último orden de parada visto y su hora:
+\[
+\text{pasos}[D][\rho]=\big(n,\ t\big),\qquad t=t_{\mathrm{rec}}\ \text{si existe; si no, }\tgps,
+\]
+donde $t$ es la hora del registro en que el feed dio ese orden de parada (la capa 2 y la memoria del feed prefieren, en
+cambio, $\tgps$) y $D$ es el día del viaje, no el del reloj: pasada la medianoche, un autobús de un viaje de ayer se
+apunta en los pasos de ayer, con $t$ en las horas de su horario (sección «\nameref{sec:mas-de-24h}»). Hasta el 7 de
+noviembre de 2026 se apuntaba en el día del reloj: en un feed que siga actualizándose de noche, el autobús de las 23:30 de ayer,
+visto a las 00:30, quedaba en los
+pasos de hoy, y las paradas del viaje de las 23:30 de hoy, que tiene la misma referencia, salían esa noche como ya
+pasadas hasta su salida. Los pasos de cada día caducan 36~horas después de terminar ese día. Al responder, y solo para
+los viajes de las filas que no tienen entrada en el feed, se leen los pasos de todas sus referencias (un viaje
+fusionado puede tener varias; sección «\nameref{sec:alias}») y se conserva el de mayor orden. Si la fila tiene $q<n$,
+sale como \texttt{departed} con $\ETA=\min(t,\tnow)$. Esta comprobación se hace antes de recurrir a la capa 3.
+
+\section{Autobuses que Faltan en una Lectura del Feed}
+\label{sec:memoria-feed}
+
+El feed deja fuera a veces, durante una lectura o unas pocas, a un autobús que sigue en su viaje. En las capturas del 2
+al 4 de noviembre de 2026 pasa unas 700 veces al día con una sola lectura y otras 250 a 400 con dos o tres. Sin otra
+medida, en esas lecturas las filas del viaje no tienen entrada y se resuelven con la capa 3, o salen como
+\texttt{scheduled} («Solo horario») si el horario corregido ya ha pasado, aunque el autobús se viera un minuto antes.
+
+Por eso, al leer el feed, se le añade la última entrada de cada autobús que falta en la lectura nueva si se cumplen
+las tres condiciones siguientes:
+\begin{itemize}
+  \item el dato tiene como mucho $H=180$~s de antigüedad (\texttt{HOLD\_SECONDS}): $0\le\tnow-\tgps\le H$, con
+        $t_{\mathrm{rec}}$ si no hay posición;
+  \item el autobús no aparece en la lectura nueva con otro viaje;
+  \item su viaje no lo lleva ya otro autobús en la lectura nueva.
+\end{itemize}
+La entrada se usa tal cual, y la capa~1 parte de su $\tgps$~\eqref{eq:eta-capa1}. Como ya se explicó, la antigüedad del
+dato no sesga la llegada: solo la hace algo menos precisa. La memoria es un fichero temporal por red en el servidor;
+en un servidor recién arrancado no hay nada guardado y se usa solo la lectura nueva.
+
+\begin{table}[ht]
+\centering
+\caption{Llegadas de Autobuses que Faltaban en el Feed, con y sin Guardar su Último Dato}\label{tab:memoria-feed}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Llegada en & $n$ & Sin guardar & Guardando 180~s & Mediana del error\\
+\midrule
+0--5 min & 9\,572 & 54{,}5\,\% & 77{,}5\,\% & de 1{,}8 a 1{,}0 min\\
+5--10 min & 8\,945 & 51{,}6\,\% & 65{,}2\,\% & \\
+10--20 min & 8\,676 & 37{,}3\,\% & 42{,}8\,\% & \\
+\bottomrule
+\end{tabular}
+\nota{Aciertos dentro de $\pm2$~min contra el paso real, con las capturas del 2 al 4 de noviembre de 2026: cada
+lectura en la que falta un autobús visto en los 180~s anteriores y que vuelve después al mismo viaje.}
+\end{table}
+
+La Tabla~\ref{tab:memoria-feed} recoge el resultado. Guardar el dato mejora los aciertos en los tres días y en los tres
+horizontes; con 60, 120 y 300~s, la mejora a 0--5~min es del 55{,}7 al 80{,}9, del 54{,}8 al 79{,}6 y del 54{,}3 al
+76{,}0\,\% (cada umbral mide sus propias lecturas, las de autobuses vistos en los $H$ segundos anteriores, y por eso
+cambia también la cifra sin guardar). Cuanto más antiguo es el dato, algo menos acierta, y 180~s cubre la mayoría de
+los cortes. El coste es el autobús que desaparece de verdad (acaba o se pierde el viaje): sus paradas siguen «en
+directo» hasta que su último dato cumple $H$ segundos, cuando sin guardarlo habrían salido con la capa~3, que tampoco
+se cumple.
+
+\section{Viajes que Pasan de las 24:00}
+\label{sec:mas-de-24h}
+
+El horario cuenta las horas desde la medianoche del día del viaje: un autobús del viernes que pasa a las 02:10 del
+sábado figura a las 26:10 ($94\,200$~s). En el horario de Bizkaibus del 5 de noviembre de 2026, 52 viajes pasan de las 24:00, y 43 de ellos salen ya pasada esa
+hora: 6 circulan todas las noches, hasta las 26:05; 33, solo las noches del viernes o del sábado, y llegan hasta las
+32:10, las 08:10 del día siguiente; y 4, solo en fechas concretas. El feed, en cambio, da $\tgps$ y $t_{\mathrm{rec}}$ en horas del día en curso, y la referencia
+de un viaje que circula todos los días es la misma cada día. Con un solo emparejador, en un feed que siga actualizándose de noche, el autobús de las
+23:30 de ayer, visto a las 00:30, se emparejaría con el viaje de las 23:30 de hoy, y no con el suyo.
+
+Por eso, cada entrada del feed se asigna al día de su viaje. Una entrada es de un viaje de ayer si la salida de cabecera
+de su referencia queda más de 12~h por delante de la hora actual (\texttt{RealtimeMatcher::daysAgo}):
+\begin{equation}
+\label{eq:dia-viaje}
+d_0^{\mathrm{feed}}-\tnow>43\,200\ \text{s}.
+\end{equation}
+A las 00:30 ($\tnow=1\,800$) son de ayer el viaje que salió a las 23:30 ($d_0^{\mathrm{feed}}=84\,600$) y el de las
+24:10 ($87\,000$). La regla supone que el feed solo trae viajes en marcha o a punto de salir, y que la referencia da la
+salida en horas del horario, como la de Bizkaibus~\eqref{eq:regex}.
+
+Las entradas de ayer van a un emparejador propio en el que todo está en las horas del día del viaje: $\tgps$,
+$t_{\mathrm{rec}}$ y $\tnow$ se cuentan con $86\,400$~s más (las 02:10 son las 26:10), la fecha de servicio $D$ es la de ayer y
+el registro de pasos, el de ayer (\texttt{RealtimeMatcher::vehiclesOfDay}). El cálculo es el de las secciones
+anteriores, sin cambios: la franja de las 26:10 de un viernes, por ejemplo, es la \texttt{laborable.madrugada} del
+viernes (definición~\ref{def:franja}). El emparejador de hoy solo recibe las entradas de hoy, y una entrada sin ninguna
+hora de hoy no va a ninguno (sección «\nameref{sec:feed}»).
+
+La aplicación pasa al emparejador de ayer las salidas de ayer que pasan de las 24:00, con sus horas del horario, y
+devuelve sus llegadas en horas de hoy, $\ETA-86\,400$ (sección «\nameref{sec:ultima-salida}»). De madrugada, la ficha de
+un viaje muestra el viaje de ayer mientras este no haya terminado, es decir, hasta 10~min después de su última parada
+(\texttt{LATE\_GRACE\_SECONDS}); en la red de autobús, solo si el feed no trae ningún autobús en el viaje de hoy. En el
+mapa de una línea, cada autobús se sitúa con el emparejador de su día.
+
+En la práctica, de 23:58 a 05:00 el feed de Bizkaibus no se actualiza (sección «\nameref{sec:feed}»), así que los
+viajes nocturnos salen con la capa~3 o con el horario; el mapa no dice que siga a ningún autobús, y la ficha no dice
+que a un viaje le falte autobús. Antes, el mapa de la línea 3136 mostraba toda la noche seis autobuses vistos a las
+23:58. El emparejador de ayer sirve para los feeds que siguen actualizándose de noche y, en Bizkaibus, para los 11
+viajes de los horarios del viernes y del sábado que acaban después de las 29:00 (las 05:00 del día siguiente), en las
+líneas 3923 y 3932. De día, ninguna entrada es de ayer: con el código anterior y el nuevo sobre el mismo feed, 28 paradas, 256 fichas y 56 mapas de línea
+dan las mismas respuestas.
+
+\section{La Decisión Completa}
+\label{sec:decision}
+
+El algoritmo de la Figura~\ref{alg:fila} reúne las reglas anteriores en el orden exacto en que se aplican. Cualquier error
+inesperado durante el cálculo de una fila (un dato corrupto, una base de datos inaccesible) se captura y la fila sale
+con la capa 3 o con el horario publicado: una fila nunca impide responder a las demás.
+
+\begin{figure}[ht]
+\caption{Estado y Llegada de una Fila (Motor de Autobús)}\label{alg:fila}
+\begin{algorithmic}[1]
+\Require fila $(J,q,a_\dest)$, entrada del feed $e$ (o ninguna), $\tnow$
+\Ensure (estado, $\ETA$, $\delta$)
+\State $P\gets$ posición de $e$ en $J$ con su contraste (capítulo «\nameref{cap:localizacion}» y sección «\nameref{sec:desconfianza}»)
+\State $G\gets$ registro de $e$ en $J$ (sección «\nameref{sec:capa2}»)
+\If{$e$ no existe \textbf{o} ($P$ no existe \textbf{y} $G$ no existe)}
+  \State \Return \Call{SinDatos}{$J,q,a_\dest$}
+\EndIf
+\If{hay $t_{\mathrm{paso}}$ (sección «\nameref{sec:paso}»)}
+  \State \Return $(\texttt{departed},\ \min(t_{\mathrm{paso}},\tnow),\ 0)$
+\EndIf
+\If{$P$ no existe \textbf{y} ($q$ desconocido \textbf{o} la capa 2 no da llegada para $q$)}
+  \State \Return \Call{SinDatos}{$J,q,a_\dest$}
+\EndIf
+\If{$P$ existe}
+  \State $(\ETA,\delta)\gets$ capa 1, ecuaciones~\eqref{eq:eta-capa1}, \eqref{eq:paso-capa1} o, en la cabecera,~\eqref{eq:eta-cabecera}; $\pi\gets$ verdadero
+\Else
+  \State $\ETA\gets$ capa 2, ecuación~\eqref{eq:eta-capa2}; $\delta\gets\ETA-a_\dest$; $\pi\gets$ falso
+\EndIf
+\If{$|\delta|>2\,700$} $\delta\gets$ nulo \EndIf \Comment{retraso no creíble: se conserva la llegada}
+\State $\alpha\gets(\ETA<\tnow-120)$ \Comment{ya debería haber pasado}
+\If{$\alpha$ \textbf{y no} $\pi$} \State \Return \Call{SinDatos}{$J,q,a_\dest$} \EndIf
+\If{\textbf{no} $\pi$} \State \Return $(\texttt{estimated},\ \ETA,\ 0)$ \EndIf
+\If{$\ETA<\tnow$} \Comment{llegando, sin confirmar el paso}
+  \If{$\delta$ no es nulo} $\delta\gets\max(\delta,\ \tnow-a_\dest)$ \EndIf
+  \If{$\tnow-\ETA>180$} \State \Return $(\texttt{likely\_departed},\ \tnow,\ \delta)$ \EndIf
+  \State \Return $(\texttt{live},\ \tnow,\ \delta)$
+\EndIf
+\State \Return $(\texttt{live},\ \ETA,\ \delta)$
+\Statex
+\Function{SinDatos}{$J,q,a_\dest$}
+  \If{$e$ no existe \textbf{y} el registro de pasos tiene $(n,t)$ para $J$ con $q<n$} \State \Return $(\texttt{departed},\min(t,\tnow),0)$ \EndIf
+  \State \Return capa 3 (sección «\nameref{sec:capa3}»): \texttt{estimated}, \texttt{likely\_departed} o \texttt{scheduled}
+\EndFunction
+\end{algorithmic}
+\end{figure}
+
+\subsection{El Tope de 45 Minutos} Un desfase de más de 45~minutos, de retraso o de adelanto ($|\delta|>2\,700$~s,
+\texttt{MAX\_PLAUSIBLE\_DELAY\_SECONDS}), casi siempre indica un emparejamiento erróneo, no un retraso real: en los datos, los retrasos reales llegan a $+37$~min y
+los viajes mal asignados dan valores como $+111$~min. Por encima del tope el retraso no se afirma ($\delta$ nulo), pero
+la llegada se conserva, porque sigue saliendo de los datos del propio autobús y es útil. Se probó a ocultar también
+la llegada, y la precisión empeoraba (del 85,2\,\% al 84,1\,\% de aciertos dentro de $\pm2$~min).
+
+\subsection{El Margen de 120 Segundos} Una llegada de la capa~2 hasta dos minutos en el pasado
+(\texttt{STALE\_GRACE\_SECONDS}) se sigue mostrando como estimada: el autobús puede estar en la parada o saliendo de
+ella. Más allá, la estimación ya no es creíble y la fila pasa a la capa~3. Con GPS no hay margen: una llegada ya
+pasada sale con $\ETA=\tnow$ hasta que se confirme el paso (sección «\nameref{sec:llegando}»).
+
+\section{Retraso y Minutos que Se Muestran}
+\label{sec:retraso-mostrado}
+
+El desfase en la posición $\delta_{\mathrm{pos}}$ no es el retraso que entiende el usuario: compara al autobús con un
+horario interpolado en un punto donde no hay parada. Lo que el usuario compara es la hora publicada de \emph{su} parada
+con la llegada que se le muestra. Por eso, el retraso que se muestra es siempre una diferencia entre una llegada
+estimada y una hora publicada:
+
+\begin{itemize}
+  \item \textbf{En la lista de una parada}, para cada fila,
+        \begin{equation}
+        \label{eq:retraso-lista}
+        \text{retraso}=\redondeo\!\big(\delta/60\big)\ \text{min},\qquad \text{minutos}=\redondeo\!\big((\ETA-\tnow)/60\big),
+        \end{equation}
+        con el retraso nulo si $\delta$ es nulo. Las filas con menos de $-2$ minutos se retiran de la lista. Las demás
+        se ordenan por $(\mathbf{1}[\text{estado}=\texttt{likely\_departed}],\ \ETA)$: por llegada estimada, no por la
+        hora publicada (un autobús adelantado puede llegar antes que uno anterior en el horario), y con las filas
+        \texttt{likely\_departed} al final.
+  \item \textbf{En la ficha de un autobús}, el retraso es el de su próxima parada: con posición, $\ETA(p_n)-a_n$
+        calculado con la capa 1. Se muestra $\redondeo(\cdot/60)$ minutos, o nada si $|\delta|$ pasa de 45~minutos. Sin
+        posición se calcula $\delta_{\mathrm{reg}}$ (o 0 si tampoco hay registro), pero no se afirma: la ficha se marca
+        como estimada y sin retraso, igual que la lista.
+\end{itemize}
+
+\noindent La aplicación traduce el retraso $r$ en minutos a un texto: «Retraso $+r$m» si $r>0$, «Adelantado $r$m» si
+$r\le-2$, con su signo («Adelantado $-2$m»), y «En hora» en otro caso. La asimetría es deliberada: un autobús que llega un minuto antes no se anuncia como
+adelantado, porque la resolución del dato es de un minuto. Nótese el efecto del redondeo de PHP:
+$\redondeo(-90/60)=\redondeo(-1{,}5)=-2$, de modo que un adelanto de 90~s ya se anuncia.
+
+Con esta definición, la lista y la ficha nunca se contradicen: se comprobó con el feed real que ninguna de 232 salidas
+mostraba un retraso incoherente con su llegada.
+
+\section{Después de la Última Salida del Día}
+\label{sec:ultima-salida}
+
+La lista se construye con el calendario del día y, de madrugada, con las salidas del día anterior que pasan de las
+24:00, con el calendario de ayer y sus horas pasadas a las de hoy ($a-86\,400$: las 26:10 son las 02:10), intercaladas
+con las de hoy por hora de salida. Las de la red de autobús pasan por el emparejador de ayer (sección
+«\nameref{sec:mas-de-24h}») y las de las demás redes, por el emparejamiento por viaje de la sección
+«\nameref{sec:otras-redes}». Cuando ya no queda ninguna salida por delante (las que acaban de salir siguen en la lista
+por si alguna viene con retraso), se añaden detrás las primeras del día siguiente, con su calendario y sus horas
+desplazadas 24~h ($a+86\,400$), en estado \texttt{scheduled} y sin pasar por el motor: el feed de hoy no dice nada de
+esos viajes. La aplicación las muestra
+con la hora («mañana 07:00») en lugar de los minutos.
+
+\section{Ejemplo Completo}
+\label{sec:ejemplo-completo}
+
+La Tabla~\ref{tab:escenarios} recoge los dieciséis escenarios de los vectores de prueba (Apéndice~\ref{ap:vectores})
+sobre el viaje sintético del ejemplo~\ref{ej:posicion}, con los tramos aprendidos, las proporciones y el factor del
+ejemplo~\ref{ej:tiempo-esperado}. Las horas publicadas son $28\,800$, $28\,890$, $29\,010$, $29\,310$ y $29\,430$~s
+(8:00:00 a 8:10:30), salvo en el escenario~8. Todas las cifras se han obtenido con el código de producción.
+
+\begin{table}[ht]
+\centering
+\caption{Estado y Llegada Estimada en Cada Parada del Viaje Sintético}\label{tab:escenarios}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lrccccc@{}}
+\toprule
+Esc. & $\tnow$ & $S0$ & $S1$ & $S2$ & $S3$ & $S4$\\
+\midrule
+1 & 28\,980 & S 28\,800 & S 28\,890 & V 29\,020 (+10) & V 29\,220 ($-90$) & V 29\,318 ($-112$)\\
+2 & 28\,980 & S 28\,800 & S 28\,890 & V 29\,020 (+10) & V 29\,290 ($-20$) & V 29\,398 ($-32$)\\
+3 & 28\,980 & S 28\,860 & S 28\,950 & E 29\,020 & E 29\,220 & E 29\,318\\
+4 & 28\,980 & S 28\,860 & S 28\,950 & E 29\,020 & E 29\,220 & E 29\,318\\
+5 & 29\,420 & P 28\,800 & P 28\,890 & P 29\,010 & P 29\,310 & P 29\,430\\
+6 & 28\,700 & P 28\,800 & E 28\,970 & E 29\,110 & E 29\,310 & E 29\,408\\
+7 & 29\,600 & P 28\,800 & P 28\,890 & P 29\,010 & P 29\,310 & P 29\,430\\
+8 & 31\,200 & P 28\,800 & P 28\,890 & P 29\,010 & Pp 30\,810 & Pp 30\,930\\
+9 & 28\,980 & P 28\,800 & P 28\,890 & E 29\,110 & E 29\,310 & E 29\,408\\
+10 & 28\,700 & P 28\,800 & E 28\,990 & E 29\,150 & E 29\,350 & E 29\,468\\
+11 & 28\,700 & P 28\,800 & E 28\,930 & E 29\,110 & E 29\,302 & E 29\,424\\
+12 & 28\,210 & V 28\,800 (0) & V 28\,970 (+80) & V 29\,110 (+100) & V 29\,310 (0) & V 29\,408 ($-22$)\\
+13 & 28\,210 & P 28\,800 & E 28\,970 & E 29\,110 & E 29\,310 & E 29\,408\\
+14 & 29\,100 & S 28\,800 & S 28\,890 & V 29\,100 (+90) & V 29\,220 ($-90$) & V 29\,318 ($-112$)\\
+15 & 29\,040 & S 28\,800 & S 28\,890 & V 29\,040 (+30) & V 29\,214 ($-96$) & V 29\,311 ($-119$)\\
+16 & 29\,320 & S 28\,800 & S 28\,890 & Pp 29\,320 (+310) & V 29\,320 (+10) & V 29\,320 ($-110$)\\
+\bottomrule
+\end{tabular}
+\nota{Esc.: escenario. Llegadas en segundos. V: \texttt{live}; E: \texttt{estimated}; S: \texttt{departed}; P: \texttt{scheduled}; Pp: \texttt{likely\_departed}. Entre paréntesis, el retraso en segundos cuando se afirma. Escenarios: 1, GPS a 700~m del origen y 11~m del trazado; 2, el mismo sin trazado; 3, GPS a 60~m del trazado; 4, sin GPS, con $n=3$ y $\tref=28\,950$; 5, GPS y registro discrepan; 6 y 7, sin datos del autobús, antes de salir y con el horario corregido ya pasado, respectivamente; 8, horario publicado muy lento ($S3$ y $S4$ a $30\,810$ y $30\,930$); 9, GPS de hace 680~s; 10, como el 6, con la corrección por viaje de los vectores de prueba; 11, el 10 en un festivo; 12, el autobús espera en la primera parada 10~min antes de salir; 13, el mismo a 600~m de ella; 14, como el 1 con $\tnow=29\,100$: la llegada a $S2$ ya pasó sin confirmar el paso; 15, GPS 50~m pasada $S2$ con el feed aún en ella (no basta para darla por pasada); 16, como el 14 con $\tnow=29\,320$: más de 3~min llegando sin confirmar el paso.}
+\end{table}
+
+\subsection{Escenario 1} Es el del ejemplo~\ref{ej:posicion}: $\Tpos=\tgps=28\,950$. Las paradas $S0$ y $S1$ tienen
+$a_\dest<\Tpos$ y salen como pasadas a las $28\,950-(28\,950-28\,800)=28\,800$ y $28\,890$. Para $S2$, $S3$ y $S4$ la
+llegada es $\tgps$ más los tiempos esperados del ejemplo~\ref{ej:tiempo-esperado}: $28\,950+70=29\,020$,
+$\redondeo(28\,950+270{,}4)=29\,220$ y $\redondeo(28\,950+367{,}72)=29\,318$. El horario publicado de $S3$ y $S4$ es
+90 y 112~s más lento de lo esperado, y la aplicación anunciaría «Adelantado $-2$m» en ambas
+($\redondeo(-1{,}5)=-2$ y $\redondeo(-1{,}87)=-2$).
+
+\subsection{Escenario 2} Sin trazado, la proyección sobre la recta $S1S2$ da el mismo $\Tpos$, pero los tramos sin
+aprender ya no tienen longitud y caen al factor de ritmo: las llegadas a $S3$ y $S4$ pasan a $29\,290$ y $29\,398$.
+
+\subsection{Escenarios 3 y 4} Con el GPS a 60~m (fuera del pasillo de 50~m) o sin GPS, se usa el registro: $n=3$,
+$\tref=28\,950$, $\theta=\redondeo(0{,}5\cdot140)=70$. La llegada a $S2$ es $28\,950+70=29\,020$, y a $S3$,
+$\redondeo(28\,950+70+200{,}4)=29\,220$: las mismas cifras que con GPS, porque en este ejemplo el autobús estaba
+justo a mitad del tramo. Las paradas pasadas salen a $\tref-\max(0,a_2-a_\dest)$: $28\,950-90=28\,860$ para $S0$ y
+$28\,950$ para $S1$. Las demás salen como estimadas y sin retraso.
+
+\subsection{Escenario 5} El contraste de la sección «\nameref{sec:desconfianza}» invalida GPS y registro. La capa 3 da para
+$S2$ un horario corregido de $28\,800+60+250=29\,110<\tnow$, que no cumple las condiciones~\eqref{eq:probablemente}
+de \texttt{likely\_departed}, de modo que todas las paradas salen como \texttt{scheduled}, con su hora publicada.
+
+\subsection{Escenario 6} Sin datos y antes de la salida, el horario corregido es $28\,860+E$: $28\,970$ para $S1$
+(110~s aprendidos), $29\,110$ para $S2$ (110+140), $29\,310$ para $S3$ ($250+200{,}4=450{,}4$, redondeado a 450) y
+$29\,408$ para $S4$ ($450{,}4+97{,}32=547{,}72$, redondeado a 548). La cabecera $S0$ no tiene $a_\dest>d_1$ y sale como
+\texttt{scheduled}.
+
+\subsection{Escenario 8} Con todos los tramos aprendidos (110, 140, 240 y 100~s) y un horario publicado que pone
+$S3$ a las $30\,810$, el horario corregido es $C=28\,860+490=29\,350$. A las $31\,200$ se cumple $C<31\,200-600$,
+$a_\dest-C=1\,460\ge600$ y $\lambda=1$: estado \texttt{likely\_departed}. Para $S2$, $C=29\,110$ es posterior a su hora
+publicada y la regla no se aplica.
+
+\subsection{Escenario 9} Un dato de hace 680~s supera la antigüedad máxima de 600~s: no hay posición ni registro, y
+las filas van a la capa 3 como en el escenario 6, salvo $S1$, cuyo horario corregido ($28\,970$) ya es anterior a
+$\tnow=28\,980$.
+
+\subsection{Escenarios 10 y 11} Con la tabla de corrección de los vectores de prueba (Apéndice~\ref{ap:vectores}), el
+viaje tiene en laborable 20, 40 y 60~s para sus tres tercios. Las paradas $S1$ a $S4$ ocupan las posiciones 1 a 4 de
+cinco y caen en los tercios 0, 1, 1 y 2~\eqref{eq:tercio}: las llegadas del escenario 6 se desplazan 20, 40, 40 y
+60~s. En el festivo, $D'$ es el domingo. La tabla de tramos no tiene valores en franjas de fin de semana, así que se
+usan los de cualquier hora (\texttt{all}: 100 y 150~s); el factor vale 1, los tramos sin aprender usan las proporciones
+\texttt{all} y la corrección de fin de semana es de $-30$, 0 y 30~s. Para $S4$, $C=28\,860+\redondeo(100+150+192+92{,}28)+30=29\,424$.
+
+\subsection{Escenarios 12 y 13} Diez minutos antes de salir, el autobús está a 11~m de la primera parada con $n=2$: el feed
+ya da la segunda como próxima parada. Queda situado en la cabecera (sección «\nameref{sec:cabecera}»), con
+$\Tpos=a_1$ y la hora de la posición igual a la de salida, y todas las paradas salen en directo, $S0$ incluida, que no
+cuenta como pasada aunque $n=2$.
+Las llegadas son las de la capa 3 del escenario 6, porque el autobús aún no ha recorrido nada; el retraso que se
+afirma es el de esas llegadas frente al horario publicado. A 600~m de la parada (escenario 13) puede estar acabando
+otro viaje: el autobús no se sitúa en la cabecera, y las filas son las del escenario 6.

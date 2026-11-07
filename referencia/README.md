@@ -2,11 +2,12 @@
 
 | File | What it does |
 |---|---|
-| `referencia.py` | The method, written only from the technical report (not from the production code): projection on the route, the three prediction layers, segment times, pace factors, per-trip correction and their calibration |
-| `vectores.json` | 323 test vectors: concrete inputs and the exact output of the production engine |
+| `referencia.py` | The method, written only from the technical report (not from the production code): reading of the feed, matching of each vehicle to its trip, projection on the route, the three prediction layers, segment times, pace factors, per-trip correction, passage log, delay shown and their calibration |
+| `vectores.json` | Test vectors with 407 checks: concrete inputs and the exact output of the production engine |
 | `comprobar.py` | Runs `referencia.py` on every vector and reports how many match |
+| `vectores.php` | The program that produced `vectores.json` by calling the production engine. It is published so that anyone can see which engine function gave each expected output; it cannot run without the engine, which is private |
 | `evaluar.py` | Public evaluator: predicts every stop from the next one to eight ahead in each snapshot of the live feed, takes the actual passage from the change of next stop, and writes 15-second error histograms (`histograma-v1`) by layer, status, horizon and time band |
-| `desvio-horario.py` | Figures of section 1.1 of the report: line frequency and the gap between the actual passage and the published time |
+| `desvio-horario.py` | Figures of the section «El horario publicado se desvía en los dos sentidos» of the report: line frequency and the gap between the actual passage and the published time |
 
 Conventions to keep when porting to another language (also at the top of `referencia.py`):
 

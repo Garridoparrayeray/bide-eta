@@ -4,7 +4,7 @@
 - eta-eval.jsonl: histogramas del error en barras de 15 s desde el 31 de octubre (formato histograma-v1), con los tres
   modos de la evaluación: normal, sin GPS (las posiciones se borran) y sin feed (solo el horario corregido).
 
-Uso: python3 articulo/resultados.py [--latex]
+Uso: python3 articulo-metodo/resultados.py [--latex]
 """
 import collections
 import json

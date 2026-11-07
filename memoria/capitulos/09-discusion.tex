@@ -1,0 +1,331 @@
+\chapter{Discusión}
+\label{cap:discusion}
+
+Este capítulo interpreta las medidas del capítulo «\nameref{cap:evaluacion}», las sitúa respecto a otros enfoques de la
+literatura, recoge las limitaciones del trabajo y discute qué hace falta para aplicar el método a otras redes.
+
+\section{Interpretación de los Resultados}
+\label{sec:interpretacion}
+
+Los resultados permiten distinguir de dónde sale la precisión del método.
+
+\subsection{El Tramo en que Está el Autobús} Saber en qué tramo está el autobús aporta la mayor parte de la información. La capa 2, que solo conoce la
+próxima parada y la hora del dato, queda a pocos puntos de la capa 1 con GPS (Tabla~\ref{tab:capas}). La posición
+exacta dentro del tramo mejora la predicción, pero lo decisivo es partir de dónde está el autobús y no de la hora
+publicada, como anticipa la proposición~\ref{prop:diferencias}.
+
+\subsection{La Corrección del Horario} Corregir el error de forma del horario ya lo mejora mucho. La capa 3 no sabe
+nada del autobús y, aun así, duplica o triplica los aciertos del horario publicado. Esa mejora solo puede venir de
+sustituir las duraciones interpoladas por los tiempos aprendidos de cada tramo. Le quedaba, sin embargo, un sesgo:
+llegaba de media 131~s antes que el autobús. La corrección por viaje, que usa lo que cada viaje suele hacer y nada del
+autobús ese día, lo deja en 17~s (sección «\nameref{sec:eval-correccion}»). Quitar el sesgo de la media no es lo mismo
+que acertar lo típico: con el percentil 40 de los desvíos en lugar de la media, la hora sin autobús acierta más y el
+autobús pasa antes de lo mostrado un tercio menos de veces (sección «\nameref{sec:correccion-percentil}»). Lo que
+queda es el desvío de cada viaje ese día, que se explica por el autobús que lo hace. Si ese desvío se conociera, el
+acierto a $\pm2$~min de las filas «Estimado» sin autobús del 2 y el 3 de noviembre pasaría del 52--58\,\% (con la
+media) al 81--85\,\%; pero ni los demás viajes de la línea ni la hora que ya ha pasado sin autobús lo predicen.
+
+\subsection{La Cobertura de Tramos Aprendidos} La cobertura de tramos aprendidos es lo que más mueve la precisión. En
+las llegadas a menos de diez minutos, con todo el camino aprendido se acierta el 93\,\% dentro de $\pm2$~minutos,
+frente al 76\,\% con un tramo sin aprender y el 59\,\% con dos o más (Tabla~\ref{tab:cobertura} y el texto que la sigue; con 17 días, el 93, el 76 y el 63\,\%,
+Tabla~\ref{tab:varios-dias-origen}). La curva de aprendizaje (Tabla~\ref{tab:curva}) indica que esa
+cobertura sigue creciendo con los datos.
+
+\subsection{El Error y la Distancia} El error crece con la distancia, y el acierto tiene un techo. Cada tramo suma su
+propia variación, de modo que el
+acierto baja de forma regular con el horizonte. En las llegadas a menos de diez minutos con todo el camino aprendido, el techo medido
+está en torno al 93\,\% dentro de $\pm2$~minutos, limitado por la resolución del dato (una posición por minuto y $\pm30$~s en el paso real) y por lo que
+ningún modelo puede prever con estos datos: semáforos, tráfico y esperas en parada.
+
+\section{Relación con Otros Enfoques}
+\label{sec:otros-enfoques}
+
+El método pertenece a la familia de las medias históricas (capítulo «\nameref{cap:marco}»), con dos
+diferencias: los tiempos se aprenden por tramo y franja en lugar de por línea, y la posición en tiempo real reinicia la
+predicción en cada actualización. Otros trabajos han usado filtros de Kalman con datos de localización y de conteo de
+pasajeros \citep{shalaby2004} o redes neuronales \citep{chien2002,jeong2005}; en el caso de \citet{jeong2005}, las
+redes neuronales superaron a un modelo de datos históricos y a modelos de regresión en una línea de Houston.
+
+Las cifras de este trabajo no se pueden comparar directamente con las de esos estudios: las redes, los datos, los
+horizontes y las medidas de error son distintos. Por eso se implementaron esos métodos sobre las mismas muestras y con
+el mismo protocolo por días (sección «\nameref{sec:comparacion}»). El resultado tiene dos lecturas. La primera es que
+el modelo sencillo se queda con casi toda la mejora sobre el horario: de 154 a 42~s de error medio a 4--8~minutos,
+mientras que la mejor alternativa, una red neuronal que además usa lo que pasa ese día, baja a 39,5~s. La segunda es
+que esa diferencia, aunque pequeña, es real: la red reduce el error medio entre un 6 y un 7\,\% y mejora al método
+todos los días de prueba en todos los horizontes, y un filtro de Kalman sobre el ritmo del propio autobús consigue algo más de la mitad de esa mejora con dos
+parámetros.
+
+Esto no contradice que corregir con la velocidad reciente del autobús empeorara la medida
+(sección «\nameref{sec:descartadas}»). Esa corrección usaba la velocidad del último minuto, muy ruidosa, sobre la llegada
+completa; el filtro usa la desviación de los tramos ya terminados, la suaviza y la olvida con una constante de 30~minutos.
+Que los autobuses previos en el mismo tramo aporten tan poco (un 1 o 2\,\%) indica que, en esta red, la variación de
+un día a otro en un tramo pesa menos que la de cada conductor y cada viaje, que es la que capta el ritmo del propio
+autobús. La comparación se hizo sobre sumas de tramos, no sobre la llegada completa que ve el usuario; antes de
+adoptar el filtro habría que medirlo así, con la regla de la sección «\nameref{sec:eval-contraccion}».
+
+\section{Limitaciones}
+\label{sec:limitaciones}
+
+\begin{itemize}
+  \item \textbf{Una muestra pequeña con las tres capas.} Las Tablas~\ref{tab:resultados} a~\ref{tab:cobertura}, las
+        únicas que calculan cada llegada con las tres capas a la vez, salen de 14~minutos de feed de un laborable; sus cifras a horizonte
+        largo tienen intervalos de confianza anchos. La medida principal se repitió con 17 días
+        (Tabla~\ref{tab:varios-dias}), y con ellos el acierto a 10--20~minutos quedó en el 67\,\% y no en el 73\,\%, ya
+        con llegadas de cualquier capa.
+  \item \textbf{Un método que cambia.} Los 17 días miden la aplicación tal como estaba cada día, con calibraciones y
+        reglas que cambiaron en ese periodo; no son la precisión de una versión fija del método.
+  \item \textbf{Resolución de la verdad de referencia.} El paso real se conoce con $\pm30$~s. Las medidas dentro de
+        $\pm1$~minuto están especialmente afectadas.
+  \item \textbf{Definición de paso.} La verdad de referencia por cambio de parada mide cuándo el feed cambia de
+        próxima parada, lo que puede ir algo por detrás del paso físico. Afecta por igual al método y al horario publicado.
+  \item \textbf{Censura.} Solo se evalúan los autobuses cuyo paso se observa dentro de la ventana de captura; los muy
+        retrasados pueden quedar fuera.
+  \item \textbf{Dependencia temporal.} Las predicciones de un mismo autobús en instantáneas sucesivas están
+        correlacionadas; el número efectivo de observaciones independientes es menor que el número de predicciones.
+  \item \textbf{Temporada y festivos.} Las muestras van del 6 de octubre a los primeros días de noviembre de 2026 y
+        solo tienen un festivo entre semana. La regla de
+        los festivos se apoya en ese día, y el efecto de la temporada (verano, vacaciones) está sin medir.
+  \item \textbf{Lo que el feed no dice.} Un viaje sin autobús en el feed sale con la capa 3 aunque no se haga, y un
+        refuerzo que no está en el horario no sale en las paradas. Según las capturas del 3 de noviembre de 2026, en
+        torno al 4\,\% de los viajes que deberían estar en marcha no se pueden interpretar: los que salen tarde y los
+        que no aparecen en todo el día se ven igual en el momento (sección «\nameref{sec:feed}»).
+  \item \textbf{De madrugada.} De 23:58 a 05:00 el feed de Bizkaibus repite la lectura de las 23:58 y los autobuses
+        nocturnos salen con la capa~3 o con el horario (sección «\nameref{sec:mas-de-24h}»). Esas llegadas no están
+        medidas, y la parte de un viaje posterior a la medianoche no aporta muestras al aprendizaje.
+  \item \textbf{Calidad del horario.} El método depende de que trazado y paradas casen. En el horario de Bizkaibus del
+        3 de noviembre de 2026, 1\,417 de los 6\,130 viajes (el 23\,\%) tenían alguna parada a más de 200~m del
+        punto del trazado que marcan sus metros, 670 de ellos (el 11\,\% del total) con el trazado al revés. La
+        corrección de la sección «\nameref{sec:trazados-gtfs}» lo arregla en la construcción, pero otra red puede
+        traer errores distintos, que habría que buscar antes de medir el método.
+  \item \textbf{Una sola red.} Todos los resultados son de Bizkaibus. La generalización a otras redes es una hipótesis
+        razonable (sección «\nameref{sec:aplicabilidad}»), no un resultado.
+  \item \textbf{Evaluación hecha por el autor.} El método lo ha evaluado quien lo ha diseñado, con sus propias
+        herramientas. Los vectores de prueba y la implementación de referencia permiten comprobar que el método descrito
+        es el que se ha medido, pero no sustituyen a una replicación independiente con otros datos.
+  \item \textbf{Sin revisión por pares.} Este documento no ha pasado por una revisión externa.
+\end{itemize}
+
+\section{Límites de la Infraestructura}
+\label{sec:infraestructura}
+
+Todo el sistema funciona sin un servidor propio y casi sin coste, y eso condiciona el método tanto como los datos.
+
+\begin{itemize}
+  \item \textbf{La aplicación, sin estado.} La aplicación y la API corren en una plataforma sin servidor (Vercel): cada
+        petición es una función independiente que no recuerda nada de la anterior, salvo una caché corta en disco y un
+        almacén clave-valor externo (Upstash Redis) que se paga por comando. Cada función admite 250~MB, de los que la
+        aplicación usa 208, y cada red nueva suma su base de datos del horario.
+  \item \textbf{El aprendizaje, en una plataforma de pruebas.} La captura y la recalibración corren en una plataforma
+        de integración continua (GitHub Actions) pensada para compilar y probar, no para trabajar sin parar: cada trabajo
+        dura como mucho seis horas y los disparos programados se retrasan o se saltan (sección «\nameref{sec:ciclo}»).
+        Hasta el 31 de octubre de 2026 solo se ejecutaron 163 de unas 600 capturas previstas.
+  \item \textbf{Los datos, en ficheros.} Las muestras acumuladas no están en una base de datos, sino en ficheros JSON
+        Lines guardados como adjuntos del repositorio. Cada recalibración los descarga enteros, los recalcula en memoria
+        y los vuelve a subir. Por eso existen los topes de la sección «\nameref{sec:retencion}»: 120~días, 300 muestras
+        por tramo y tipo de día, y 500\,000 muestras de ritmo, con ficheros de unos 100--120~MB y menos de 2~GB de memoria.
+  \item \textbf{Una vez al día.} Los parámetros se recalculan una vez al día y producción usa parámetros de entre 23 y
+        47~horas de antigüedad: un desvío o unas obras de hoy no entran en lo aprendido hasta uno o dos días después.
+\end{itemize}
+
+\noindent Estos límites explican varias limitaciones del método:
+
+\begin{itemize}
+  \item \textbf{Memoria corta.} Con 120~días y un tope por tramo no hay un año de historia. No se puede aprender una
+        fiesta con la misma fiesta del año anterior (Navidad, Semana Santa, Aste Nagusia), ni el verano o las
+        vacaciones escolares, y los días especiales se mezclan con los normales al aprender.
+  \item \textbf{Grupos gruesos.} Con pocas muestras por tramo, lo aprendido se agrupa en seis franjas y dos tipos de
+        día. Con más historia se podría separar por día de la semana, por hora o por fecha especial sin quedarse sin
+        datos en cada grupo.
+  \item \textbf{Sin otras fuentes.} No se cruzan la meteorología, el calendario escolar, los eventos (un partido o un
+        concierto) ni las incidencias publicadas, porque no hay dónde guardar su historia junto a la de los pasos.
+  \item \textbf{Sin modelos más capaces.} La red neuronal de la sección «\nameref{sec:comparacion}», que usa además
+        lo que está pasando ese día, reduce el error medio de la suma de tramos entre un 6 y un 7\,\% frente al método. Se descartó para producción porque lo
+        sencillo se puede auditar, pero también porque entrenarla y servirla en directo exige un servidor que no existe.
+\end{itemize}
+
+\noindent Con inversión en infraestructura se podría quitar cada uno de estos límites:
+
+\begin{itemize}
+  \item un servidor que capture el feed sin pausa, sin huecos ni capturas saltadas;
+  \item una base de datos de series temporales que guarde años de pasos sin tope y permita consultar solo lo necesario,
+        en lugar de descargar y recalcular ficheros enteros;
+  \item aprender por fecha especial (festivos, Navidad, fiestas de cada pueblo, vacaciones escolares) comparando con
+        el mismo día del año anterior, y cruzar los pasos con la meteorología, los eventos y las incidencias;
+  \item recalibrar cada hora o de forma continua, de modo que un desvío entre en lo aprendido en horas y no en días;
+  \item servir en directo modelos más capaces, como la red neuronal ya medida, e intervalos de predicción;
+  \item añadir redes sin el límite de tamaño de cada función.
+\end{itemize}
+
+\noindent Ninguna de estas mejoras está medida. Son la dirección que señalan las medidas de este trabajo: la cobertura
+de tramos aprendidos es lo que más mueve la precisión (sección «\nameref{sec:cobertura-tramos}»), y más historia y más fuentes
+dan más cobertura y grupos más finos. Cuánto mejoraría la precisión en festivos o en verano solo se sabrá con esos
+datos y con el mismo protocolo de medida.
+
+\section{Aplicabilidad a Otras Redes}
+\label{sec:aplicabilidad}
+
+El método se diseñó para Bizkaibus, pero casi nada de él es específico de esa red. Esta sección separa lo que es
+general de lo que hay que adaptar y da una lista de pasos para poner el método en marcha en otra ciudad. Describe
+además las otras dos situaciones que ya resuelve la aplicación: redes que publican su propio retraso, que se tratan en
+el motor, y redes que publican su propia predicción, que se tratan fuera de él.
+
+\subsection{Requisitos}
+\label{sec:requisitos}
+
+El método necesita, por orden de importancia:
+
+\begin{enumerate}
+  \item \textbf{Un horario GTFS} con viajes, paradas y horas de paso. Sin él no hay recorrido sobre el que situar al
+        vehículo.
+  \item \textbf{Un feed en tiempo real que identifique el viaje} de cada vehículo y la \textbf{próxima parada}, con la
+        hora del dato. Con eso funcionan las capas 2 y 3 y el aprendizaje queda limitado a lo que se pueda reconstruir.
+  \item \textbf{La posición GPS} de cada vehículo y la hora en que se tomó. Con ella funcionan la capa 1 y el
+        aprendizaje.
+  \item \textbf{Trazados} (\texttt{shapes.txt}). Si no traen los metros de cada parada
+        (\texttt{shape\_dist\_traveled}), la construcción de la base los mide sobre el trazado; sin trazados, la
+        localización usa rectas entre paradas, con un pasillo más ancho, y no hay respaldo por longitud.
+  \item \textbf{Una forma de capturar} el feed periódicamente y de guardar las muestras: aquí, un trabajo
+        programado de una plataforma de integración continua y un fichero adjunto a una publicación del repositorio.
+\end{enumerate}
+
+\noindent Un operador que no publique retrasos ni predicciones, como Bizkaibus, es precisamente el caso para el que el
+método aporta más. Uno que sí los publique puede usarlos directamente (sección «\nameref{sec:otras-redes}»).
+
+\subsection{Qué Hay que Adaptar}
+\label{sec:adaptar}
+
+\subsubsection{La Lectura del Feed y el Emparejamiento} Es la única parte que depende del formato concreto del operador:
+cómo se extraen la línea, el número de viaje y la salida de cabecera de la referencia del viaje
+(expresión~\eqref{eq:regex}) y cómo se encuentra el viaje del GTFS (sección «\nameref{sec:emparejamiento}»). Si la referencia
+del feed coincide con el \texttt{trip\_id} del GTFS, basta la tabla de alias. El motor deduce además de qué día es cada
+viaje por la salida de cabecera del feed~\eqref{eq:dia-viaje}, que en Bizkaibus va en horas del horario. Los lectores
+que la toman de \texttt{OriginAimedDepartureTime}, en hora del reloj (Bilbobus, Lurraldebus), considerarían de hoy un
+viaje que empezara pasadas las 24:00; en esas dos redes no hay ninguno.
+
+\subsubsection{Las Franjas} Las seis franjas por tipo de día responden a la demanda de Bizkaia. Una ciudad con otra
+distribución de la hora punta debería revisarlas, con el mismo protocolo de evaluación por días.
+
+\subsubsection{Las Constantes Medidas} Las constantes del Apéndice~\ref{ap:constantes} son de dos clases. Unas son
+geométricas o de diseño y no deberían cambiar (la ventana de tramos y la regla de desempate). Otras se midieron en Bizkaibus y conviene volver a medirlas: el pasillo de 50~m depende de la calidad de los
+receptores GPS, los 20~minutos de la capa 2 dependen de la longitud típica de los tramos, el tope de 45~minutos de los
+retrasos reales de la red y los 60~s de salida de cabecera de la práctica de los conductores. La mitad del tramo de la capa 2 también se midió:
+fue el mejor reparto entre 0,35 y 0,65.
+
+\subsubsection{Sin Muestras} En una red nueva, sin muestras propias (la semilla del repositorio solo sirve para las
+paradas de Bizkaibus), la tabla de tiempos por tramo está vacía y el modelo se reduce al factor de
+ritmo, que sin muestras vale 1: las diferencias de horario de la proposición~\ref{prop:diferencias}, sin corrección de
+forma. Solo con eso ya mejora mucho al horario publicado, porque elimina el retraso acumulado. Con unos días de capturas aparecen los
+primeros tramos aprendidos y el modelo mejora sin intervención.
+
+\subsection{El Mismo Motor en Otras Redes de Autobús}
+\label{sec:lurraldebus}
+
+El motor se reutiliza por herencia en dos redes más. Lurraldebus (Gipuzkoa) recibe su información en tiempo real en
+varios feeds SIRI-VM, uno por operador; Bilbobus (los autobuses urbanos de Bilbao) la recibe en un solo feed del
+Consorcio de Transportes de Bizkaia. En las dos, una clase derivada del emparejador solo cambia la red a la que se
+aplica y los ficheros con los datos aprendidos (factor de ritmo, tiempos por tramo y correcciones por viaje); el
+cálculo es el mismo código. La lectura del feed sí es distinta: un lector genérico toma la referencia del viaje tal
+cual la publica el operador y la empareja con los alias del horario, con el nombre del operador delante cuando hay
+varios. Las dos redes están activadas, pero sus feeds llegan vacíos durante largos periodos: entonces la aplicación
+muestra el horario oficial sin afirmar que sigue a ningún vehículo, y el aprendizaje de tramos no tiene con qué
+empezar hasta que los feeds traigan vehículos de forma regular. Sus GTFS no traen los metros de cada parada; la
+construcción los mide sobre el trazado (Tabla~\ref{tab:sin-metros}), así que, cuando lleguen vehículos, se situarán
+con el mismo pasillo de 50~m que Bizkaibus y no con la recta entre paradas.
+
+\subsection{Redes que Publican Retraso o Predicción}
+\label{sec:otras-redes}
+
+\subsubsection*{Retraso Declarado}
+
+En el código, «red de autobús» es la red para la que se configuró el emparejador; las demás, sean o no de autobuses,
+usan este camino. En ellas las capas 2 y 3 y el contraste no se aplican, y la entrada se considera en directo si no tiene
+posición o si la tiene y es válida. La llegada se calcula a partir del retraso declarado por el operador, $\delta_{\mathrm{decl}}$:
+\begin{equation}
+\ETA_{\mathrm{plano}}=a_\dest+\delta_{\mathrm{decl}}.
+\end{equation}
+Si la entrada no tiene posición pero sí parada actual y orden $n$, y el horario da la llegada $a_n$ a esa parada, se
+calcula también una llegada por diferencias desde ahora,
+\[
+\ETA_{\mathrm{pos}}=\tnow+(a_\dest-a_n),
+\]
+y se usa en lugar de la plana si $a_\dest-a_n\ge0$ y $|\ETA_{\mathrm{pos}}-\ETA_{\mathrm{plano}}|\le900$~s
+(\texttt{POSITION\_SANITY\_SECONDS}). Con posición válida se usa la capa 1 tal cual. En estas redes no se aplica el
+tope de 45~minutos ni el estado \texttt{estimated}.
+
+\subsubsection*{Predicciones de Llegada (GTFS-Realtime Trip Updates)}
+
+Metro Bilbao, Euskotren, los tranvías de Bilbao y Vitoria-Gasteiz y Álavabus publican, para cada vehículo, la hora
+prevista en cada parada que le queda; Renfe, Tuvisa y Dbus, un retraso por viaje. Ahí no hace falta estimar: basta con
+emparejar cada vehículo con su viaje del horario y comprobar que lo que dice el operador es un dato en directo. Ese
+trabajo no aprende nada, así que está en la aplicación y no en el motor.
+
+\paragraph{Emparejar por el Viaje} Todos esos feeds traen el identificador del viaje del horario (con el horario del
+4 de noviembre de 2026: los 71 viajes de Metro en servicio, 188 de Euskotren, 46 y 73 de los tranvías), y se empareja
+por él. La hora en una parada es la del feed; si el feed se salta esa parada, la de la siguiente que trae, menos lo que
+se tarda hasta ella según el horario; con un retraso por viaje, la del horario más ese retraso. El retraso que se
+muestra es la diferencia con la hora publicada, redondeado a cero por debajo de 60~s (\texttt{ON\_TIME\_SECONDS}).
+Las horas del feed son del reloj y las del horario pueden pasar de las 24:00: cada viaje guarda los días enteros que
+separan unas de otras (24~h para un tren anotado a las 26:00 que pasa a las 02:00; 0 el resto del día), y todas las
+comparaciones los descuentan. Sin eso, ese tren salía con $\pm1\,440$~min de retraso.
+
+La versión anterior emparejaba por paradas y hora: cada tren del feed con la fila del horario más cercana dentro de
+10~minutos, asignando de menor a mayor diferencia. Se suponía que con trenes separados varios minutos la ambigüedad era
+rara. El 4 de noviembre, con retrasos generalizados de 15 a 20~minutos en Metro, no lo era: cada tren se pegaba a la
+salida siguiente, la aplicación mostraba «+2~min» o «4~min adelantado» a trenes que iban 18~minutos tarde y dejaba
+salidas sin tren como «solo horario». Ese emparejamiento queda solo de reserva, para cuando ningún viaje del feed esté
+en el horario (por ejemplo, un horario recién cambiado).
+
+\paragraph{Comprobaciones del Directo} Antes de mostrar nada se comprueba, con los datos de cada consulta:
+\begin{itemize}
+  \item \emph{Un feed que copia el horario.} Si todas las horas del feed son las del horario al segundo, no es
+        directo y sale el horario. Es el caso de los trenes de Euskotren (2\,504 horas, ninguna distinta); los tranvías,
+        en el mismo feed, sí traen horas distintas.
+  \item \emph{Unas horas que contradicen al GPS.} Si hay al menos 3~vehículos con posición y, en la mayoría de ellos,
+        la hora del feed en la parada por la que van se aparta más de 20~minutos de la hora actual
+        (\texttt{VEHICLE\_DISAGREEMENT\_SECONDS}), las horas del feed no valen. Es el caso de Álavabus, que las da con una
+        hora de más.
+  \item \emph{Un viaje que aún no ha salido.} Si no ha salido de su origen y el operador solo repite su hora
+        publicada (Renfe, hasta una hora antes, con retraso cero), sale con el horario.
+\end{itemize}
+
+\paragraph{Vehículos con Posición y sin Predicción} Su retraso es el que llevan en la parada por la que van (nunca un
+adelanto) y se aplica a las paradas que les quedan. No cuentan los que están en la última parada de su viaje ni los que
+darían más de 45~minutos (\texttt{MAX\_GPS\_DELAY\_SECONDS}), que suelen ser vehículos parados o que aún hacen el viaje
+anterior.
+
+\paragraph{Predicción Vencida} Si un vehículo aún no ha llegado a la parada a la que va y la hora que le daba el
+operador ya pasó hace más de 60~s, va al menos ese tiempo más tarde: se suma a esa parada y a las siguientes, y crece
+mientras no avance. Con más de una hora de desfase no se extrapola (\texttt{MAX\_STALE\_PREDICTION\_SECONDS}).
+
+\paragraph{Salidas sin Datos y Salidas Pasadas} En los trenes, una salida que ya debería estar en la estación y no está en el
+feed va al final como «sin datos del tren». Se miran también las salidas de la última hora, para que un tren muy
+retrasado siga en la lista, y se retiran las que ya salieron: las que están en directo, 45~s después de su llegada, y las
+programadas, 60~s después.
+
+\paragraph{Vigilancia} El servidor publica para cada red un diagnóstico (viajes del feed, cuántos encuentra en el
+horario, cuántos deberían ir en marcha según el horario, si copia el horario o contradice al GPS y la mediana y el
+percentil 95 de los retrasos que muestra), y un proceso lo revisa cada hora: si un feed deja de responder, si una red
+deja de encontrar sus viajes o si los retrasos no son creíbles (mediana de más de 30~minutos o percentil 95 de más de
+60), avisa. Un feed vacío, o uno cuyos viajes no están en el horario, solo cuenta como fallo si según el horario van en
+marcha al menos tres viajes de la red; el vacío, además, si la red no es de las que lo publican vacío a ratos aunque
+haya servicio (Bilbobus, Lurraldebus y Álavabus). Un feed con vehículos pero ninguno con hora de hoy, como el de Bizkaibus
+de madrugada, queda como aviso. Así se detectaron las horas desfasadas de Álavabus, vehículos ya llegados que seguían
+contando y trenes de madrugada con $\pm1\,440$~min de retraso.
+
+\subsection{Pasos Para Otra Ciudad}
+\label{sec:pasos}
+
+\begin{enumerate}
+  \item Comprobar qué publica el operador. Con Trip Updates, basta el emparejamiento de la sección anterior y sus
+        comprobaciones. Con SIRI-VM
+        (o GTFS-Realtime Vehicle Positions), hace falta el motor de este trabajo.
+  \item Construir la base del horario con la fusión de variantes y los alias (sección «\nameref{sec:alias}») y los trazados
+        con distancias.
+  \item Adaptar la lectura del feed y el emparejamiento, y comprobar con capturas reales que todos los vehículos del
+        feed encuentran su viaje.
+  \item Poner en marcha la captura periódica y la recalibración diaria. Sin calibrar, el modelo tiene poco con qué
+        corregir el horario.
+  \item Medir con el protocolo del capítulo «\nameref{cap:evaluacion}» sobre capturas de la propia red antes de mostrar
+        nada como «en directo», y volver a medir las constantes de la sección «\nameref{sec:adaptar}».
+  \item Comprobar que una implementación propia reproduce los vectores del Apéndice~\ref{ap:vectores}.
+\end{enumerate}

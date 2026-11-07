@@ -1,8 +1,8 @@
 name: Captura para la comparación
 
 # Guarda el feed SIRI de Bizkaibus cada 20 s y los tiempos de espera oficiales de las paradas de
-# comparacion/paradas.json cada minuto, en tres tandas al día (de 06:00 a 23:00 en Madrid), y lo sube a la release
-# del mes (comparacion-AAAA-MM) con el horario GTFS del día. Ver comparacion/README.md.
+# articulo-comparacion/captura/paradas.json cada minuto, en tres tandas al día (de 06:00 a 23:00 en Madrid), y lo sube a la release
+# del mes (comparacion-AAAA-MM) con el horario GTFS del día. Ver articulo-comparacion/captura/README.md.
 on:
   schedule:
     - cron: '0 5 * * *'
@@ -32,7 +32,7 @@ jobs:
           python-version: '3.12'
 
       - name: Capturar
-        run: python3 comparacion/capturar.py --minutos "${{ github.event.inputs.minutos || '335' }}" --salida bloque
+        run: python3 articulo-comparacion/captura/capturar.py --minutos "${{ github.event.inputs.minutos || '335' }}" --salida bloque
 
       - name: Subir a la release del mes
         if: always()
@@ -46,7 +46,7 @@ jobs:
           tar -cJf "captura-$INICIO.tar.xz" -C bloque .
           gh release view "$RELEASE" >/dev/null 2>&1 || gh release create "$RELEASE" --prerelease \
             --title "Captura para la comparación ($MES)" \
-            --notes "Feed SIRI de Bizkaibus cada 20 s y tiempos de espera oficiales cada minuto. Formato y uso en comparacion/README.md. No es una versión."
+            --notes "Feed SIRI de Bizkaibus cada 20 s y tiempos de espera oficiales cada minuto. Formato y uso en articulo-comparacion/captura/README.md. No es una versión."
           gh release upload "$RELEASE" "captura-$INICIO.tar.xz" --clobber
           # El horario del día, una vez al día: con él se reconstruye la base del horario de esas capturas.
           DIA=$(TZ=Europe/Madrid date +%Y%m%d)

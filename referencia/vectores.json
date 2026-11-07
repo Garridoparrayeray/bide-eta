@@ -1802,5 +1802,944 @@
                 }
             ]
         }
-    ]
+    ],
+    "dia_del_viaje": {
+        "casos": [
+            {
+                "salida": 84600,
+                "ahora": 1800,
+                "dias_atras": 1
+            },
+            {
+                "salida": 87000,
+                "ahora": 1800,
+                "dias_atras": 1
+            },
+            {
+                "salida": 28800,
+                "ahora": 28980,
+                "dias_atras": 0
+            },
+            {
+                "salida": 600,
+                "ahora": 85800,
+                "dias_atras": 0
+            },
+            {
+                "salida": 45000,
+                "ahora": 1800,
+                "dias_atras": 0
+            },
+            {
+                "salida": 45001,
+                "ahora": 1800,
+                "dias_atras": 1
+            }
+        ],
+        "feed": {
+            "9999|201": [
+                {
+                    "tripRef": "trp_A9999_201_X_84600",
+                    "departureSeconds": 84600,
+                    "vehicleRef": "V7",
+                    "order": 9,
+                    "locationSeconds": 1700,
+                    "recordedSeconds": 1710
+                }
+            ],
+            "9999|202": [
+                {
+                    "tripRef": "trp_A9999_202_X_87000",
+                    "departureSeconds": 87000,
+                    "vehicleRef": "V8",
+                    "order": 2,
+                    "locationSeconds": null,
+                    "recordedSeconds": 1750
+                }
+            ],
+            "9999|203": [
+                {
+                    "tripRef": "trp_A9999_203_X_83000",
+                    "departureSeconds": 83000,
+                    "vehicleRef": "V9",
+                    "order": 20
+                }
+            ],
+            "9999|101": [
+                {
+                    "tripRef": "trp_A9999_101_X_1500",
+                    "departureSeconds": 1500,
+                    "vehicleRef": "V1",
+                    "order": 2,
+                    "locationSeconds": 1790,
+                    "recordedSeconds": 1790
+                }
+            ]
+        },
+        "ahora": 1800,
+        "de_ayer": {
+            "9999|201": [
+                {
+                    "tripRef": "trp_A9999_201_X_84600",
+                    "departureSeconds": 84600,
+                    "vehicleRef": "V7",
+                    "order": 9,
+                    "locationSeconds": 88100,
+                    "recordedSeconds": 88110
+                }
+            ],
+            "9999|202": [
+                {
+                    "tripRef": "trp_A9999_202_X_87000",
+                    "departureSeconds": 87000,
+                    "vehicleRef": "V8",
+                    "order": 2,
+                    "locationSeconds": null,
+                    "recordedSeconds": 88150
+                }
+            ]
+        },
+        "de_hoy": {
+            "9999|101": [
+                {
+                    "tripRef": "trp_A9999_101_X_1500",
+                    "departureSeconds": 1500,
+                    "vehicleRef": "V1",
+                    "order": 2,
+                    "locationSeconds": 1790,
+                    "recordedSeconds": 1790
+                }
+            ]
+        }
+    },
+    "buses_retenidos": {
+        "feed": {
+            "9999|101": [
+                {
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "vehicleRef": "V1",
+                    "order": 3,
+                    "locationSeconds": 29000
+                }
+            ],
+            "9999|102": [
+                {
+                    "tripRef": "trp_A9999_102_X_30000",
+                    "vehicleRef": "V3",
+                    "order": 1,
+                    "locationSeconds": 29000
+                }
+            ]
+        },
+        "anterior": {
+            "9999|101": [
+                {
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "vehicleRef": "V9",
+                    "order": 2,
+                    "locationSeconds": 28950
+                }
+            ],
+            "9999|103": [
+                {
+                    "tripRef": "trp_A9999_103_X_27000",
+                    "vehicleRef": "V2",
+                    "order": 7,
+                    "locationSeconds": 28900
+                }
+            ],
+            "9999|104": [
+                {
+                    "tripRef": "trp_A9999_104_X_27600",
+                    "vehicleRef": "V4",
+                    "order": 5,
+                    "locationSeconds": 28800
+                }
+            ],
+            "9999|105": [
+                {
+                    "tripRef": "trp_A9999_105_X_27600",
+                    "vehicleRef": "V5",
+                    "order": 4,
+                    "locationSeconds": null,
+                    "recordedSeconds": 28830
+                }
+            ],
+            "9999|106": [
+                {
+                    "tripRef": "trp_A9999_106_X_27600",
+                    "vehicleRef": "V3",
+                    "order": 6,
+                    "locationSeconds": 28990
+                }
+            ],
+            "9999|107": [
+                {
+                    "tripRef": "trp_A9999_107_X_27600",
+                    "vehicleRef": "V6",
+                    "order": 6
+                }
+            ],
+            "9999|108": [
+                {
+                    "tripRef": "trp_A9999_108_X_27600",
+                    "vehicleRef": "V10",
+                    "order": 6,
+                    "locationSeconds": 29050
+                }
+            ],
+            "9999|109": [
+                {
+                    "tripRef": "trp_A9999_109_X_27600",
+                    "vehicleRef": "",
+                    "order": 6,
+                    "locationSeconds": 29000
+                }
+            ],
+            "9999|110": [
+                {
+                    "tripRef": "trp_A9999_110_X_27600",
+                    "vehicleRef": "V11",
+                    "order": 3,
+                    "locationSeconds": 28820
+                }
+            ]
+        },
+        "ahora": 29010,
+        "resultado": {
+            "9999|101": [
+                {
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "vehicleRef": "V1",
+                    "order": 3,
+                    "locationSeconds": 29000
+                }
+            ],
+            "9999|102": [
+                {
+                    "tripRef": "trp_A9999_102_X_30000",
+                    "vehicleRef": "V3",
+                    "order": 1,
+                    "locationSeconds": 29000
+                }
+            ],
+            "9999|103": [
+                {
+                    "tripRef": "trp_A9999_103_X_27000",
+                    "vehicleRef": "V2",
+                    "order": 7,
+                    "locationSeconds": 28900,
+                    "held": true
+                }
+            ],
+            "9999|105": [
+                {
+                    "tripRef": "trp_A9999_105_X_27600",
+                    "vehicleRef": "V5",
+                    "order": 4,
+                    "locationSeconds": null,
+                    "recordedSeconds": 28830,
+                    "held": true
+                }
+            ]
+        }
+    },
+    "emparejado": {
+        "alias": {
+            "trp_A9999_101_X_28800": "J"
+        },
+        "casos": [
+            {
+                "caso": "Referencia exacta",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_Y_28700",
+                        "departureSeconds": 28800,
+                        "vehicleRef": "VO"
+                    },
+                    {
+                        "tripRef": "trp_A9999_101_X_28800",
+                        "departureSeconds": 28800,
+                        "vehicleRef": "VE"
+                    }
+                ],
+                "viaje": "J",
+                "salida": 28800,
+                "bus": "VE"
+            },
+            {
+                "caso": "Sin referencia exacta: salida a 120 s",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_Y_28920",
+                        "departureSeconds": 28920,
+                        "vehicleRef": "VA"
+                    }
+                ],
+                "viaje": "J",
+                "salida": 28800,
+                "bus": "VA"
+            },
+            {
+                "caso": "Sin referencia exacta: salida a 180 s justos",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_Y_28980",
+                        "departureSeconds": 28980,
+                        "vehicleRef": "VA"
+                    }
+                ],
+                "viaje": "J",
+                "salida": 28800,
+                "bus": "VA"
+            },
+            {
+                "caso": "Sin referencia exacta: salida a 200 s, no se empareja",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_Y_29000",
+                        "departureSeconds": 29000,
+                        "vehicleRef": "VA"
+                    }
+                ],
+                "viaje": "J",
+                "salida": 28800,
+                "bus": null
+            },
+            {
+                "caso": "Dos candidatos: el de salida más cercana",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_Y_28650",
+                        "departureSeconds": 28650,
+                        "vehicleRef": "VA"
+                    },
+                    {
+                        "tripRef": "trp_A9999_101_Y_28860",
+                        "departureSeconds": 28860,
+                        "vehicleRef": "VB"
+                    }
+                ],
+                "viaje": "J",
+                "salida": 28800,
+                "bus": "VB"
+            },
+            {
+                "caso": "Otro viaje con la misma línea y número: el bus emparejado con J no se reutiliza",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_X_28800",
+                        "departureSeconds": 28800,
+                        "vehicleRef": "VE"
+                    }
+                ],
+                "viaje": "K",
+                "salida": 28800,
+                "bus": null
+            },
+            {
+                "caso": "Otro viaje: se usa el bus sin referencia exacta",
+                "buses": [
+                    {
+                        "tripRef": "trp_A9999_101_X_28800",
+                        "departureSeconds": 28800,
+                        "vehicleRef": "VE"
+                    },
+                    {
+                        "tripRef": "trp_A9999_101_Y_28800",
+                        "departureSeconds": 28800,
+                        "vehicleRef": "VC"
+                    }
+                ],
+                "viaje": "K",
+                "salida": 28800,
+                "bus": "VC"
+            }
+        ]
+    },
+    "lectura_feed": {
+        "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Siri xmlns=\"http:\/\/www.siri.org.uk\/siri\" version=\"2.0\"><ServiceDelivery><VehicleMonitoringDelivery>\n<VehicleActivity><RecordedAtTime>2026-10-28T08:02:40+01:00<\/RecordedAtTime><MonitoredVehicleJourney>\n<VehicleJourneyRef>trp_A0651_737_ABC1_28500<\/VehicleJourneyRef><Delay>PT2M30S<\/Delay><VehicleRef>4021<\/VehicleRef>\n<VehicleLocation><Longitude>-2.93<\/Longitude><Latitude>43.26<\/Latitude><\/VehicleLocation>\n<LocationRecordedAtTime>2026-10-28T07:02:30Z<\/LocationRecordedAtTime>\n<MonitoredCall><StopPointRef>0356<\/StopPointRef><Order>5<\/Order><\/MonitoredCall><\/MonitoredVehicleJourney><\/VehicleActivity>\n<VehicleActivity><RecordedAtTime>2026-10-28T08:03:00+01:00<\/RecordedAtTime><MonitoredVehicleJourney>\n<VehicleJourneyRef>trp_A3414_12_X_29100<\/VehicleJourneyRef><Delay>-PT45S<\/Delay><VehicleRef>4100<\/VehicleRef>\n<MonitoredCall><StopPointRef>1201<\/StopPointRef><VisitNumber>2<\/VisitNumber><\/MonitoredCall><\/MonitoredVehicleJourney><\/VehicleActivity>\n<VehicleActivity><RecordedAtTime>2026-10-27T23:59:00+01:00<\/RecordedAtTime><MonitoredVehicleJourney>\n<VehicleJourneyRef>trp_A0651_801_ABC1_84000<\/VehicleJourneyRef><VehicleRef>4022<\/VehicleRef>\n<VehicleLocation><Longitude>-2.95<\/Longitude><Latitude>43.25<\/Latitude><\/VehicleLocation>\n<MonitoredCall><StopPointRef>0400<\/StopPointRef><Order>30<\/Order><\/MonitoredCall><\/MonitoredVehicleJourney><\/VehicleActivity>\n<VehicleActivity><MonitoredVehicleJourney><VehicleJourneyRef>otro_formato_1<\/VehicleJourneyRef><\/MonitoredVehicleJourney><\/VehicleActivity>\n<\/VehicleMonitoringDelivery><\/ServiceDelivery><\/Siri>",
+        "hoy": "2026-10-28",
+        "resultado": {
+            "651|737": [
+                {
+                    "tripRef": "trp_A0651_737_ABC1_28500",
+                    "lineId": "651",
+                    "departureSeconds": 28500,
+                    "delaySeconds": 150,
+                    "vehicleRef": "4021",
+                    "currentStopId": "0356",
+                    "order": 5,
+                    "lat": 43.26,
+                    "lon": -2.93,
+                    "locationSeconds": 28950,
+                    "recordedSeconds": 28960
+                }
+            ],
+            "3414|12": [
+                {
+                    "tripRef": "trp_A3414_12_X_29100",
+                    "lineId": "3414",
+                    "departureSeconds": 29100,
+                    "delaySeconds": -45,
+                    "vehicleRef": "4100",
+                    "currentStopId": "1201",
+                    "order": 2,
+                    "lat": null,
+                    "lon": null,
+                    "locationSeconds": null,
+                    "recordedSeconds": 28980
+                }
+            ],
+            "651|801": [
+                {
+                    "tripRef": "trp_A0651_801_ABC1_84000",
+                    "lineId": "651",
+                    "departureSeconds": 84000,
+                    "delaySeconds": 0,
+                    "vehicleRef": "4022",
+                    "currentStopId": "0400",
+                    "order": 30,
+                    "lat": null,
+                    "lon": null,
+                    "locationSeconds": null,
+                    "recordedSeconds": null
+                }
+            ]
+        }
+    },
+    "registro_pasos": {
+        "feed": {
+            "9999|101": [
+                {
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "order": 3,
+                    "recordedSeconds": 29000,
+                    "locationSeconds": 28990
+                },
+                {
+                    "tripRef": "trp_A9999_101_Y_28800",
+                    "order": 2,
+                    "recordedSeconds": null,
+                    "locationSeconds": 28900
+                }
+            ],
+            "9999|102": [
+                {
+                    "tripRef": "trp_A9999_102_X_30000",
+                    "order": null,
+                    "recordedSeconds": 29000
+                },
+                {
+                    "tripRef": "",
+                    "order": 1,
+                    "recordedSeconds": 29000
+                },
+                {
+                    "tripRef": "trp_A9999_102_Z_30000",
+                    "order": 4,
+                    "recordedSeconds": null,
+                    "locationSeconds": null
+                }
+            ]
+        },
+        "campos": {
+            "trp_A9999_101_X_28800": "3:29000",
+            "trp_A9999_101_Y_28800": "2:28900"
+        },
+        "campos_paradas": {
+            "trp_A9999_101_X_28800#3": "29000",
+            "trp_A9999_101_Y_28800#2": "28900"
+        },
+        "lectura": {
+            "viaje_de_cada_campo": [
+                "J",
+                "J",
+                "K",
+                "K"
+            ],
+            "valores": [
+                "3:29000",
+                "5:29100",
+                null,
+                "mal"
+            ],
+            "resultado": {
+                "J": {
+                    "order": 5,
+                    "seconds": 29100
+                }
+            }
+        },
+        "historial": {
+            "hash": {
+                "trp_A1#3": "29000",
+                "trp_A1#1": "28800",
+                "trp_A2#2": "30000",
+                "mal": "1",
+                "trp_A1#4": "x"
+            },
+            "resultado": {
+                "trp_A1": {
+                    "1": 28800,
+                    "3": 29000
+                },
+                "trp_A2": {
+                    "2": 30000
+                }
+            }
+        }
+    },
+    "escenarios_pasos": [
+        {
+            "escenario": "Sin bus en el feed; el registro lo vio con la próxima parada S3",
+            "ahora": 29400,
+            "paso_registrado": {
+                "order": 4,
+                "seconds": 29300
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 29300,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "departed",
+                    "llegada_estimada": 29300,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "departed",
+                    "llegada_estimada": 29300,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "scheduled",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29408,
+                    "retraso_s": 0
+                }
+            ]
+        },
+        {
+            "escenario": "El paso registrado es posterior a ahora: la hora mostrada es ahora",
+            "ahora": 28990,
+            "paso_registrado": {
+                "order": 2,
+                "seconds": 29000
+            },
+            "paradas": [
+                {
+                    "parada": "S0",
+                    "hora_publicada": 28800,
+                    "estado": "departed",
+                    "llegada_estimada": 28990,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S1",
+                    "hora_publicada": 28890,
+                    "estado": "scheduled",
+                    "llegada_estimada": 28890,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S2",
+                    "hora_publicada": 29010,
+                    "estado": "estimated",
+                    "llegada_estimada": 29110,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S3",
+                    "hora_publicada": 29310,
+                    "estado": "estimated",
+                    "llegada_estimada": 29310,
+                    "retraso_s": 0
+                },
+                {
+                    "parada": "S4",
+                    "hora_publicada": 29430,
+                    "estado": "estimated",
+                    "llegada_estimada": 29408,
+                    "retraso_s": 0
+                }
+            ]
+        }
+    ],
+    "retraso_mostrado": {
+        "minutos": [
+            {
+                "segundos": null,
+                "minutos": null
+            },
+            {
+                "segundos": 29,
+                "minutos": 0
+            },
+            {
+                "segundos": 30,
+                "minutos": 1
+            },
+            {
+                "segundos": 31,
+                "minutos": 1
+            },
+            {
+                "segundos": 89,
+                "minutos": 1
+            },
+            {
+                "segundos": 90,
+                "minutos": 2
+            },
+            {
+                "segundos": -29,
+                "minutos": 0
+            },
+            {
+                "segundos": -30,
+                "minutos": -1
+            },
+            {
+                "segundos": -31,
+                "minutos": -1
+            },
+            {
+                "segundos": -90,
+                "minutos": -2
+            },
+            {
+                "segundos": 2700,
+                "minutos": 45
+            },
+            {
+                "segundos": 2701,
+                "minutos": null
+            },
+            {
+                "segundos": -2701,
+                "minutos": null
+            }
+        ],
+        "buses": [
+            {
+                "caso": "Con GPS: el retraso en la próxima parada",
+                "entrada": {
+                    "lat": 43.2601,
+                    "lon": -2.9213653740062107,
+                    "locationSeconds": 28950,
+                    "recordedSeconds": 28950,
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "lineId": "9999",
+                    "departureSeconds": 28800,
+                    "delaySeconds": 0,
+                    "vehicleRef": "V1",
+                    "currentStopId": "S2",
+                    "order": 3
+                },
+                "ahora": 28980,
+                "retraso_actual_s": 0,
+                "retraso_mostrado_s": 10
+            },
+            {
+                "caso": "Sin GPS: el retraso de la parada registrada",
+                "entrada": {
+                    "recordedSeconds": 28950,
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "lineId": "9999",
+                    "departureSeconds": 28800,
+                    "delaySeconds": 0,
+                    "vehicleRef": "V1",
+                    "currentStopId": "S2",
+                    "order": 3,
+                    "lat": null,
+                    "lon": null,
+                    "locationSeconds": null
+                },
+                "ahora": 28980,
+                "retraso_actual_s": 10,
+                "retraso_mostrado_s": 10
+            },
+            {
+                "caso": "Dato GPS viejo y sin hora de la lectura: 0",
+                "entrada": {
+                    "lat": 43.2601,
+                    "lon": -2.9213653740062107,
+                    "locationSeconds": 28300,
+                    "tripRef": "trp_A9999_101_X_28800",
+                    "lineId": "9999",
+                    "departureSeconds": 28800,
+                    "delaySeconds": 0,
+                    "vehicleRef": "V1",
+                    "currentStopId": "S2",
+                    "order": 3,
+                    "recordedSeconds": null
+                },
+                "ahora": 28980,
+                "retraso_actual_s": 0,
+                "retraso_mostrado_s": 0
+            }
+        ]
+    },
+    "eleccion_percentil": {
+        "candidatos": [
+            0.3,
+            0.35,
+            0.4,
+            0.45,
+            0.5
+        ],
+        "desvios": [
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 1,
+                "count": 6,
+                "error": 150.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 2,
+                "count": 6,
+                "error": 340.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 3,
+                "count": 6,
+                "error": 50.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 4,
+                "count": 6,
+                "error": 320.0
+            },
+            {
+                "date": "2026-10-26",
+                "serviceDate": "2026-10-26",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 5,
+                "count": 6,
+                "error": 40.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 1,
+                "count": 6,
+                "error": 290.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 2,
+                "count": 6,
+                "error": 190.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 3,
+                "count": 6,
+                "error": 380.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 4,
+                "count": 6,
+                "error": 60.0
+            },
+            {
+                "date": "2026-10-27",
+                "serviceDate": "2026-10-27",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 5,
+                "count": 6,
+                "error": 210.0
+            },
+            {
+                "date": "2026-10-28",
+                "serviceDate": "2026-10-28",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 1,
+                "count": 6,
+                "error": -70.0
+            },
+            {
+                "date": "2026-10-28",
+                "serviceDate": "2026-10-28",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 2,
+                "count": 6,
+                "error": 30.0
+            },
+            {
+                "date": "2026-10-28",
+                "serviceDate": "2026-10-28",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 3,
+                "count": 6,
+                "error": 120.0
+            },
+            {
+                "date": "2026-10-28",
+                "serviceDate": "2026-10-28",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 4,
+                "count": 6,
+                "error": 330.0
+            },
+            {
+                "date": "2026-10-28",
+                "serviceDate": "2026-10-28",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 5,
+                "count": 6,
+                "error": 240.0
+            },
+            {
+                "date": "2026-10-29",
+                "serviceDate": "2026-10-29",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 1,
+                "count": 6,
+                "error": 250.0
+            },
+            {
+                "date": "2026-10-29",
+                "serviceDate": "2026-10-29",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 2,
+                "count": 6,
+                "error": 0.0
+            },
+            {
+                "date": "2026-10-29",
+                "serviceDate": "2026-10-29",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 3,
+                "count": 6,
+                "error": 210.0
+            },
+            {
+                "date": "2026-10-29",
+                "serviceDate": "2026-10-29",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 4,
+                "count": 6,
+                "error": -70.0
+            },
+            {
+                "date": "2026-10-29",
+                "serviceDate": "2026-10-29",
+                "trip": "L1|A|D|28800|6",
+                "line": "L1",
+                "departure": 28800,
+                "index": 5,
+                "count": 6,
+                "error": -100.0
+            }
+        ],
+        "primer_dia_de_prueba": "2026-10-29",
+        "por_percentil": [
+            {
+                "percentil": 0.3,
+                "error_medio_s": 144.4,
+                "a_2_min": 20
+            },
+            {
+                "percentil": 0.35,
+                "error_medio_s": 144.4,
+                "a_2_min": 20
+            },
+            {
+                "percentil": 0.4,
+                "error_medio_s": 147.4,
+                "a_2_min": 40
+            },
+            {
+                "percentil": 0.45,
+                "error_medio_s": 149.2,
+                "a_2_min": 60
+            },
+            {
+                "percentil": 0.5,
+                "error_medio_s": 151.2,
+                "a_2_min": 60
+            }
+        ],
+        "elegido": 0.45,
+        "sin_corregir": {
+            "error_medio_s": 126.0,
+            "a_2_min": 60
+        },
+        "se_escribe": false
+    }
 }

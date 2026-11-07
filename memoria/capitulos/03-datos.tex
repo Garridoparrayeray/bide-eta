@@ -1,0 +1,303 @@
+\chapter{Fuentes y Modelo de Datos}
+\label{cap:datos}
+
+\section{El Horario Programado}
+
+El horario oficial se publica en GTFS y se transforma, una vez al día, en una base de datos SQLite de solo lectura,
+una por red. La Tabla~\ref{tab:esquema} resume las tablas que usa el motor; el esquema completo está en el
+Apéndice~\ref{ap:formatos}.
+
+\begin{table}[ht]
+\centering
+\caption{Tablas de la Base de Datos del Horario que Usa el Motor}\label{tab:esquema}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+Tabla & Contenido relevante para el motor \\
+\midrule
+\texttt{stops} & Paradas: identificador, nombre, latitud y longitud. \\
+\texttt{service\_journeys} & Viajes: línea, recorrido (\texttt{journey\_pattern\_id}), número de viaje, calendario,
+  hora de salida de cabecera y trazado (\texttt{shape\_id}). \\
+\texttt{passing\_times} & Para cada viaje y cada parada en orden (\texttt{seq\_order}, desde 1): llegada y salida
+  programadas en segundos y \texttt{dist\_m}, la distancia a lo largo del trazado. \\
+\texttt{shapes} & Trazado de cada recorrido como lista JSON de puntos $[\varphi,\lambda,\sigma]$: latitud, longitud y
+  distancia recorrida. \\
+\texttt{trip\_aliases} & Correspondencia entre cada \texttt{trip\_id} original del GTFS y el viaje fusionado al que
+  pertenece. \\
+\texttt{journey\_patterns} & Recorridos: secuencias de paradas compartidas por varios viajes. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La columna \texttt{dist\_m} de \texttt{passing\_times} es el campo
+\texttt{shape\_dist\_traveled} de \texttt{stop\_times.txt}, y la tercera componente de cada punto del trazado es el
+\texttt{shape\_dist\_traveled} de \texttt{shapes.txt}. Ambas se miden sobre el mismo trazado y en la misma unidad (si no es
+así, se corrigen al construir la base; sección «\nameref{sec:trazados-gtfs}»), lo que permite pasar de un punto del trazado a la parada que tiene delante o detrás (sección «\nameref{sec:trazado}»). Los
+puntos del trazado se guardan con 7 decimales en las coordenadas y 2 en la distancia. Si la red no tiene trazados, la
+base no tiene la tabla \texttt{shapes} y el motor trata \texttt{dist\_m} como desconocida; esto tiene consecuencias en
+el respaldo por longitud (sección «\nameref{sec:respaldo-largo}»).
+
+\section{Trazados que No Casan con sus Paradas}
+\label{sec:trazados-gtfs}
+
+Lo anterior supone que el trazado y las distancias de las paradas casan, pero en el GTFS de Bizkaibus no siempre es así.
+Con el horario del 3 de noviembre de 2026, 55 de los 440 trazados que usan los viajes están dibujados del final al
+principio: la primera parada del viaje queda junto al último punto del trazado y la última junto al primero. Estos trazados afectan a
+670 de los 6\,130 viajes fusionados, repartidos en 25 líneas. En otros trazados el sentido es correcto, pero los metros
+de \texttt{shape\_dist\_traveled} no caen sobre la parada: unos van desplazados 200 o 300~m, y en otros la diferencia
+crece hasta varios kilómetros al final del viaje. En total, 1\,417 viajes tenían alguna parada a más de 200~m del punto
+del trazado que marcan sus metros.
+
+El efecto en el motor es grave. La ventana de búsqueda (sección «\nameref{sec:ventana}») se define con los metros de
+las paradas, así que, con el trazado al revés, el autobús se busca en la otra punta del recorrido: un autobús a 9~m de su
+parada queda «a kilómetros» y el pasillo de 50~m lo descarta. Esos autobuses no se situaban con el GPS y, como el
+aprendizaje sale de las posiciones, tampoco se aprendía de ellos: los viajes con el trazado al revés tenían el 47\,\% de sus
+tramos con tiempo aprendido, frente al 95\,\% del resto.
+
+La construcción de la base corrige ambos problemas antes de publicarla. El programa
+(\texttt{scripts/build/shapes.php}) forma parte del código privado de la aplicación, pero el algoritmo completo es
+este:
+
+\begin{enumerate}
+  \item \emph{Sentido}. Un trazado está al revés si, en la mayoría de sus viajes, la suma de las distancias de la
+        primera parada al último punto y de la última al primero es menor que la de la primera parada al primer punto
+        y de la última al último. En ese caso se le da la vuelta: se invierte el orden de los puntos y
+        $\sigma'=\sigma_{\max}-\sigma$.
+  \item \emph{Metros de las paradas}. Si se ha dado la vuelta al trazado, o si alguna parada cae a más de 100~m del
+        punto del trazado que marcan sus metros, se miden de nuevo todas las paradas de ese viaje: cada parada se
+        proyecta sobre el trazado a partir de la anterior, buscando como mucho hasta tres veces la distancia en línea
+        recta entre las dos, más 500~m. Si el trazado pasa dos veces por la misma zona, gana el primer paso, salvo que
+        el segundo quede 30~m más cerca.
+\end{enumerate}
+
+\noindent Con el horario de ese día se dio la vuelta a los 55 trazados y se midieron de nuevo las paradas de 2\,905
+viajes; los viajes con alguna parada a más de 200~m del punto que marcan sus metros bajaron de 1\,417 a 26. La corrección es general:
+se aplica al construir cualquier red, porque nada en el formato GTFS impide estos errores.
+
+El formato tampoco obliga a publicar los metros. Los GTFS de Lurraldebus, Bilbobus, Tuvisa y La Unión no traen los de
+las paradas, y los de Lurraldebus, La Unión y Bilbobus tampoco los del trazado (el de Bilbobus los deja a 0 en todos los
+puntos menos en el último). Sin metros, el motor sitúa al autobús con la recta entre paradas (sección «\nameref{sec:sin-trazado}»).
+Por eso la construcción los mide: los del trazado, sumando la distancia de cada punto al siguiente, y los de las
+paradas, como en el paso~2.
+
+Los feeds de Lurraldebus y Bilbobus, las dos de esas redes en las que funciona el motor, no traían vehículos el 3 de
+noviembre de 2026, así que la medida se hizo con Bizkaibus, quitándole los metros del GTFS. Se compararon tres
+versiones del mismo horario con las mismas capturas: 36 bloques de una hora del 2 y el 3 de noviembre, con 2,08
+millones de llegadas de paso conocido (Tabla~\ref{tab:sin-metros}). Los metros medidos quedan a una mediana de 21~m de
+los del GTFS (el 95\,\%, a menos de 103~m) y aciertan casi tanto como ellos. La recta entre paradas sitúa con el GPS un 5,6\,\% menos de llegadas y
+acierta 1,8 puntos menos dentro de $\pm$2~min. Sin tiempos aprendidos, como en una red recién activada, las tres
+versiones quedan a menos de medio punto: entonces lo que falta es aprender, no situar.
+
+\begin{table}[ht]
+\centering
+\caption{Llegadas de Bizkaibus Según los Metros de las Paradas}\label{tab:sin-metros}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{4}{c}{Con tiempos aprendidos} & \multicolumn{2}{c}{Sin aprender} \\
+\cmidrule(lr){2-5}\cmidrule(l){6-7}
+Metros de las paradas & Con GPS & $\pm$1 min & $\pm$2 min & Error & $\pm$2 min & Error \\
+\midrule
+Del GTFS & 97,4\,\% & 55,6\,\% & 78,4\,\% & 92~s & 51,5\,\% & 192~s \\
+Medidos sobre el trazado & 97,3\,\% & 55,3\,\% & 78,2\,\% & 93~s & 51,6\,\% & 192~s \\
+Ninguno (recta entre paradas) & 91,9\,\% & 54,0\,\% & 76,6\,\% & 105~s & 51,2\,\% & 194~s \\
+\bottomrule
+\end{tabular}
+
+\nota{Los mismos 2,08 millones de llegadas en las tres versiones. «Del GTFS»: los metros del GTFS con la corrección
+descrita más arriba. «Con GPS»: las que el motor sitúa con la posición del autobús (capa~1). «Error»: error absoluto medio de la hora de llegada. «Sin aprender»: sin tiempos por tramo, factores de ritmo ni correcciones por viaje.}
+\end{table}
+
+En las cuatro redes la medida es coherente: los metros nunca bajan de una parada a la siguiente, y el 99,5\,\% de los
+viajes de Bilbobus, el 95,9\,\% de los de Lurraldebus, el 99,6\,\% de los de Tuvisa y el 98,9\,\% de los de La Unión
+tienen todas sus paradas a menos de 100~m de su punto del trazado. Medirlos alarga la construcción de cada
+red entre 0 y 9~s.
+
+\section{Fusión de Variantes y Alias de Viaje}
+\label{sec:alias}
+
+Un mismo servicio aparece en el GTFS como varios \texttt{trip\_id} que solo se diferencian en el calendario (por
+ejemplo, uno para los lunes y otro para el resto de laborables). Para no mostrar salidas duplicadas, la construcción
+de la base agrupa esos \texttt{trip\_id} en un único viaje. Dos \texttt{trip\_id} se fusionan cuando coinciden en:
+
+\begin{enumerate}
+  \item la línea (\texttt{route\_id}) y el número de viaje;
+  \item la secuencia de paradas (la clave del recorrido es un resumen MD5 de los identificadores de parada en orden);
+  \item el grupo de calendario;
+  \item la \emph{forma temporal}: para cada parada, la llegada relativa a la salida de cabecera y el tiempo de espera
+        en la parada (un resumen MD5 de esa lista);
+\end{enumerate}
+
+\noindent y, además, sus salidas de cabecera son consecutivas con una separación no mayor de 90~s
+(\texttt{iDepartureClusterGapSeconds}). El viaje resultante reúne los días de sus miembros (unión de las máscaras de
+días de la semana y de las fechas incluidas y excluidas). Cada \texttt{trip\_id} miembro queda registrado en
+\texttt{trip\_aliases} apuntando al viaje fusionado. Esa tabla es la que permite emparejar exactamente el feed en
+tiempo real con el horario (sección «\nameref{sec:emparejamiento}»): el feed usa los \texttt{trip\_id} originales.
+
+\section{Por Qué el Horario No Sirve Como Referencia Absoluta}
+\label{sec:interpolado}
+
+En el GTFS de Bizkaibus las paradas intermedias llevan \texttt{timepoint=0}. Sus horas no son compromisos del
+operador, sino una interpolación lineal en la distancia entre las horas de las cabeceras. La
+Figura~\ref{fig:distancia-tiempo} muestra la consecuencia. El horario es la recta $T(s)$: una velocidad constante. La
+marcha real $R(s)$ es más lenta en la ciudad y mucho más rápida en la autopista. A mitad de recorrido, $R$ y $T$
+pueden estar separadas muchos minutos sin que el autobús vaya «adelantado» en ningún sentido operativo.
+
+\begin{figure}[ht]
+\centering
+\caption{Distancia y Tiempo de un Viaje Ilustrativo}\label{fig:distancia-tiempo}
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.88\textwidth, height=6.4cm,
+  xlabel={Distancia recorrida $s$ (km)}, ylabel={Hora (min desde la salida)},
+  xmin=0, xmax=30, ymin=0, ymax=62,
+  axis lines=left, tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\footnotesize,draw=none,at={(0.02,0.98)},anchor=north west}]
+  \addplot[thick,color=gris,dashed,domain=0:30] {2*x};
+  \addlegendentry{Horario interpolado $T(s)$}
+  \addplot[very thick,color=ruta,smooth] coordinates {(0,0) (4,12) (6,17) (8,20) (14,26) (20,32) (24,40) (28,52) (30,57)};
+  \addlegendentry{Marcha real $R(s)$}
+  \addplot[only marks,mark=*,mark size=2.6pt,color=gps] coordinates {(14,26)};
+  \draw[gps,thick,-{Stealth}] (axis cs:14,26) -- (axis cs:24,46);
+  \node[font=\footnotesize,color=gps,anchor=west] at (axis cs:14.4,24.5) {GPS: $(s_p,\tgps)$};
+  \draw[decorate,decoration={brace,amplitude=4pt}] (axis cs:14.3,28) -- (axis cs:14.3,26.2);
+\end{axis}
+\end{tikzpicture}
+\nota{La recta discontinua es el horario interpolado; la curva, la marcha real. Desde el punto GPS, el método traza una paralela al horario (flecha) y la corrige tramo a tramo con los tiempos aprendidos.}
+\end{figure}
+
+\section{El Feed en Tiempo Real}
+\label{sec:feed}
+
+El feed SIRI-VM de Bizkaibus es un documento XML público que se regenera aproximadamente una vez por minuto y contiene
+unos 250 vehículos en hora punta. El ritmo ha variado: en octubre de 2026 se publicaba una versión cada 55~s; el 5 de
+noviembre, una cada 64~s de mediana, y cada posición llegaba 66~s después de tomarse, también en mediana (sección
+«\nameref{sec:llegando}»). El motor lo descarga con un tiempo de espera máximo de 8~s y lo guarda en caché durante
+25~s. Para cada \texttt{VehicleActivity} extrae
+los campos de la Tabla~\ref{tab:feed}.
+
+\begin{table}[ht]
+\centering
+\caption{Campos que el Motor Lee del Feed SIRI-VM}\label{tab:feed}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+Símbolo & Elemento SIRI & Uso \\
+\midrule
+$\rho$ & \texttt{MonitoredVehicleJourney/VehicleJourneyRef} & Referencia del viaje; igual al \texttt{trip\_id} del GTFS. \\
+$\ell,\ \nu,\ d_0^{\mathrm{feed}}$ & (extraídos de $\rho$) & Línea (sin ceros a la izquierda, como en el horario), número de viaje y salida de cabecera, por la expresión~\eqref{eq:regex}. \\
+$v$ & \texttt{VehicleRef} & Identificador del vehículo. \\
+$n$ & \texttt{MonitoredCall/Order} (o \texttt{VisitNumber}) & Orden de la próxima parada en el viaje. \\
+$(\varphi,\lambda)$ & \texttt{VehicleLocation/Latitude}, \texttt{Longitude} & Posición GPS. \\
+$\tgps$ & \texttt{LocationRecordedAtTime} (o \texttt{RecordedAtTime}) & Hora de la posición. \\
+$t_{\mathrm{rec}}$ & \texttt{VehicleActivity/RecordedAtTime} & Hora del registro del vehículo. \\
+$\delta_{\mathrm{decl}}$ & \texttt{Delay} (duración ISO 8601) & Retraso declarado; ausente en Bizkaibus ($0$). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Referencia del Viaje} Solo se aceptan las actividades cuya referencia encaja con la expresión regular
+\begin{equation}
+\label{eq:regex}
+\texttt{\^{}trp\_[A-Za-z]+(\textbackslash d+)\_(\textbackslash d+)\_[A-Za-z0-9]+\_(\textbackslash d+)}
+\end{equation}
+cuyos tres grupos son la línea $\ell$, el número de viaje $\nu$ y la salida de cabecera $d_0^{\mathrm{feed}}$ en
+segundos; las demás actividades se ignoran. Por ejemplo, \texttt{trp\_A3414\_808\_OP9LSEPT\_54000\_\ldots} da
+$\ell=3414$, $\nu=808$ y $d_0^{\mathrm{feed}}=54\,000$ (15:00:00). La línea se guarda sin ceros a la izquierda, como el
+\texttt{route\_id} del horario: \texttt{trp\_A0651\_737\_\ldots} da $\ell=651$, no \texttt{0651} (\texttt{0651}, con el
+cero de relleno, viene del nombre público \texttt{A0651}, que el horario guarda aparte en \texttt{route\_short\_name}).
+Las entradas se agrupan por la clave «$\ell|\nu$», porque puede haber varios vehículos con la misma línea y número de
+viaje en distintos días de calendario.
+
+\subsection{Horas} Las horas del feed son fechas y horas ISO 8601 con zona horaria. Se convierten a
+\texttt{Europe/Madrid} y a segundos desde la medianoche, $3600\,H+60\,M+S$. Si la fecha convertida no es la fecha de hoy, el valor se descarta: una posición
+de ayer no dice nada del viaje de hoy. Si la hora de la posición no es válida, también se descartan la latitud y la
+longitud. Una entrada sin ninguna hora de hoy, ni $\tgps$ ni $t_{\mathrm{rec}}$, no se usa: ni en la predicción, ni en
+el registro de pasos, ni en el mapa (\texttt{RealtimeMatcher::hasTime}). Mientras el feed se actualiza, todas las entradas la
+traen: 1\,471 de 1\,471 entradas leídas el 6 de noviembre de 2026 entre las 23:00 y las 23:59, la última hora antes de
+que se detenga. De 23:58 a 05:00, en cambio, el feed de Bizkaibus no
+se actualiza: repite la lectura de las 23:58 con sus horas de entonces, aunque haya autobuses nocturnos en servicio
+(capturas de las noches del 31 de octubre y del 6 de noviembre de 2026). Pasada la medianoche, ninguna de esas entradas
+tiene hora de hoy (sección «\nameref{sec:mas-de-24h}»).
+
+\subsection{Retraso Declarado} El retraso, cuando existe, es una duración $\pm$\texttt{PT}$h$\texttt{H}$m$\texttt{M}$s$\texttt{S};
+se convierte a $\pm(3600h+60m+s)$. En Bizkaibus no aparece y el motor de autobús no lo usa
+(sección «\nameref{sec:otras-redes}»).
+
+\subsection{Lo que el Feed No Dice} El feed solo trae posiciones: no publica cancelaciones, ni qué vehículo hará cada
+viaje, ni refuerzos fuera del horario. Con las capturas del 3 de noviembre de 2026 se midieron cuatro consecuencias:
+
+\begin{itemize}
+  \item \emph{Viajes sin autobús.} En cuatro momentos del día, 947 viajes debían estar en marcha según el horario y
+        187 (el 20\,\%) no tenían autobús en el feed. Al seguir esos viajes en las capturas, se ve que la mayoría no falta: el
+        12\,\% del total ya había llegado al final antes de su hora (el horario deja margen al final del recorrido);
+        un 2\,\% aparece más tarde, con una mediana de unos 15~min de retraso; otro 2\,\% desaparece un rato y vuelve, y otro
+        2\,\% desaparece a mitad y no vuelve. Solo el 2\,\% no aparece en ningún momento del día; desde fuera no se distingue
+        un autobús sin GPS de un viaje que no se hizo.
+  \item \emph{El número de viaje no es el vehículo.} De los viajes consecutivos de una misma clave «$\ell|\nu$», solo
+        el 11\,\% los hizo el mismo autobús, y el GTFS no trae \texttt{block\_id}. No se puede saber de antemano qué
+        autobús hará el próximo viaje, ni arrastrar a él el retraso del anterior (sección «\nameref{sec:descartadas}»).
+  \item \emph{Orden y parada.} El orden $n$ y la parada \texttt{StopPointRef} coinciden en el 97,9\,\% de los
+        casos. En unas pocas líneas (3129, 2610, 2611 y 652) el operador cuenta una o varias paradas más que el GTFS;
+        el motor usa $n$, y fiarse de la parada no mejoró la medida.
+  \item \emph{Dónde está el autobús.} El feed no dice si un autobús está en una parada. \texttt{StopPointRef} es
+        la próxima parada, también mientras el autobús espera en la primera de su viaje: entonces apunta a la segunda
+        (359 de 360 casos en nueve instantáneas del 3 de noviembre). \texttt{ArrivalStatus} vale \texttt{arrived} en los 2\,142 autobuses
+        observados, estuvieran parados o en marcha, y el feed no trae \texttt{PreviousCalls}. Solo el GPS lo dice (sección
+        «\nameref{sec:cabecera}»).
+\end{itemize}
+
+\section{Notación}
+\label{sec:notacion}
+
+\begin{definicion}[Viaje]
+Un viaje $J$ es una secuencia de $N\ge2$ paradas $p_1,\dots,p_N$. Para cada $i$ se conocen la llegada y la salida
+programadas $a_i\le d_i$, las coordenadas $(\varphi_i,\lambda_i)$, el identificador $u_i$ de la parada y,
+opcionalmente, la distancia $s_i$ a lo largo del trazado, con $s_1\le s_2\le\dots\le s_N$. El orden de la parada
+$p_i$ es $i$ (\texttt{seq\_order}). La salida de cabecera es $d_1$. El trazado, si existe, es una polilínea
+$\Sigma=\big((\varphi_j,\lambda_j,\sigma_j)\big)_{j=1}^{M}$ con $\sigma_j$ no decreciente.
+\end{definicion}
+
+\begin{definicion}[Tramo]
+El tramo $i$ de $J$ es el par de paradas consecutivas $(p_i,p_{i+1})$. Su identificador es «$u_i>u_{i+1}$», su
+duración programada es $a_{i+1}-a_i$ y su longitud, si se conocen las distancias, es $s_{i+1}-s_i$. Dos viajes de
+líneas distintas que pasan por las mismas dos paradas consecutivas comparten el tramo.
+\end{definicion}
+
+\begin{definicion}[Entrada del feed]
+Una entrada es la tupla $e=(\rho,\allowbreak\ell,\allowbreak\nu,\allowbreak d_0^{\mathrm{feed}},\allowbreak v,\allowbreak n,\allowbreak\varphi,\allowbreak\lambda,\allowbreak\tgps,\allowbreak t_{\mathrm{rec}})$ de la
+Tabla~\ref{tab:feed}, donde cualquiera de $n,\varphi,\lambda,\tgps,t_{\mathrm{rec}}$ puede faltar.
+\end{definicion}
+
+\begin{definicion}[Franja]
+\label{def:franja}
+La franja de una fecha $D$ y un instante $t$ es el par
+\begin{gather*}
+\franja(D,t)=\big(\text{tipo}(D),\ h(t)\big),\\
+\text{tipo}(D)=\begin{cases}\texttt{fin\_semana}&\text{si $D$ es sábado o domingo},\\ \texttt{laborable}&\text{en otro caso,}\end{cases}
+\end{gather*}
+con $h=\lfloor t/3600\rfloor \bmod 24$ y
+\[
+h(t)=\begin{cases}
+\texttt{madrugada} & 0\le h<6\\
+\texttt{punta\_manana} & 6\le h<9\\
+\texttt{manana} & 9\le h<13\\
+\texttt{mediodia} & 13\le h<16\\
+\texttt{punta\_tarde} & 16\le h<20\\
+\texttt{noche} & 20\le h<24.
+\end{cases}
+\]
+Se escribe como texto «\texttt{tipo.nombre}», por ejemplo \texttt{laborable.punta\_manana}. Hay, por tanto, doce
+franjas.
+\end{definicion}
+
+\begin{observacion}
+La fecha que se usa es la del día de servicio, no la del reloj. Un instante de 25:00 ($90\,000$~s) de un miércoles
+pertenece a la franja \texttt{laborable.madrugada} del miércoles, aunque en el calendario ya sea jueves. En los tiempos por
+tramo, los festivos entre semana se tratan como laborables: se comprobó que su tráfico se parece más al de un laborable
+que al de un fin de semana (sección «\nameref{sec:descartadas}»). La capa 3 es la excepción: para ella el festivo
+cuenta como fin de semana en todo (franja de los tramos, factor de ritmo, parte aprendida y corrección por viaje),
+porque así el error medido fue menor (sección «\nameref{sec:capa3}»).
+\end{observacion}
+
+\begin{definicion}[Hora actual]
+$\tnow$ es la hora del servidor en el momento de responder, en segundos desde la medianoche de Madrid del día actual.
+Para un viaje del día anterior se usa $\tnow+86\,400$, que expresa la hora en la escala de su horario (sección «\nameref{sec:mas-de-24h}»).
+\end{definicion}

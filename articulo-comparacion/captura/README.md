@@ -1,4 +1,4 @@
-# comparacion/ — the method against Bizkaibus's own waiting times
+# articulo-comparacion/captura/ — the method against Bizkaibus's own waiting times
 
 *Castellano más abajo.*
 
@@ -45,7 +45,7 @@ The feed repeats old data from 23:58 to 05:00, so night hours are not captured.
 To run it on your own computer (Python 3.9+, no other dependency, works on Windows):
 
 ```bash
-python3 comparacion/capturar.py --minutos 60 --salida mi-captura
+python3 articulo-comparacion/captura/capturar.py --minutos 60 --salida mi-captura
 ```
 
 ## Load and attribution
@@ -72,7 +72,7 @@ Las predicciones del método **no** se piden a la API de Bide+: se recalculan de
 sobre las mismas capturas del feed, que da exactamente lo mismo que el motor de producción.
 
 **Cuándo y dónde.** Tres tandas al día (de 06:00 a 23:00) en GitHub Actions, cada una subida a la release
-`comparacion-AAAA-MM`. Para hacerlo en tu ordenador: `python3 comparacion/capturar.py --minutos 60 --salida mi-captura`.
+`comparacion-AAAA-MM`. Para hacerlo en tu ordenador: `python3 articulo-comparacion/captura/capturar.py --minutos 60 --salida mi-captura`.
 
 **Carga y atribución.** Una petición por parada y minuto al servicio oficial, una detrás de otra, identificándose con
 este repositorio. Los datos son de quien los publica (Diputación Foral de Bizkaia / Bizkaibus) y se guardan para

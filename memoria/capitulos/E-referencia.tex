@@ -1,0 +1,73 @@
+\chapter{Implementación de Referencia}
+\label{ap:referencia}
+
+La implementación de referencia, en Python 3 y sin dependencias externas, se escribió a partir de la especificación de
+esta memoria y no del código PHP. Reproduce todos los vectores del Apéndice~\ref{ap:vectores}. Su propósito es servir
+de punto de partida para portar el método a otro lenguaje: es corta, sigue el orden de los capítulos y usa nombres parecidos a los
+del texto.
+
+\section{Cómo Comprobarla}
+
+Los ficheros van adjuntos a este PDF: \texttt{referencia.py}, \texttt{comprobar.py}, \texttt{vectores.json} y
+\texttt{desvio-horario.py}. La mayoría de los lectores de PDF los muestran en un panel de adjuntos, desde el que se
+pueden guardar; también se pueden extraer con \texttt{pdfdetach -saveall} (de Poppler). Con los cuatro en una carpeta:
+
+\begin{lstlisting}[language=bash,numbers=none]
+python3 comprobar.py
+# 407 de 407 comprobaciones coinciden con el código de producción
+\end{lstlisting}
+
+\noindent La carpeta \texttt{referencia} del repositorio público trae además \texttt{evaluar.py}, el evaluador
+público: repite la evaluación de la sección «\nameref{sec:varios-dias}» sobre capturas del feed y escribe los mismos
+histogramas de 15~s que la de producción, idénticos clase a clase en las 92\,686 predicciones de 40~minutos de feed
+del 7 de noviembre de 2026. Los vectores los generó el autor con el código de producción, que es privado, mediante el
+programa \texttt{vectores.php}. Ese programa también está en esa carpeta, para que se vea qué función del motor dio
+cada resultado, aunque sin el código privado no se puede ejecutar. El fichero \texttt{vectores.json} trae además un
+caso que \texttt{comprobar.py} no usa (\texttt{k\_un\_bus}, el factor sin contraer de una sola pista). No hace falta
+el código privado para usar los vectores: una implementación nueva, en cualquier lenguaje, está bien hecha cuando los
+reproduce todos. El
+programa \texttt{desvio-horario.py} recalcula las cifras de la sección «\nameref{sec:desvio-horario}»; necesita la base del
+horario y las muestras de tramo, que se generan con el propio método (capítulos «\nameref{cap:datos}»
+y «\nameref{cap:aprendizaje}»).
+
+\embedfile[desc={Implementación de referencia},filespec=referencia.py,ucfilespec=referencia.py]{../referencia/referencia.py}
+\embedfile[desc={Comprobación contra los vectores de prueba},filespec=comprobar.py,ucfilespec=comprobar.py]{../referencia/comprobar.py}
+\embedfile[desc={Vectores de prueba generados con el código de producción},filespec=vectores.json,ucfilespec=vectores.json]{../referencia/vectores.json}
+\embedfile[desc={Cifras de la sección El horario publicado se desvía en los dos sentidos},filespec=desvio-horario.py,ucfilespec=desvio-horario.py]{../referencia/desvio-horario.py}
+
+\section{Lo que Hay que Respetar al Portar}
+
+\begin{enumerate}
+  \item \textbf{Redondeo.} $\redondeo$ redondea las mitades alejándose del cero. En Python, \texttt{round(2.5)} da 2;
+        hay que usar la función \texttt{php\_round} de la implementación de referencia. En JavaScript, \texttt{Math.round(-2.5)} da $-2$
+        y tampoco sirve para negativos. El redondeo a tres decimales es $\redondeo(1000x)/1000$.
+  \item \textbf{Mediana baja y percentiles.} $x_{(\lfloor p(n-1)\rfloor)}$ sobre los valores ordenados, sin promediar los dos
+        centrales. Las funciones de mediana de las bibliotecas estadísticas suelen interpolar.
+  \item \textbf{División entera.} $t_{\mathrm{mid}}=\lfloor(d_1+a_\dest)/2\rfloor$ y la hora
+        $\lfloor t/3600\rfloor\bmod24$ se calculan con división entera.
+  \item \textbf{Truncado.} El campo \texttt{at} de las muestras de tramo es la parte entera del paso real, no su
+        redondeo.
+  \item \textbf{CRC32 sin signo.} El pliegue de validación usa el CRC32 de IEEE de los bytes UTF-8 de la pista, como
+        entero sin signo; en lenguajes con enteros de 32 bits con signo hay que convertirlo antes del módulo.
+  \item \textbf{Lista u objeto.} \texttt{lengthRatios} puede llegar como lista o como objeto
+        (Apéndice~\ref{ap:formatos}).
+  \item \textbf{Orden de evaluación.} La posición, con su contraste, se evalúa antes que cualquier uso del registro
+        (sección «\nameref{sec:desconfianza}»).
+  \item \textbf{Bucles por horas.} El tiempo esperado recorre los tramos comparando horas, no índices
+        (sección «\nameref{sec:tiempo-esperado}»).
+  \item \textbf{Festivos.} La capa 3 de un festivo entre semana se calcula con el domingo de esa semana, incluida la
+        franja de la salida con la que se busca la corrección de la línea.
+  \item \textbf{Dos redondeos.} En la capa 3, el tiempo esperado y la corrección por viaje se redondean por separado.
+  \item \textbf{El día del viaje.} La implementación de referencia recibe la entrada, $\tnow$ y la fecha ya en las horas
+        del día del viaje.
+        Pasada la medianoche, una entrada de un viaje de ayer~\eqref{eq:dia-viaje} se calcula con $\tgps$,
+        $t_{\mathrm{rec}}$ y $\tnow$ más $86\,400$~s y con la fecha de ayer; una entrada sin ninguna hora de hoy no se usa
+        (sección «\nameref{sec:mas-de-24h}»). El almacén externo en el que se guardan el registro de pasos y la memoria del feed no está en la
+        implementación de referencia, pero sí las reglas que escriben y leen esos datos (Apéndice~\ref{ap:vectores}).
+\end{enumerate}
+
+\section{Código}
+
+\lstinputlisting[language=Python,caption={\texttt{referencia.py}},label=lst:referencia]{../referencia/referencia.py}
+
+\lstinputlisting[language=Python,caption={\texttt{comprobar.py}},label=lst:comprobar]{../referencia/comprobar.py}

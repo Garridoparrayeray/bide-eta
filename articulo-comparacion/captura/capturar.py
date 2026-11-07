@@ -9,7 +9,7 @@ Guarda, a la vez:
 No consulta la API de Bide+: las predicciones del método se recalculan después con la implementación de referencia.
 Solo biblioteca estándar; funciona igual en Linux, macOS y Windows.
 
-Uso: python3 comparacion/capturar.py --minutos 330 --salida <carpeta>
+Uso: python3 articulo-comparacion/captura/capturar.py --minutos 330 --salida <carpeta>
 """
 import argparse
 import datetime

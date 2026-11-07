@@ -1,0 +1,264 @@
+\chapter{Emparejamiento y Localización}
+\label{cap:localizacion}
+
+Antes de predecir nada hay que responder a dos preguntas: qué viaje del horario está haciendo cada autobús del feed y
+en qué punto de ese viaje se encuentra. La respuesta a la segunda es una hora programada, $\Tpos$: la hora a la que el
+horario sitúa al autobús en el lugar donde el GPS dice que está.
+
+\section{Emparejamiento con el Horario}
+\label{sec:emparejamiento}
+
+\subsection{Emparejamiento Exacto} La referencia $\rho$ del feed es un \texttt{trip\_id} del GTFS. Con la tabla
+\texttt{trip\_aliases} (sección «\nameref{sec:alias}») se obtiene directamente el viaje fusionado $J=\mathrm{alias}(\rho)$.
+Al construir el emparejador se consultan a la vez los alias de todas las referencias del feed; para cada viaje $J$ se
+guarda la \emph{primera} entrada del feed cuyo alias es $J$. En las pruebas con el feed real, el 100\,\% de los
+autobuses se emparejó así.
+
+\subsection{Emparejamiento de Respaldo} Si la base de datos no tiene la tabla de alias, o el viaje no aparece en ella,
+se buscan las entradas con la misma clave «$\ell|\nu$» que el viaje y se elige la de salida de cabecera más próxima:
+\begin{equation}
+e^\ast=\argmin_{e\in C}\ \big|d_0^{\mathrm{feed}}(e)-d_1(J)\big|
+\quad\text{sujeto a}\quad \big|d_0^{\mathrm{feed}}(e)-d_1(J)\big|\le 180\ \mathrm{s},
+\end{equation}
+donde $C$ es el conjunto de esas entradas, sin las que ya tienen un emparejamiento exacto con otro viaje. Si hay
+empate, gana la primera encontrada; si ninguna cumple la tolerancia (\texttt{MATCH\_TOLERANCE\_SECONDS}), el viaje no tiene datos en directo.
+
+\section{Proyección de un Punto Sobre un Segmento}
+\label{sec:proyeccion}
+
+Toda la localización se basa en una sola operación: proyectar la posición del autobús sobre un segmento rectilíneo $AB$
+(entre dos puntos del trazado, o entre dos paradas).
+
+\subsection{Plano Local} Se usa una proyección equirrectangular centrada en el autobús, que queda en el origen. Un
+punto $Q=(\varphi_Q,\lambda_Q)$ pasa a
+\begin{equation}
+\label{eq:plano}
+x_Q=(\lambda_Q-\lambda)\cdot\cos\varphi\cdot 111\,320,\qquad y_Q=(\varphi_Q-\varphi)\cdot 111\,320,
+\end{equation}
+en metros, donde $(\varphi,\lambda)$ es la posición del autobús y 111\,320 es el número de metros por grado
+(\texttt{METERS\_PER\_DEGREE}).
+
+\subsection{Proyección} Sean $\mathbf{a}=(x_A,y_A)$ y $\mathbf{b}=(x_B,y_B)$ los extremos del segmento en el plano
+local, y $\mathbf{u}=\mathbf{b}-\mathbf{a}$.
+\begin{equation}
+\label{eq:proyeccion}
+f=\begin{cases}\clamp\!\left(-\dfrac{\mathbf{a}\cdot\mathbf{u}}{\|\mathbf{u}\|^2},\,0,\,1\right) & \text{si } \|\mathbf{u}\|^2>0\\[1ex]
+0 & \text{si } \|\mathbf{u}\|^2=0\end{cases}
+\qquad
+d_\perp=\|\mathbf{a}+f\,\mathbf{u}\|,\qquad L=\|\mathbf{u}\|.
+\end{equation}
+Aquí $f\in[0,1]$ es la fracción del segmento, desde $A$, hasta el punto más próximo al autobús; $d_\perp$, la distancia
+del autobús a ese punto, y $L$, la longitud del segmento (Figura~\ref{fig:proyeccion}).
+
+\begin{proposicion}
+El punto $\mathbf{a}+f\,\mathbf{u}$ con $f$ dado por~\eqref{eq:proyeccion} es el punto del segmento más próximo al
+origen.
+\end{proposicion}
+\begin{proof}
+Si $\|\mathbf{u}\|=0$, el segmento se reduce a un punto, que es el que da $f=0$. Si no, $g(t)=\|\mathbf{a}+t\mathbf{u}\|^2=\|\mathbf{a}\|^2+2t\,
+\mathbf{a}\cdot\mathbf{u}+t^2\|\mathbf{u}\|^2$ es una parábola convexa con mínimo en
+$t^\ast=-\mathbf{a}\cdot\mathbf{u}/\|\mathbf{u}\|^2$. Restringida a $[0,1]$, su mínimo se alcanza en $\clamp(t^\ast,0,1)$, porque
+$g$ es decreciente a la izquierda de $t^\ast$ y creciente a la derecha.
+\end{proof}
+
+\subsection{Error de la Aproximación} La proyección~\eqref{eq:plano} usa para todos los puntos el coseno de la
+latitud del autobús, $\cos\varphi$. En un punto situado $\Delta\varphi$ radianes al norte o al sur, el factor correcto
+sería $\cos(\varphi+\Delta\varphi)
+\approx\cos\varphi\,(1-\Delta\varphi\tan\varphi)$. A la latitud de Bilbao ($\varphi\approx43{,}26^\circ$,
+$\tan\varphi\approx0{,}94$) y a 3~km ($\Delta\varphi\approx4{,}7\cdot10^{-4}$~rad), el error relativo es del orden
+del 0,04\,\%, poco más de un metro. El factor de 111\,320~m por grado sobrestima en torno a un 0,2\,\% la longitud
+de un grado de latitud en Bilbao, unos 6~m en 3~km. Ambos errores son despreciables frente a los pasillos de
+tolerancia (50 y 150~m). Además, la hora programada se obtiene de la \emph{fracción} $f$ y de las distancias del
+propio GTFS, no de distancias medidas en el plano, así que un error de escala uniforme no altera $\Tpos$. El error de
+escala de este plano no es del todo uniforme (frente al elipsoide WGS84, las distancias este–oeste quedan un 0,16\,\%
+cortas y las norte–sur un 0,2\,\% largas), pero esa diferencia entre los ejes mueve el punto proyectado menos de un
+0,4\,\% de la longitud del segmento: también despreciable.
+
+\begin{figure}[ht]
+\centering
+\caption{Proyección del Autobús Sobre un Segmento: Fracción $f$ y Distancia Perpendicular $d_\perp$}\label{fig:proyeccion}
+\begin{tikzpicture}[scale=1.15]
+  \coordinate (A) at (0,0);
+  \coordinate (B) at (7,1.4);
+  \coordinate (P) at (3.6,2.1);
+  \coordinate (H) at ($(A)!(P)!(B)$);
+  \draw[very thick,ruta] (A) -- (B);
+  \fill[ruta] (A) circle (2.2pt) node[below left] {$A$};
+  \fill[ruta] (B) circle (2.2pt) node[below right] {$B$};
+  \fill[gps] (P) circle (2.6pt) node[above] {autobús $(0,0)$};
+  \draw[gps,dashed,thick] (P) -- (H) node[midway,right] {$d_\perp$};
+  \fill[black] (H) circle (1.6pt);
+  \draw[decorate,decoration={brace,amplitude=5pt,mirror},thick,gris] ($(A)+(0.05,-0.25)$) -- ($(H)+(0.05,-0.25)$) node[midway,below=4pt,sloped,font=\small] {$f\cdot L$};
+  \draw[decorate,decoration={brace,amplitude=5pt,mirror},thick,gris] ($(A)+(0.1,-0.95)$) -- ($(B)+(0.1,-0.95)$) node[midway,below=4pt,sloped,font=\small] {$L$};
+\end{tikzpicture}
+\end{figure}
+
+\section{Ventana de Búsqueda}
+\label{sec:ventana}
+
+El feed indica el orden $n$ de la próxima parada. Esa información acota dónde puede estar el autobús: en algún punto
+poco antes de $p_n$. La búsqueda se limita a los tramos del $i_{\min}$ al $i_{\max}$, con
+\begin{equation}
+\label{eq:ventana}
+i_{\min}=\max(1,\,n-3),\qquad i_{\max}=\min(N-1,\,n+2),
+\end{equation}
+es decir, del tramo $n-3$ al $n+2$: los tres que llevan hasta la próxima parada y los tres que salen de ella o de
+las siguientes (las constantes \texttt{SEGMENTS\_BEHIND\_NEXT\_STOP} y \texttt{SEGMENTS\_AHEAD\_OF\_NEXT\_STOP}, de
+valores 3 y 2, son los desplazamientos respecto a $n$). La ventana cubre las paradas $p_{i_{\min}},\dots,p_{i_{\max}+1}$,
+de $p_{n-3}$ a $p_{n+3}$ cuando el viaje las tiene (Figura~\ref{fig:ventana}). Mirar hacia atrás tolera que el feed
+cambie de próxima parada antes de tiempo; mirar hacia delante, que lo haga con retraso. Si $n$ no es el orden de ninguna parada del viaje, no hay posición.
+
+\section{Con Trazado}
+\label{sec:trazado}
+
+Se usa este método cuando el viaje tiene trazado y se conocen las distancias $s_i$ de todas las paradas de la
+ventana. Sean $S_{\mathrm{lo}}=s_{i_{\min}}$ y $S_{\mathrm{hi}}=s_{i_{\max}+1}$ las distancias de la primera y de la
+última parada de la ventana.
+
+\begin{enumerate}
+  \item \textbf{Candidatos.} Para cada par de puntos consecutivos del trazado $A=\Sigma_j$, $B=\Sigma_{j+1}$ que no
+        quedan fuera de la ventana (quedan fuera si $\sigma_B<S_{\mathrm{lo}}$ o $\sigma_A>S_{\mathrm{hi}}$), se
+        proyecta el autobús con~\eqref{eq:proyeccion} y se calcula su posición a lo largo del trazado,
+        $s^\ast=\sigma_A+f\,(\sigma_B-\sigma_A)$.
+  \item \textbf{Dos grupos.} El candidato es \emph{esperado} si $s^\ast\le s_n+100$~m
+        (\texttt{BEYOND\_NEXT\_STOP\_SLACK\_METERS}) y \emph{más allá} en otro caso. En cada grupo se conserva el de menor
+        $d_\perp$; con empate, el primero.
+  \item \textbf{Desempate.} Se elige el mejor esperado salvo que el mejor de más allá esté más de 20~m más cerca del
+        trazado (\texttt{AMBIGUITY\_MARGIN\_METERS}):
+        \[
+        \text{elegido}=\begin{cases}\text{más allá}&\text{si existe y } \big(\text{no hay esperado o }d_\perp^{\text{más allá}}+20<d_\perp^{\text{esperado}}\big)\\
+        \text{esperado}&\text{en otro caso.}\end{cases}
+        \]
+  \item \textbf{Pasillo.} La posición es válida si el candidato elegido tiene $d_\perp\le50$~m
+        (\texttt{MAX\_DISTANCE\_FROM\_SHAPE\_METERS}).
+  \item \textbf{Hora programada.} Se acota $s^\ast\leftarrow\clamp(s^\ast,S_{\mathrm{lo}},S_{\mathrm{hi}})$ y se
+        busca el primer tramo $i\in[i_{\min},i_{\max}]$ con $s^\ast\le s_{i+1}$ (o el último de la ventana, si ninguno lo
+        cumple). Entonces
+        \begin{equation}
+        \label{eq:tpos}
+        f_i=\begin{cases}\clamp\!\Big(\dfrac{s^\ast-s_i}{s_{i+1}-s_i},0,1\Big)&\text{si }s_{i+1}>s_i\\ 0&\text{en otro caso}\end{cases}
+        \qquad
+        \Tpos=\redondeo\big(d_i+f_i\,(a_{i+1}-d_i)\big).
+        \end{equation}
+\end{enumerate}
+
+La hora programada se interpola entre la \emph{salida} de la parada de inicio del tramo y la \emph{llegada} a la de
+fin: dentro del tramo el autobús está en marcha, y la espera en la parada no forma parte de él. Como los segmentos del
+trazado que tocan el borde de la ventana entran como candidatos y $s^\ast$ se acota a $[S_{\mathrm{lo}},S_{\mathrm{hi}}]$,
+una posición GPS algo más allá de un extremo de la ventana queda en ese extremo: con un trazado que solo tuviera
+puntos en las paradas, un autobús 400~m después de $p_{i_{\max}+1}$ y dentro del pasillo toma $\Tpos=a_{i_{\max}+1}$.
+
+Hacen falta dos grupos porque hay recorridos que vuelven sobre la misma calle: una ida y vuelta por el mismo eje o
+una rotonda. Una posición GPS en esa calle tiene dos proyecciones casi igual de cercanas. El grupo de los esperados da
+preferencia a la que es coherente con la próxima parada que declara el feed. Solo se acepta una proyección más
+adelantada si es claramente mejor (más de 20~m más cerca), lo que cubre el caso en que el feed tarda en actualizar la
+próxima parada. Los 100~m de margen tras la próxima parada absorben el retraso con que el feed cambia de parada.
+
+\begin{figure}[ht]
+\centering
+\caption{Ventana de Búsqueda Alrededor de la Próxima Parada}\label{fig:ventana}
+\begin{tikzpicture}[scale=1.0]
+  \draw[line width=6pt,gris!25,line cap=round] (0,0) -- (13,0);
+  \draw[line width=6pt,ruta,line cap=round] (1.2,0) -- (11.4,0);
+  \foreach \x/\l in {1.2/$p_{n-3}$,3.4/$p_{n-2}$,5.6/$p_{n-1}$,7.8/$p_{n}$,9.0/$p_{n+1}$,10.2/$p_{n+2}$,11.4/$p_{n+3}$} {
+    \fill[white] (\x,0) circle (5pt); \draw[ruta,thick] (\x,0) circle (5pt);
+    \node[below=7pt,font=\small] at (\x,0) {\l};
+  }
+  \fill[ruta] (7.8,0) circle (5pt);
+  \draw[gps,dashed,thick] (7.8,0) -- (7.8,1.3) -- (8.6,1.3) -- (8.6,0);
+  \node[gps,font=\footnotesize,above] at (8.2,1.3) {$+100$ m};
+  \fill[gps] (6.6,0.55) circle (3pt);
+  \draw[gps,thick] (6.6,0.55) -- (6.6,0);
+  \node[gps,font=\footnotesize,above] at (6.6,0.6) {GPS};
+  \draw[decorate,decoration={brace,amplitude=5pt},thick] (1.2,-0.95) -- (11.4,-0.95) node[midway,below=6pt,font=\small] {ventana: tramos $i_{\min}=n-3$ a $i_{\max}=n+2$, paradas $p_{n-3}$ a $p_{n+3}$};
+\end{tikzpicture}
+\nota{El trazo discontinuo marca el margen de 100~m tras la próxima parada $p_n$, límite de los candidatos
+«esperados».}
+\end{figure}
+
+\section{Sin Trazado}
+\label{sec:sin-trazado}
+
+Si el viaje no tiene trazado, o falta la distancia de alguna parada de la ventana, se proyecta sobre las rectas entre
+paradas. Para cada tramo $i$ de la ventana, en orden, se proyecta el autobús sobre el segmento $p_ip_{i+1}$ (con las
+coordenadas de las paradas) y se conserva el de menor $d_\perp$ (con empate, el primero). Para ese tramo se calculan
+\begin{equation}
+c_i=\max\big(150,\ 0{,}15\,L_i\big),\qquad \Tpos=\redondeo\big(d_i+f\,(a_{i+1}-d_i)\big),
+\end{equation}
+donde $f$ y $L_i$ son la fracción y la longitud que da la proyección~\eqref{eq:proyeccion} sobre ese segmento, y la
+posición es válida si $d_\perp\le c_i$ (\texttt{MAX\_DISTANCE\_FROM\_ROUTE\_METERS},
+\texttt{MAX\_DISTANCE\_FROM\_ROUTE\_SEGMENT\_RATIO}). El pasillo es más ancho que con trazado porque la calle real se
+aparta de la recta entre dos paradas, tanto más cuanto más largo es el tramo. Sin trazado no hay dos grupos ni
+desempate: se conserva el tramo más cercano y, en un recorrido que vuelve sobre sí mismo, la única protección es la
+ventana.
+
+Como la construcción de la base mide ahora los metros en las redes que no los publican (sección
+«\nameref{sec:trazados-gtfs}»), este caso queda solo para los viajes que no tienen ningún trazado: los demás se sitúan
+con el trazado y su pasillo de 50~m.
+
+\section{Condiciones Para Usar el GPS}
+\label{sec:condiciones-gps}
+
+La posición de una entrada $e$ en el viaje $J$ existe solo si se cumplen todas estas condiciones:
+
+\begin{enumerate}
+  \item $e$ tiene latitud, longitud, hora de la posición $\tgps$ y orden $n$ de la próxima parada;
+  \item el dato es reciente: $\tnow-\tgps\le600$~s (\texttt{MAX\_LOCATION\_AGE\_SECONDS});
+  \item el viaje tiene al menos dos paradas;
+  \item el viaje ha empezado o está a punto de empezar: $\tgps\ge d_1-60$~s (\texttt{NOT\_STARTED\_GRACE\_SECONDS}); si
+        no, solo cabe la posición en la cabecera (sección «\nameref{sec:cabecera}»);
+  \item $n$ es el orden de una parada del viaje;
+  \item la proyección es válida (secciones «\nameref{sec:trazado}» o «\nameref{sec:sin-trazado}»);
+  \item el GPS no contradice a la parada registrada (sección «\nameref{sec:desconfianza}»).
+\end{enumerate}
+
+Si se cumplen, la \emph{posición} es la cuádrupla $\big(\Tpos,\ \tgps,\ d_\perp,\ \text{método}\big)$ y el
+\emph{desfase en la posición} es
+\begin{equation}
+\label{eq:desfase-pos}
+\delta_{\mathrm{pos}}=\tgps-\Tpos.
+\end{equation}
+Un valor positivo indica que el autobús llega a ese punto más tarde de lo que dice el horario. Como el horario está
+interpolado, este desfase \emph{no} se muestra al usuario tal cual (sección «\nameref{sec:retraso-mostrado}»).
+
+\begin{ejemplo}
+\label{ej:posicion}
+Considérese el viaje sintético del Apéndice~\ref{ap:vectores}: cinco paradas, $p_1$ a $p_5$ ($S0$ a $S4$ en
+los vectores), en línea recta hacia el este a lo largo del paralelo $43{,}26^\circ$, a 0, 400, 1\,000,
+2\,500 y 3\,200~m, con la misma hora de llegada y de salida en cada parada: 8:00:00, 8:01:30, 8:03:30, 8:08:30 y
+8:10:30 ($28\,800$, $28\,890$, $29\,010$, $29\,310$ y $29\,430$~s). Un autobús declara como próxima parada $p_3$
+($n=3$) y su GPS está 700~m al este de la primera parada y $0{,}0001^\circ$ al norte ($\approx11$~m), con
+$\tgps=28\,950$.
+
+La ventana es $i_{\min}=\max(1,0)=1$, $i_{\max}=\min(4,5)=4$. Con trazado, la mejor proyección cae en el tramo
+$p_2p_3$, con $d_\perp=11{,}132$~m $\le50$ y $s^\ast=700$~m. Entonces $f_2=(700-400)/(1\,000-400)=0{,}5$ y
+$\Tpos=\redondeo(28\,890+0{,}5\cdot(29\,010-28\,890))=28\,950$. El desfase en la posición es
+$\delta_{\mathrm{pos}}=0$: el autobús está donde dice el horario. Sin trazado se obtiene el mismo $\Tpos$, por
+proyección sobre la recta $p_2p_3$.
+\end{ejemplo}
+
+\section{En la Cabecera, Antes de Salir}
+\label{sec:cabecera}
+
+Un autobús asignado a un viaje que aún no ha salido no cumple la condición~4 de la sección
+«\nameref{sec:condiciones-gps}». Muchos de ellos esperan en la primera parada: en la captura del 3 de noviembre de 2026
+a las 14:47, 36 de los 259 autobuses estaban antes de su hora de salida y 34 de ellos, a menos de 50~m de su primera
+parada. Sin posición, la parada de cabecera y las siguientes salían solo con el horario, aunque el autobús estuviera
+allí. Por eso, cuando $\tgps<d_1-60$, la entrada tiene la posición
+\begin{equation}
+\label{eq:cabecera}
+\Tpos=\min(a_1,d_1),\qquad \tgps'=d_1,\qquad\text{método «cabecera»},
+\end{equation}
+si el autobús está a 150~m o menos de la primera parada (\texttt{MAX\_DISTANCE\_FROM\_ROUTE\_METERS}) y su posición
+se tomó como mucho 60~min antes de su salida, $d_1-\tgps\le3\,600$~s (\texttt{MAX\_WAIT\_AT\_ORIGIN\_SECONDS}). Más
+lejos de la parada, el autobús puede estar acabando otro viaje; más de una hora antes, la asignación es poco segura. La
+hora de la posición pasa a ser la de salida, $d_1$: el autobús no ha recorrido nada y saldrá, como pronto, a su hora.
+
+Con esta posición, la fila sale «en directo», pero su llegada no se calcula desde $\tgps'$: es la de la capa 3
+(sección «\nameref{sec:cabecera-eta}»). Tampoco se da por pasada la primera parada, aunque el feed ya apunte a la
+segunda ($n=2$) mientras el autobús espera. La aplicación lo muestra como «En la parada», pero solo en la fila de la
+primera parada, que se identifica por su orden en el recorrido y no por su hora: dos paradas seguidas pueden tener la
+misma hora publicada, y en un viaje circular la primera y la última son la misma. Las posiciones en la cabecera no
+entran en las medidas del aprendizaje, porque no describen ningún recorrido. En el 97\,\% de los casos en que una
+entrada se sitúa así, el autobús hace después ese viaje desde allí (sección «\nameref{sec:fiabilidad-estados}»).
+

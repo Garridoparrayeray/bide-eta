@@ -1,4 +1,4 @@
-"""Cifras de la sección 1.1: frecuencia de las líneas y desvío entre el paso real y la hora publicada.
+"""Cifras de la sección «El horario publicado se desvía en los dos sentidos» de la memoria: frecuencia de las líneas y desvío entre el paso real y la hora publicada.
 
 Uso:
     python3 desvio-horario.py <bizkaibus.sqlite> <segment-samples.jsonl> [fecha=2026-10-28]

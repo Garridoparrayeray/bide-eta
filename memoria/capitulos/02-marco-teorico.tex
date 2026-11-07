@@ -1,0 +1,126 @@
+\chapter{Marco Teórico y Estado del Arte}
+\label{cap:marco}
+
+Este capítulo sitúa el método en el contexto de la predicción de llegadas de transporte público y presenta las
+herramientas estadísticas en que se apoya. Se centra en los trabajos y las técnicas que explican de dónde vienen las
+ideas del método y por qué se eligieron unas y no otras.
+
+\section{Predicción de la Hora de Llegada}
+
+Predecir cuándo llegará un vehículo a un punto de su recorrido es un problema clásico de los sistemas inteligentes de
+transporte. Los enfoques de la literatura pueden agruparse en cuatro familias.
+
+\subsection{Medias Históricas} Se estima el tiempo de recorrido entre dos puntos con el valor típico observado en el
+pasado para esa hora y ese día. Son sencillas, estables y fáciles de explicar, pero no reaccionan a lo que le ocurre
+al vehículo concreto.
+
+\subsection{Regresión y Modelos de Series Temporales} Relacionan el tiempo de recorrido con variables explicativas
+(hora, distancia, número de paradas, demanda) o con su propia historia reciente. Exigen elegir y mantener esas
+variables.
+
+\subsection{Filtros de Kalman} Combinan una predicción \emph{a priori} con la observación más reciente, ponderando cada una
+por su incertidumbre \citep{kalman1960}. Se han usado para predecir llegadas y salidas a partir de datos de
+localización automática de vehículos (AVL) y de conteo automático de viajeros (APC) \citep{shalaby2004}.
+
+\subsection{Redes Neuronales} Aprenden la relación entre la posición y el tiempo restante a partir de muchos datos
+\citep{chien2002,jeong2005}. Suelen ser precisas cuando hay abundancia de datos homogéneos, pero son difíciles de
+auditar y de explicar a quien usa el sistema.
+
+\subsection{Trabajos Recientes} Dos revisiones recientes recogen el estado del campo: \citet{kumar2025review}, que cubre
+el proceso completo (datos, modelos, discretización del recorrido y medidas de evaluación), y
+\citet{singh2022review}, centrada en los modelos de inteligencia artificial. Partir el viaje en tramos entre paradas
+consecutivas y predecir cada uno por separado es habitual \citep{gal2017journey}. La variabilidad del tiempo de
+recorrido depende mucho de la hora del día \citep{mazloumi2010variability}, lo que justifica aprender por franjas.
+\citet{lin1999experimental} compararon algoritmos que combinan el GPS con el horario en un servicio rural de baja
+frecuencia, un caso parecido al de los autobuses interurbanos. Entre los filtros de Kalman, \citet{cathey2003prescription} propusieron el esquema de
+seguimiento, filtrado y predicción para datos AVL, y \citet{vanajakshi2009kalman} lo aplicaron a autobuses en tráfico
+heterogéneo. Entre las redes neuronales se han usado redes recurrentes \citep{pang2019rnn}, redes LSTM convolucionales
+que predicen a la vez todos los enlaces de una línea \citep{petersen2019convlstm}, redes de grafos con atención para
+datos escasos \citep{ma2022multiattention} y transformadores entrenados con datos abiertos
+\citep{jeong2024battransformer}. En la predicción del tráfico, el aprendizaje profundo no siempre es la mejor técnica,
+y los métodos de referencia sencillos y bien ajustados siguen siendo importantes \citep{manibardo2022deep}.
+
+Otros trabajos parten, como este, de los datos que publican los operadores. \citet{wessel2017retrospective}
+reconstruyeron el horario realmente cumplido a partir de un feed público de posiciones, igual que aquí se reconstruye
+la verdad de referencia. \citet{cats2016realtime} evaluaron las predicciones que ya se mostraban a los viajeros en
+Estocolmo y encontraron que subestimaban la espera. \citet{garciamaurino2024improving} corrigieron los errores
+sistemáticos de las predicciones de los operadores de Madrid y París solo con datos de sus API públicas.
+\citet{woodard2017predicting} modelaron, para viajes en coche, un efecto propio de cada viaje y recurrieron a
+parámetros agrupados cuando un enlace tenía pocas observaciones, dos recursos análogos a la corrección por viaje y a la
+contracción de este método.
+
+El método de esta memoria pertenece a la primera familia en su forma de estimar tiempos (valores típicos por tramo y
+franja) y combina esa estimación con la observación en tiempo real de la posición, que hace de «reinicio» de la predicción en cada
+actualización del feed. La elección es deliberada: con un dato de posición por minuto y sin retrasos publicados, un
+modelo explicable, robusto y medible tramo a tramo resultó más útil que uno de caja negra. Las ideas que se
+probaron y no mejoraron la medida (entre ellas, corregir con la velocidad del último minuto del vehículo, la forma más
+simple de filtrar) se recogen en la sección «\nameref{sec:descartadas}». Un filtro de Kalman sobre la desviación del
+propio autobús en los tramos ya terminados, suavizada y olvidada con el tiempo, sí reduce un 4\,\% el error medio de las
+sumas de tramos (sección «\nameref{sec:comparacion}»): lo que decide es qué se filtra y cuánto se recuerda
+(sección «\nameref{sec:otros-enfoques}»).
+
+\section{Datos de Transporte: GTFS y SIRI}
+
+GTFS \citep{gtfs} es el formato \emph{de facto} para publicar horarios programados. Describe agencias, líneas
+(\texttt{routes}), viajes (\texttt{trips}), paradas (\texttt{stops}), horas de paso (\texttt{stop\_times}),
+calendarios (\texttt{calendar}, \texttt{calendar\_dates}) y trazados (\texttt{shapes}). Dos campos son centrales
+aquí: \texttt{shape\_dist\_traveled}, la distancia recorrida a lo largo del trazado hasta cada parada y cada punto del
+trazado, y \texttt{timepoint}, que indica si la hora de paso es exacta (\texttt{1}) o aproximada por interpolación
+(\texttt{0}).
+
+GTFS Realtime \citep{gtfsrt} y SIRI \citep{siri} son los formatos más usados para datos en tiempo real. SIRI Vehicle
+Monitoring (SIRI-VM) publica, para cada vehículo, la actividad de su viaje: referencia del viaje
+(\texttt{VehicleJourneyRef}), posición (\texttt{VehicleLocation}), hora de la posición
+(\texttt{LocationRecordedAtTime}) y llamada a la próxima parada (\texttt{MonitoredCall}), con su orden
+(\texttt{Order} o \texttt{VisitNumber}).
+
+\section{Ajuste al Mapa}
+
+Situar una posición GPS sobre una red o un recorrido se conoce como \emph{map matching} \citep{quddus2007}. Los
+métodos van desde la proyección geométrica sobre el segmento más próximo hasta modelos probabilísticos que tienen en
+cuenta la topología y la trayectoria. Aquí el recorrido se conoce de antemano (es el trazado del viaje
+que el propio feed declara), lo que reduce el problema a una proyección sobre una polilínea. La dificultad que queda
+es la ambigüedad cuando el recorrido pasa dos veces por la misma calle; el capítulo «\nameref{cap:localizacion}» la resuelve
+con una ventana alrededor de la próxima parada y una regla de desempate.
+
+Para distancias de unos pocos kilómetros basta una proyección equirrectangular local \citep{snyder1987}, que trata la
+superficie terrestre como un plano alrededor del punto de interés.
+
+\section{Estadística Robusta}
+
+La media de una muestra es muy sensible a valores extremos: un único autobús parado veinte minutos por un accidente
+desplaza la media de un tramo tanto como muchos autobuses normales. Los estimadores \emph{robustos}
+\citep{huber1964,tukey1977} limitan esa influencia. La mediana es el más sencillo: su punto de ruptura es del 50\,\%,
+es decir, la mitad de la muestra tendría que estar contaminada para llevarla a un valor arbitrario. El método usa
+medianas en todos sus agregados, y además toma un solo valor por vehículo y viaje, para que un vehículo lento visto
+muchas veces no pese más que uno visto una vez.
+
+\section{Contracción y Modelos Jerárquicos}
+\label{sec:marco-contraccion}
+
+Cuando se estiman muchas medias a la vez (un tiempo para cada tramo y cada franja horaria), algunas se apoyan en muy
+pocas observaciones y son ruidosas. \citet{jamesstein1961} demostraron que, al estimar simultáneamente tres o más medias de
+distribuciones normales, un estimador que contrae las medias observadas hacia un punto fijo tiene un error cuadrático
+total esperado menor que el de usar cada media por separado. \citet{efronmorris1975} mostraron su utilidad con datos
+reales, contrayendo cada media hacia la media común del grupo. En términos bayesianos
+\citep{gelman2013}, la contracción equivale a un modelo jerárquico con \emph{agrupamiento parcial}: cada grupo tiene su
+propio parámetro, pero estos se parecen entre sí, y la estimación de cada grupo es una media ponderada de su dato
+propio y del valor común, en la que el peso del dato propio crece con el número de observaciones del grupo.
+
+El método aplica esta idea en dos sitios: el tiempo de un tramo en una franja se contrae hacia el tiempo del tramo a
+cualquier hora (sección «\nameref{sec:contraccion-tramo}»), y el factor de ritmo se contrae hacia~1 (sección «\nameref{sec:k}»).
+
+\section{Validación}
+\label{sec:marco-validacion}
+
+Medir el error con los mismos datos con que se aprendió sobreestima la precisión. La \emph{validación cruzada}
+\citep{kohavi1995,hastie2009} separa los datos en particiones, aprende con unas y mide con otras. Cuando los datos
+tienen orden temporal, lo honesto es aprender con el pasado y medir con el futuro (\emph{validación con origen
+móvil}, \citealp{hyndman2021}). El método usa ambas: una partición por recorridos (un autobús en un viaje de un día) para
+decidir si se escribe una nueva calibración y una partición por días para comparar reglas. La primera comparte los
+días entre aprendizaje y prueba, y con ellos el tráfico y la meteorología de cada día, por lo que las reglas nuevas se
+deciden con la segunda. \citet{hyndmankoehler2006} distinguen entre las medidas de
+error que dependen de la escala de los datos, como el error absoluto medio, y las que no: las primeras sirven para
+comparar métodos sobre unos mismos datos, pero no entre conjuntos de datos con escalas distintas. Aquí todas las
+predicciones se miden en la misma unidad (segundos), de modo que se usan errores absolutos y porcentajes de aciertos
+dentro de umbrales que tienen sentido para quien espera el autobús.

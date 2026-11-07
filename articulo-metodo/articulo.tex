@@ -6,6 +6,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{microtype}
+\setlength{\emergencystretch}{2em}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs,tabularx}
 \usepackage{xcolor}
@@ -43,6 +44,7 @@
 \makeatother
 
 \newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
 
 \begin{document}
 
@@ -69,8 +71,8 @@ timetable corrected trip by trip. It recalibrates itself every day and only adop
 measured on held-out days. On 9.1 million predictions over 23 days checked against the actual passage, the displayed
 arrival is within $\pm2$~minutes in 92--96\% of cases when the bus is less than three minutes away and in 67\% at
 ten to twenty minutes, against 23--25\% for the published timetable. Without any live data, the corrected timetable
-alone doubles the accuracy of the published one. A reference implementation in Python, 323 test vectors produced by
-the production engine, a public evaluator that reproduces the production evaluation exactly, and the learned tables
+alone doubles the accuracy of the published one. A reference implementation in Python, test vectors with 407 checks produced
+by the production engine, a public evaluator that reproduces the production evaluation exactly, and the learned tables
 and evaluation data are openly available.
 \end{abstract}
 
@@ -110,7 +112,9 @@ This paper describes the method that the Bizkaibus+ app\footnote{\url{https://ww
 independent and has no relation with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the service.}
 uses to predict arrivals under these conditions. Its purpose is to make the method reusable: every rule is given with
 its formula and constants, the evaluation protocol is specified so that it can be repeated on other data, and the
-reference implementation, test vectors, evaluator and data are public. The contributions are:
+reference implementation, test vectors, evaluator and data are public. A longer technical report in Spanish
+\parencite{garrido2026memoria} gives the measurements behind each constant, the history of each rule and the full
+evaluation. The contributions are:
 
 \begin{enumerate}
   \item A representation of the vehicle state in \emph{timetable time}: the GPS position is projected on the route
@@ -121,8 +125,8 @@ reference implementation, test vectors, evaluator and data are public. The contr
         the error on held-out days.
   \item A three-layer prediction with explicit abstention rules, which decides for every stop whether the vehicle
         position, the last registered stop or the corrected timetable gives the best available estimate, and says so.
-  \item An open, verifiable package: a reference implementation written only from the specification, 323 test
-        vectors produced by the production engine, an evaluator that reproduces the production histograms bin by
+  \item An open, verifiable package: a reference implementation written only from the specification, test
+        vectors with 407 checks produced by the production engine, an evaluator that reproduces the production histograms bin by
         bin, and the learned tables and evaluation data (Section~\ref{sec:reuse}).
 \end{enumerate}
 
@@ -149,16 +153,7 @@ it uses the timetable corrected with what each trip usually does. Each predictio
 \section{Related work}
 \label{sec:related}
 
-% Se completa con la bibliografía verificada (related-work.bib): revisiones, métodos por tramos e históricos,
-% filtros de Kalman, aprendizaje automático, estudios con GTFS-Realtime y calidad de los feeds, contracción.
-
-Bus arrival time prediction has been studied with historical averages and regression, Kalman filters, artificial
-neural networks and, more recently, deep learning models. Early work used neural networks trained on automatic
-vehicle location data \parencite{chien2002} and combined them with Kalman filters to update predictions with the
-latest observations \parencite{shalaby2004}. Kalman filtering \parencite{kalman1960} remains a common baseline for
-the delay of a single vehicle. The relationship between published schedules, observed running times and the
-uncertainty of predictions has also been studied from the passenger's side
-\parencite{mishalani2006,watkins2011,brakewood2019}.
+\input{relacionado}
 
 % =====================================================================================================================
 \section{Data and problem setting}
@@ -221,8 +216,7 @@ pass increasingly early as the trip advances.}
 \section{Method}
 \label{sec:method}
 
-% PENDIENTE: se escribe a partir de la lectura completa de los capítulos 4 a 7 de la memoria (localización, modelo,
-% predicción en tres capas, aprendizaje), con las fórmulas, las constantes y el pseudocódigo.
+\input{metodo}
 
 % =====================================================================================================================
 \section{Evaluation}
@@ -333,8 +327,7 @@ lower in the second period than in the first.
 \paragraph{By day type} Weekday and weekend accuracy are similar (92\% and 92\% below three minutes, 67\% and 65\% at
 ten to twenty minutes).
 
-% PENDIENTE: comparación con el filtro de Kalman y la red neuronal (memoria, capítulo 8), y evaluación por días de la
-% contracción.
+\input{evaluacion-dias}
 
 % =====================================================================================================================
 \section{Reproducing and reusing the method}
@@ -346,15 +339,19 @@ All the material needed to verify the results and to reuse the method is in the 
 \begin{itemize}
   \item \texttt{referencia/referencia.py} implements the method in Python using only the standard library. It was
         written from the specification, not from the production code.
-  \item \texttt{referencia/vectores.json} contains 323 test vectors: concrete inputs and the exact output of the
-        production engine, covering the projection, the three layers, the segment model, the pace factor, the
-        per-trip correction and their calibration. \texttt{comprobar.py} runs the reference implementation on all of
-        them; it reproduces the 323 outputs.
+  \item \texttt{referencia/vectores.json} contains test vectors with 407 checks: concrete inputs and the exact output
+        of the production engine, covering the reading of the feed, the matching of each vehicle to its trip, vehicles
+        missing from one download, trips past midnight, the projection, the three layers, the segment model, the pace
+        factor, the per-trip correction, the passage log, the delay shown, the calibration and the nightly choice of
+        the percentile. \texttt{comprobar.py} runs the reference implementation on all of them; it reproduces the 407
+        outputs.
   \item \texttt{referencia/evaluar.py} replays captures of the live feed and writes the same 15-second histograms as
         the production evaluation. On 40 minutes of the live feed of 7 November 2026 (92,686 predictions), its
         histograms are identical bin by bin to those of the production evaluator in the three modes.
+  \item \texttt{memoria/} holds the technical report \parencite{garrido2026memoria}, which describes the same method
+        in more detail.
   \item \texttt{datos/} holds the learned tables (segment times, pace factors and per-trip corrections) and the
-        evaluation data behind every table of this paper; \texttt{articulo/resultados.py} recomputes them.
+        evaluation data behind every table of this paper; \texttt{articulo-metodo/resultados.py} recomputes them.
 \end{itemize}
 
 \noindent Three conventions must be kept when porting the method to another language: times are seconds since
@@ -365,19 +362,34 @@ the element $\lfloor p(n-1)\rfloor$ of the sorted values.
 \section{Discussion and limitations}
 \label{sec:discussion}
 
-% PENDIENTE: a partir del capítulo 9 de la memoria y de los resultados nuevos.
+\input{discusion}
 
 % =====================================================================================================================
 \section{Conclusions}
 \label{sec:conclusions}
 
-% PENDIENTE.
+Bus networks that publish vehicle positions but not delays, with intermediate times interpolated at constant speed,
+can still offer accurate arrival predictions. Working in timetable time, learning the real duration of every segment
+by time band with shrunk medians, and choosing for every stop the most reliable of three sources with explicit
+abstention rules, the method described here puts the arrival shown within $\pm2$~minutes in 92--96\% of cases below
+three minutes and in 67\% at ten to twenty minutes, against 23--25\% for the published timetable, and doubles the
+accuracy of the timetable even without live data. More complex models that use what happens each day improve the
+error of segment sums by only 4--7\%, which supports keeping a method that can be audited by hand.
+
+Every rule, constant and evaluation step is specified, and the reference implementation, the test vectors, the
+evaluator, the learned tables and the evaluation data are public, so that the method can be reproduced, applied to
+other networks and compared with new ones on equal terms. A comparison with the waiting times that the operator itself
+shows is under way with the same tools.
 
 \section*{Data and code availability}
-The reference implementation, test vectors, evaluator, learned tables and evaluation data are available at
+The technical report, reference implementation, test vectors, evaluator, learned tables and evaluation data are
+available at
 \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for text and data). The
 timetable and the live feed are open data of their publishers. The production engine of the app is not public.
 
 \printbibliography
+
+\appendix
+\input{apendice}
 
 \end{document}

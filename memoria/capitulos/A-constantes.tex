@@ -1,0 +1,117 @@
+\chapter{Constantes}
+\label{ap:constantes}
+
+Este apéndice reúne todas las constantes del método, con su nombre en el código, su valor y la sección donde se explica. Las marcadas en la
+columna «Med.» se fijaron midiendo su efecto en Bizkaibus y conviene volver a medirlas en otra red
+(sección «\nameref{sec:adaptar}»).
+
+% Los nombres del código van en monoespaciada de 10 puntos, como pide APA para el código.
+{\setlength{\tabcolsep}{4pt}\setstretch{1.15}
+\begin{longtable}{@{}>{\raggedright\arraybackslash\fontsize{10}{12}\selectfont}p{0.30\textwidth}>{\raggedleft\arraybackslash}p{0.11\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.19\textwidth}c@{}}
+\caption{Constantes del Método}\label{tab:constantes}\\
+\toprule
+Nombre en el código & Valor & Significado & Sección & Med.\\
+\midrule
+\endfirsthead
+\toprule
+Nombre en el código & Valor & Significado & Sección & Med.\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{5}{@{}l}{\emph{Construcción de la base (trazados)}}\\
+\texttt{MAX\_STOP\_OFFSET\_METERS} & 100 m & Parada mal medida si cae a más de esta distancia del punto que marcan sus metros & «\nameref{sec:trazados-gtfs}» & \\
+\texttt{ROAD\_VS\_STRAIGHT\_RATIO} & 3 & Búsqueda de la parada siguiente: veces la línea recta & «\nameref{sec:trazados-gtfs}» & \\
+\texttt{SEARCH\_SLACK\_METERS} & 500 m & Margen de esa búsqueda & «\nameref{sec:trazados-gtfs}» & \\
+\texttt{EARLIER\_PASS\_MARGIN\_METERS} & 30 m & Ventaja exigida a un paso posterior por la misma zona & «\nameref{sec:trazados-gtfs}» & \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Emparejamiento}}\\
+\texttt{iDepartureCluster\allowbreak GapSeconds} & 90 s & Separación máxima para fusionar variantes & «\nameref{sec:alias}» & \\
+\texttt{MATCH\_TOLERANCE\_SECONDS} & 180 s & Tolerancia del emparejamiento de respaldo & «\nameref{sec:emparejamiento}» & \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Localización}}\\
+\texttt{METERS\_PER\_DEGREE} & 111\,320 m & Metros por grado de latitud & «\nameref{sec:proyeccion}» & \\
+\texttt{MAX\_LOCATION\_AGE\_SECONDS} & 600 s & Antigüedad máxima del dato & «\nameref{sec:condiciones-gps}» & \\
+\texttt{HOLD\_SECONDS} & 180 s & Tiempo que se guarda un autobús que falta en el feed & «\nameref{sec:memoria-feed}» & \checkmark\\
+\texttt{NOT\_STARTED\_GRACE\_SECONDS} & 60 s & El viaje cuenta como empezado este tiempo antes de su salida & «\nameref{sec:condiciones-gps}» & \\
+\texttt{MAX\_WAIT\_AT\_ORIGIN\_SECONDS} & 3\,600 s & Antelación máxima para situar al autobús en la cabecera & «\nameref{sec:cabecera}» & \\
+\texttt{SEGMENTS\_BEHIND\_NEXT\_STOP} & 3 & Primer tramo de la ventana: $n-3$ & «\nameref{sec:ventana}» & \\
+\texttt{SEGMENTS\_AHEAD\_OF\_NEXT\_STOP} & 2 & Último tramo de la ventana: $n+2$ (paradas hasta $p_{n+3}$) & «\nameref{sec:ventana}» & \\
+\texttt{MAX\_DISTANCE\_FROM\_SHAPE\_METERS} & 50 m & Pasillo con trazado & «\nameref{sec:trazado}» & \checkmark\\
+\texttt{BEYOND\_NEXT\_STOP\_SLACK\_METERS} & 100 m & Límite de los candidatos esperados & «\nameref{sec:trazado}» & \\
+\texttt{AMBIGUITY\_MARGIN\_METERS} & 20 m & Ventaja exigida a un candidato «más allá» & «\nameref{sec:trazado}» & \\
+\texttt{MAX\_DISTANCE\_FROM\_ROUTE\_METERS} & 150 m & Pasillo mínimo sin trazado; distancia máxima a la primera parada en la cabecera & «\nameref{sec:sin-trazado}» & \checkmark\\
+\texttt{MAX\_DISTANCE\_FROM\_ROUTE\_SEGMENT\_RATIO} & 0,15 & Pasillo sin trazado, fracción del tramo & «\nameref{sec:sin-trazado}» & \checkmark\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Modelo}}\\
+Franjas & 0, 6, 9, 13, 16 y 20 h & Inicio de cada periodo del día & Definición~\ref{def:franja} & \\
+\texttt{LENGTH\_CUTS\_METERS} & 300, 600, 1\,000, 1\,500, 3\,000 m & Cortes de los cubos de longitud & «\nameref{sec:respaldo-largo}» & \\
+Cotas de la proporción & 0,3 -- 1,5 & Acotación del respaldo por longitud & «\nameref{sec:respaldo-largo}» & \\
+\texttt{MIN\_FACTOR}, \texttt{MAX\_FACTOR} & 0,6 -- 1,2 & Acotación de $k$ & «\nameref{sec:k}» & \checkmark\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Predicción}}\\
+\texttt{REGISTRATION\_SEGMENT\_SHARE} & 0,5 & Fracción del tramo que falta en la capa 2 & «\nameref{sec:capa2}» & \checkmark\\
+\texttt{REGISTRATION\_MAX\_SEGMENT\_SECONDS} & 1\,200 s & Tramo máximo para la capa 2 & «\nameref{sec:capa2}» & \checkmark\\
+\texttt{REGISTRATION\_CROSSCHECK\_MAX\_SEGMENT\_SECONDS} & 360 s & Tramo máximo para el contraste & «\nameref{sec:desconfianza}» & \checkmark\\
+\texttt{MAX\_GPS\_VS\_STOP\_DISAGREEMENT\_SECONDS} & 360 s & Discrepancia máxima GPS / parada & «\nameref{sec:desconfianza}» & \checkmark\\
+\texttt{SCHEDULE\_ORIGIN\_OFFSET\_SECONDS} & 60 s & Salida de cabecera tras la hora publicada & «\nameref{sec:capa3}» & \checkmark\\
+\texttt{WRONG\_SCHEDULE\_PASSED\_SECONDS} & 600 s & \texttt{likely\_departed}: hace cuánto & «\nameref{sec:capa3}» & \\
+\texttt{WRONG\_SCHEDULE\_GAP\_SECONDS} & 600 s & \texttt{likely\_departed}: horario lento & «\nameref{sec:capa3}» & \\
+\texttt{WRONG\_SCHEDULE\_LEARNED\_SHARE} & 0,8 & \texttt{likely\_departed}: parte aprendida & «\nameref{sec:capa3}» & \\
+\texttt{TripOffsets::PARTS} & 3 & Partes del recorrido en la corrección por viaje & «\nameref{sec:correccion-viaje}» & \checkmark\\
+Calendario de solo domingo & máscara 64 & Marca un festivo entre semana & «\nameref{sec:correccion-viaje}» & \\
+\texttt{MAX\_PLAUSIBLE\_DELAY\_SECONDS} & 2\,700 s & Retraso máximo que se afirma & «\nameref{sec:decision}» & \checkmark\\
+\texttt{STALE\_GRACE\_SECONDS} & 120 s & Llegada de la capa 2 en el pasado que aún se muestra & «\nameref{sec:decision}» & \\
+\texttt{PASSED\_DISTANCE\_METERS} & 150 m & Distancia del GPS a la parada para darla por pasada sin que lo diga el feed & «\nameref{sec:paso}» & \\
+\texttt{ARRIVING\_MAX\_SECONDS} & 180 s & Tiempo en «0~min» sin confirmar el paso antes de «puede que ya haya pasado» & «\nameref{sec:llegando}» & \\
+\texttt{TTL\_SECONDS} (registro de pasos) & 36 h & Caducidad de los pasos, desde el final de su día & «\nameref{sec:registro-pasos}» & \\
+\texttt{DAY\_SECONDS}/2 & 43\,200 s & Adelanto de la salida del feed sobre la hora actual por encima del cual la entrada es de un viaje de ayer & «\nameref{sec:mas-de-24h}» & \\
+\texttt{LATE\_GRACE\_SECONDS} & 600 s & De madrugada, la ficha es la del viaje de ayer hasta este tiempo después de su última parada & «\nameref{sec:mas-de-24h}» & \\
+Retirada de la lista & $-2$ min & Minutos por debajo de los cuales se retira una fila & «\nameref{sec:retraso-mostrado}» & \\
+Umbral de «adelantado» & $-2$ min & Adelanto mínimo que se anuncia & «\nameref{sec:retraso-mostrado}» & \\
+\texttt{POSITION\_SANITY\_SECONDS} & 900 s & Discrepancia máxima con la llegada plana, en redes con retraso declarado & «\nameref{sec:otras-redes}» & \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Aprendizaje}}\\
+Captura & continua, bloques de 1 h, cada 20 s & Bloque e intervalo de captura & «\nameref{sec:captura}» & \\
+\texttt{MAX\_GAP\_BETWEEN\_SNAPSHOTS\_SECONDS} & 300 s & Hueco que corta una ventana; separación máxima del par de instantáneas del paso real & «\nameref{sec:paso-real}» & \\
+\texttt{OBSERVED\_AFTER\_PREDICTION\_SECONDS} & 600 s & Margen de observación tras la llegada & «\nameref{sec:muestras-ritmo}» & \\
+\texttt{MIN\_REMAINING\_SECONDS\_FOR\_FACTOR} & 120 s & Horizonte mínimo de una muestra de ritmo & «\nameref{sec:muestras-ritmo}» & \\
+\texttt{MAX\_SAMPLES\_PER\_TRACK} & 30 & Muestras de ritmo por pista & «\nameref{sec:muestras-ritmo}» & \\
+\texttt{MIN\_TRACKS\_PER\_SEGMENT} & 2 & Pistas mínimas por tramo y franja & «\nameref{sec:contraccion-tramo}» & \checkmark\\
+\texttt{SEGMENT\_BAND\_PRIOR\_TRACKS} & 5 & Peso de la mediana del tramo, $n_0$ & «\nameref{sec:contraccion-tramo}» & \checkmark\\
+\texttt{MIN\_SAMPLES\_PER\_LENGTH\_RATIO} & 20 & Muestras mínimas por cubo y franja & «\nameref{sec:respaldo-largo}» & \\
+\texttt{MIN\_TRACKS\_PER\_BAND} & 8 & Pistas mínimas para $k_b$ & «\nameref{sec:k}» & \\
+\texttt{MIN\_TRACKS\_PER\_LINE} & 25 & Pistas mínimas para $k_{\ell,b}$ & «\nameref{sec:k}» & \checkmark\\
+\texttt{MIN\_VEHICLES\_PER\_LINE} & 5 & Vehículos mínimos para $k_{\ell,b}$ & «\nameref{sec:k}» & \\
+\texttt{SHRINKAGE\_TRACKS} & 10 & Peso de $k=1$ en la contracción & «\nameref{sec:k}» & \\
+\texttt{SAMPLES\_RETENTION\_DAYS} & 120 d & Retención de muestras & «\nameref{sec:retencion}» & \\
+\texttt{MAX\_SAMPLES\_PER\_SEGMENT} & 300 & Muestras por tramo y tipo de día & «\nameref{sec:retencion}» & \\
+\texttt{MAX\_PACE\_SAMPLES} & 500\,000 & Muestras de ritmo en total & «\nameref{sec:retencion}» & \\
+Pliegues & 2 & $\mathrm{crc32}(\texttt{track})\bmod2$ & «\nameref{sec:recalibracion}» & \\
+\texttt{TRIP\_OFFSET\_RANKS} & 0,3 a 0,5 & Percentiles de los desvíos entre los que la recalibración elige cada noche: el que más acierta a $\pm2$~min y, con empate, el de menos error medio (0,4 en los vectores) & «\nameref{sec:correccion-percentil}» & \checkmark\\
+Pasos fuera de la corrección por viaje & 2\,700 s & Se descartan los pasos que se apartan más de este tiempo de su hora publicada & «\nameref{sec:recalibracion}» & \\
+\texttt{TRIP\_OFFSET\_CLIP\_SECONDS} & 900 s & Recorte de cada desvío de la corrección por viaje & «\nameref{sec:recalibracion}» & \checkmark\\
+\texttt{TRIP\_OFFSET\_LINE\_PRIOR\_PASSES} & 20 & Peso de la franja en la corrección de la línea & «\nameref{sec:recalibracion}» & \\
+\texttt{TRIP\_OFFSET\_TRIP\_PRIOR\_DAYS} & 1 & Peso de la línea en la corrección del viaje, en días & «\nameref{sec:recalibracion}» & \checkmark\\
+\texttt{TRIP\_OFFSET\_TEST\_DAYS} & 7 d & Días de prueba de la corrección por viaje & «\nameref{sec:recalibracion}» & \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Evaluación}}\\
+Paradas evaluadas & $n$ a $n+8$ & Paradas de cada autobús con las que se mide & «\nameref{sec:verdad}» & \\
+Horizontes & 0--20 min & Tiempo hasta el paso real que se evalúa & «\nameref{sec:verdad}» & \\
+Histogramas & 15 s & Anchura de las clases del error en la captura continua & «\nameref{sec:varios-dias}» & \\
+Datos del día para los rivales & 60 s & Antigüedad mínima de los tramos del día que pueden usar & «\nameref{sec:comparacion}» & \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Trip Updates (Metro, Euskotren, tranvías, Renfe, Tuvisa, Dbus, Álavabus)}}\\
+\texttt{match\_tolerance\_seconds} & 600 s & Tolerancia del emparejamiento de reserva, por paradas y hora & «\nameref{sec:otras-redes}» & \\
+\texttt{VEHICLE\_DISAGREEMENT\_SECONDS} & 1\,200 s & Hora del feed que contradice al GPS & «\nameref{sec:otras-redes}» & \\
+\texttt{MIN\_VEHICLES\_TO\_DISTRUST} & 3 & Vehículos con posición para desconfiar del feed & «\nameref{sec:otras-redes}» & \\
+\texttt{MAX\_GPS\_DELAY\_SECONDS} & 2\,700 s & Retraso máximo creíble por GPS & «\nameref{sec:otras-redes}» & \\
+\texttt{STALE\_PREDICTION\_SECONDS} & 60 s & Predicción vencida & «\nameref{sec:otras-redes}» & \\
+\texttt{MAX\_STALE\_PREDICTION\_SECONDS} & 3\,600 s & Desfase máximo que se extrapola & «\nameref{sec:otras-redes}» & \\
+\texttt{DUE\_SECONDS} & 60 s & Salida que ya debería estar en la estación & «\nameref{sec:otras-redes}» & \\
+\texttt{LATE\_TRAINS\_LOOKBACK\_SECONDS} & 3\,600 s & Salidas pasadas que se miran por si van tarde & «\nameref{sec:otras-redes}» & \\
+\texttt{ON\_TIME\_SECONDS} & 60 s & Retraso que se redondea a cero & «\nameref{sec:otras-redes}» & \\
+\texttt{LIVE\_DEPARTED\_AFTER\_SECONDS} & 45 s & Retirada de una fila en directo & «\nameref{sec:otras-redes}» & \\
+\texttt{SCHEDULED\_DEPARTED\_AFTER\_SECONDS} & 60 s & Retirada de una fila programada & «\nameref{sec:otras-redes}» & \\
+\end{longtable}
+}

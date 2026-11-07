@@ -1,0 +1,303 @@
+% =====================================================================================================================
+%  Predicción de Llegadas de Autobuses con Posiciones en Tiempo Real y Horarios Interpolados
+%  Memoria técnica del motor de Bizkaibus+, con el formato de las normas APA (7.ª edición)
+%
+%  Compilar:  latexmk -pdf memoria.tex    (o: pdflatex memoria && biber memoria && pdflatex memoria && pdflatex memoria)
+%  Necesita biblatex con el estilo apa (biblatex-apa) y biber, incluidos en TeX Live completo.
+% =====================================================================================================================
+\documentclass[12pt,letterpaper,oneside,openany]{book}
+
+% ---------------------------------------------------------------- idioma y tipografía
+% APA: una sola fuente en todo el texto (Times New Roman de 12 puntos), sans serif en las figuras y monoespaciada de
+% 10 puntos en el código.
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noshorthands,es-nolists]{babel}
+\usepackage{mathptmx}
+\usepackage[scaled=0.92]{helvet}
+\renewcommand{\ttdefault}{lmtt}
+\usepackage{microtype}
+\usepackage{csquotes}
+
+% ---------------------------------------------------------------- página
+% APA: carta, márgenes de 2,54 cm, doble espacio en todo (salvo notas al pie, cuerpo de tablas y código), sin espacio
+% extra entre párrafos, alineado a la izquierda sin justificar, sin guiones y con sangría de 1,27 cm.
+\usepackage[letterpaper,margin=2.54cm,headheight=16pt,headsep=0.75cm]{geometry}
+\usepackage{setspace}
+\doublespacing
+\usepackage{ragged2e}
+\AtBeginDocument{\RaggedRight}
+\usepackage{footmisc}
+\renewcommand{\footnotelayout}{\RaggedRight}
+\setlength{\RaggedRightParindent}{1.27cm}
+% Sin guiones, el margen derecho tiene que poder quedar tan irregular como haga falta (como \raggedright): con el
+% estiramiento de 2em de ragged2e, una palabra larga dejaba la línea corta y TeX avisaba de un «Underfull \hbox».
+\setlength{\RaggedRightRightskip}{0pt plus 1fil}
+\setlength{\parindent}{1.27cm}
+\setlength{\parskip}{0pt}
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\usepackage{etoolbox}
+
+% Encabezado de un trabajo profesional: título corto en mayúsculas a la izquierda y número de página a la derecha, en
+% todas las páginas; la portada es la página 1.
+\usepackage{fancyhdr}
+\newcommand{\titulocorto}{PREDICCIÓN DE LLEGADAS DE AUTOBUSES}
+\fancypagestyle{apa}{\fancyhf{}\fancyhead[L]{\titulocorto}\fancyhead[R]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+\pagestyle{apa}
+\fancypagestyle{plain}{\fancyhf{}\fancyhead[L]{\titulocorto}\fancyhead[R]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ---------------------------------------------------------------- títulos
+% APA: títulos sin números, del mismo tamaño que el texto y en negrita. Nivel 1 centrado; nivel 2 a la izquierda;
+% nivel 3 a la izquierda en cursiva; niveles 4 y 5 con sangría, terminados en punto y seguidos del texto.
+\usepackage{titlesec}
+\titleformat{\chapter}[block]{\normalfont\normalsize\bfseries\filcenter}{}{0pt}{}
+\titlespacing*{\chapter}{0pt}{0pt}{0pt}
+\titleformat{\section}[block]{\normalfont\normalsize\bfseries\filright}{}{0pt}{}
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+\titleformat{\subsection}[block]{\normalfont\normalsize\bfseries\itshape\filright}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{0pt}{0pt}
+\titleformat{\subsubsection}[runin]{\normalfont\normalsize\bfseries}{}{0pt}{}[.]
+\titlespacing*{\subsubsection}{1.27cm}{0pt}{0.5em}
+\titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries\itshape}{}{0pt}{}[.]
+\titlespacing*{\paragraph}{1.27cm}{0pt}{0.5em}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+% Índice: sin números de capítulo ni de sección; los apéndices, con su letra.
+\usepackage{titletoc}
+\newif\ifapendices
+\newcommand{\puntos}{\titlerule*[0.6pc]{.}\contentspage}
+\titlecontents{chapter}[0pt]{}{\ifapendices Apéndice~\thecontentslabel.\ \fi}{}{\puntos}
+\titlecontents{section}[1.27cm]{}{}{}{\puntos}
+\titlecontents{subsection}[2.54cm]{}{}{}{\puntos}
+\titlecontents{figure}[0pt]{\addtolength{\rightskip}{0pt plus 1fil}}{Figura~\thecontentslabel.\ }{}{\puntos}
+\titlecontents{table}[0pt]{\addtolength{\rightskip}{0pt plus 1fil}}{Tabla~\thecontentslabel.\ }{}{\puntos}
+
+% ---------------------------------------------------------------- matemáticas
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\newtheorem{definicion}{Definición}
+\newtheorem{proposicion}{Proposición}
+\newtheorem{observacion}{Observación}
+\theoremstyle{definition}
+\newtheorem{ejemplo}{Ejemplo}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\clamp}{clamp}
+\DeclareMathOperator{\redondeo}{rnd}
+\DeclareMathOperator{\mediana}{med}
+\DeclareMathOperator{\franja}{franja}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\tgps}{t_{\mathrm{gps}}}
+\newcommand{\tref}{t_{\mathrm{ref}}}
+\newcommand{\tnow}{t_{\mathrm{now}}}
+\newcommand{\Tpos}{T_{\mathrm{pos}}}
+\newcommand{\ETA}{\mathrm{ETA}}
+\newcommand{\dest}{\mathrm{dest}}
+\counterwithout{equation}{chapter}
+
+% ---------------------------------------------------------------- tablas, figuras, pseudocódigo, código
+\usepackage{booktabs,array,tabularx,longtable,multirow}
+% Las columnas X de tabularx, sin justificar, como el resto del texto (sin guiones, justificadas quedaban huecos).
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\definecolor{ruta}{HTML}{01573C}
+\definecolor{gps}{HTML}{D9480F}
+\definecolor{gris}{HTML}{56635A}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+% APA: dentro de las figuras, fuente sans serif de 8 a 14 puntos.
+\AtBeginEnvironment{tikzpicture}{\sffamily}
+\usepackage[noend]{algpseudocode}
+\algrenewcommand\algorithmicrequire{\textbf{Entrada:}}
+\algrenewcommand\algorithmicensure{\textbf{Salida:}}
+\algrenewcommand\algorithmicif{\textbf{si}}
+\algrenewcommand\algorithmicthen{\textbf{entonces}}
+\algrenewcommand\algorithmicelse{\textbf{si no}}
+\algrenewcommand\algorithmicfor{\textbf{para}}
+\algrenewcommand\algorithmicdo{\textbf{hacer}}
+\algrenewcommand\algorithmicreturn{\textbf{devolver}}
+\algrenewcommand\algorithmicwhile{\textbf{mientras}}
+\algrenewcommand\algorithmicfunction{\textbf{función}}
+\AtBeginEnvironment{algorithmic}{\setstretch{1.15}\raggedright}
+\usepackage{listings}
+% Sin guiones en el texto (APA), pero el código sí puede partir sus líneas largas: listings las corta con el mismo
+% mecanismo que los guiones.
+\makeatletter
+\lst@AddToHook{Init}{\hyphenpenalty=50\relax\exhyphenpenalty=50\relax}
+\makeatother
+\usepackage{embedfile}
+\lstset{
+  basicstyle=\ttfamily\fontsize{10}{12}\selectfont\setstretch{1},
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gris!40},
+  numbers=left,
+  numberstyle=\tiny\color{gris},
+  showstringspaces=false,
+  keywordstyle=\color{ruta}\bfseries,
+  commentstyle=\color{gris}\itshape,
+  stringstyle=\color{gps},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {ü}{{\"u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1 {Ñ}{{\~N}}1
+           {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1 {·}{{\textperiodcentered}}1 {×}{{$\times$}}1 {±}{{$\pm$}}1
+           {-}{{-}}1
+}
+
+% APA: tablas y figuras numeradas seguidas en todo el texto, con el número en negrita y el título en cursiva en la línea
+% siguiente, encima, alineados a la izquierda y a doble espacio. Las aclaraciones van debajo, en una nota.
+\usepackage{caption}
+\captionsetup{labelfont=bf,textfont=it,labelsep=newline,justification=raggedright,singlelinecheck=false,
+  font=doublespacing,position=top,skip=0pt}
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+\newcommand{\nota}[1]{\par\smallskip{\setstretch{2}\RaggedRight\noindent\textit{Nota.} #1\par}}
+\AtBeginEnvironment{table}{\setstretch{1.15}}
+\AtBeginEnvironment{figure}{\setstretch{1.15}}
+\setlength{\LTcapwidth}{\textwidth}
+
+% ---------------------------------------------------------------- referencias y enlaces
+% APA 7 con biblatex-apa, en castellano: «y» entre los dos últimos autores, como en la edición en español.
+\usepackage[style=apa,backend=biber,natbib=true]{biblatex}
+\addbibresource{bibliografia.bib}
+\DeclareDelimFormat[bib,biblist]{finalnamedelim}{%
+  \ifthenelse{\value{listcount}>\maxprtauth}{}{\addspace y\space}}
+\DeclareDelimFormat{finalnamedelim}{\addspace y\space}
+\DefineBibliographyStrings{spanish}{retrieved={Recuperado},from={de}}
+% Sin coma delante de la «y» (Brakewood, C. y Watkins, K.): la coma tras cada autor se pone solo hasta el penúltimo.
+\makeatletter
+\renewcommand*{\apablx@ifnotfinalname}{%
+  \ifboolexpr{test {\ifnumless{\value{listcount}}{\numexpr\value{liststop}-1\relax}} or test \ifmorenames}}
+\makeatother
+\setlength{\bibitemsep}{0pt}
+\AtBeginBibliography{\RaggedRight}
+% Las direcciones se pueden partir, pero sin estirar el espacio entre sus caracteres.
+\appto\biburlsetup{\Urlmuskip=0mu\relax}
+% APA pide «(Vol. 1, pp. 361–379)» en los capítulos de obras en varios volúmenes; biblatex-apa pone las páginas antes.
+\renewbibmacro*{addinfo1}{%
+  \printtexte[parens]{%
+    \usebibmacro{editor+trans+narr}%
+    \setunit*{\addsemicolon\addspace}%
+    \printfield{edition}%
+    \setunit*{\addcomma\addspace}%
+    \ifthenelse{\ifentrytype{report}\OR\ifentrytype{unpublished}\OR\ifentrytype{dataset}\OR
+                \ifentrytype{software}\OR\ifentrytype{audio}\OR\ifentrytype{patent}\OR
+                \ifentrytype{image}}{\usebibmacro{addinfo3}}{}%
+    \setunit*{\addcomma\addspace}%
+    \ifthenelse{\ifentrytype{book}\OR\ifentrytype{inbook}}{\printfield{volumes}}{}%
+    \setunit*{\addcomma\addspace}%
+    \ifthenelse{\ifentrytype{book}\OR\ifentrytype{inbook}}{\printfield{volume}}{}%
+    \setunit*{\addcomma\addspace}%
+    \ifentrytype{inbook}{\printfield{pages}}{}}}
+\usepackage[hidelinks,unicode,pdfusetitle]{hyperref}
+\urlstyle{same}
+\hypersetup{pdfauthor={Yeray Garrido},
+  pdftitle={Predicción de Llegadas de Autobuses con Posiciones en Tiempo Real y Horarios Interpolados}}
+\usepackage{bookmark}
+
+% ---------------------------------------------------------------- cortes de línea en nombres largos
+% Los nombres del código (CONSTANTES_CON_GUIONES, franjas.con_punto) pueden partirse tras «_» y «.».
+\let\guionbajo\_
+\renewcommand{\_}{\guionbajo\penalty50\hspace{0pt}}
+\setlength{\emergencystretch}{3em}
+% Con el texto sin justificar quedan desbordes de décimas de punto que no se ven.
+\hfuzz=0.5pt
+
+% ---------------------------------------------------------------- apéndices
+% APA: cada apéndice en página nueva, después de las referencias, con «Apéndice A» y su título centrados y en negrita;
+% sus tablas y figuras se numeran A1, A2...
+\newcommand{\apendices}{%
+  \appendix
+  \titleformat{\chapter}[display]{\normalfont\normalsize\bfseries\filcenter}{Apéndice~\thechapter}{0pt}{}
+  \titlespacing*{\chapter}{0pt}{0pt}{0pt}
+  \counterwithin{table}{chapter}\renewcommand{\thetable}{\thechapter\arabic{table}}
+  \counterwithin{figure}{chapter}\renewcommand{\thefigure}{\thechapter\arabic{figure}}
+  \counterwithin{equation}{chapter}\renewcommand{\theequation}{\thechapter\arabic{equation}}
+  \addtocontents{toc}{\protect\apendicestrue}}
+
+% Título de nivel 1 sin número que empieza página y va al índice (resumen, listas, referencias).
+\newcommand{\seccionprincipal}[1]{\chapter*{#1}\addcontentsline{toc}{chapter}{#1}}
+
+\begin{document}
+\pagenumbering{arabic}
+
+% =====================================================================================================================
+% Portada (trabajo profesional): título, autor, afiliación y nota del autor.
+\thispagestyle{apa}
+\begingroup
+  \centering
+  \vspace*{3\baselineskip}
+  {\bfseries Predicción de Llegadas de Autobuses con Posiciones en Tiempo Real y Horarios Interpolados\par}
+  \vspace{\baselineskip}
+  Yeray Garrido\par
+  Bilbao, Bizkaia\par
+  ORCID: \href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}\par
+  \vfill
+  {\bfseries Nota del Autor\par}
+  \RaggedRight
+  \setlength{\parindent}{1.27cm}
+  Este es un trabajo personal e independiente: no se ha presentado como tesis doctoral, no ha sido revisado por
+  pares y ninguna universidad, revista ni institución lo ha evaluado. Bizkaibus+ es una aplicación sin relación con
+  Bizkaibus, con la Diputación Foral de Bizkaia ni con los operadores del servicio, y usa solo los datos abiertos que se
+  publican: el horario en formato GTFS y el feed de posiciones en formato SIRI.\par
+  El código del motor es privado. Este documento describe el motor tal como estaba el 7 de noviembre de 2026, con cada
+  fórmula, constante y regla transcrita del código y comprobada con vectores de prueba; la implementación de
+  referencia, los vectores y el programa que los comprueba van adjuntos al PDF. Es el informe técnico que acompaña al
+  artículo en inglés que presenta el método. Ambos se publican, con los datos y el código de referencia, en
+  \url{https://github.com/Garridoparrayeray/bide-eta}, donde también pueden dirigirse las consultas sobre este trabajo.\par
+  Versión 2.1, 7 de noviembre de 2026. DOI: \href{https://doi.org/10.5281/zenodo.24041572}{10.5281/zenodo.24041572}.
+  \copyright~2026 Yeray Garrido. El texto se publica con la licencia Creative
+  Commons Atribución 4.0 Internacional (CC~BY~4.0) y el código de referencia, con la licencia MIT.\par
+\endgroup
+\clearpage
+
+% =====================================================================================================================
+\input{capitulos/00-resumen}
+
+\clearpage
+\renewcommand{\contentsname}{Contenido}
+\tableofcontents
+\clearpage
+\phantomsection
+\renewcommand{\listfigurename}{Lista de Figuras}
+\addcontentsline{toc}{chapter}{Lista de Figuras}
+\listoffigures
+\clearpage
+\phantomsection
+\renewcommand{\listtablename}{Lista de Tablas}
+\addcontentsline{toc}{chapter}{Lista de Tablas}
+\listoftables
+\input{capitulos/00-acronimos}
+
+% =====================================================================================================================
+\include{capitulos/01-introduccion}
+\include{capitulos/02-marco-teorico}
+\include{capitulos/03-datos}
+\include{capitulos/04-localizacion}
+\include{capitulos/05-modelo}
+\include{capitulos/06-prediccion}
+\include{capitulos/07-aprendizaje}
+\include{capitulos/08-resultados}
+\include{capitulos/09-discusion}
+\include{capitulos/10-conclusiones}
+
+% =====================================================================================================================
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Referencias}
+\printbibliography[title=Referencias,heading=bibliography]
+
+\apendices
+\include{capitulos/A-constantes}
+\include{capitulos/B-algoritmos}
+\include{capitulos/C-formatos}
+\include{capitulos/D-vectores}
+\include{capitulos/E-referencia}
+\include{capitulos/F-glosario}
+
+\end{document}
