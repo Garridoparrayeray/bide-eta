@@ -10,3 +10,4 @@ articulo/*.log
 articulo/*.run.xml
 articulo/*.out
 articulo/articulo.pdf
+articulo/*.spl
