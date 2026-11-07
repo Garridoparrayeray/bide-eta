@@ -1,2 +1,12 @@
 __pycache__/
 *.pyc
+articulo/*.aux
+articulo/*.bbl
+articulo/*.bcf
+articulo/*.blg
+articulo/*.fdb_latexmk
+articulo/*.fls
+articulo/*.log
+articulo/*.run.xml
+articulo/*.out
+articulo/articulo.pdf
