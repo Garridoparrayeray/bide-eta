@@ -2,37 +2,37 @@
 % párrafo sin sangría de 150 a 250 palabras y, debajo, las palabras clave en un párrafo con sangría.
 \seccionprincipal{Resumen}
 \noindent Bizkaibus, la red de autobuses interurbanos de Bizkaia, publica la posición GPS de cada vehículo y su
-próxima parada, pero no su retraso, y las horas intermedias de su horario oficial están interpoladas a velocidad
+próxima parada, pero no su retraso. Las horas intermedias de su horario oficial están interpoladas a velocidad
 constante: de 169\,308 pasos reales por parada, el 85\,\% de los que ocurren pasada la primera hora de viaje llega más
-de dos minutos antes de la hora publicada. Esta memoria describe, para que pueda replicarse, el método con el que la
+de dos minutos antes de la hora publicada. Esta memoria describe, para que pueda replicarse, el método con que la
 aplicación Bizkaibus+ predice las llegadas. El método trabaja con diferencias de horario en lugar
-de horas absolutas, aprende el tiempo real de cada tramo por franja horaria con medianas contraídas,
-y organiza la predicción en tres capas con reglas para abstenerse: la posición
+de horas absolutas, aprende el tiempo real de cada tramo por franja horaria con medianas contraídas
+y organiza la predicción en tres capas con reglas de abstención: la posición
 proyectada sobre el recorrido, la última parada registrada y el horario corregido viaje a viaje. Se recalibra cada día y solo
 adopta cambios que reducen el error. En 2,21 millones de predicciones a menos de veinte minutos, de 17 días,
-contrastadas con el paso real, la llegada mostrada cae dentro de $\pm2$ minutos en el 96\,\% a menos de tres minutos y en el
-67\,\% entre diez y veinte minutos, frente al 24\,\% y el 25\,\% del horario publicado. Evaluados por días, un filtro
-de Kalman sobre el ritmo del propio autobús y una red neuronal reducen el error medio de las sumas de tiempos de
-tramo un 4\,\% y entre un 6 y un 7\,\%. Se incluyen vectores de prueba y una implementación de referencia que los reproduce.
+contrastadas con el paso real, la llegada mostrada cae dentro de $\pm2$ minutos en el 96\,\% cuando el autobús está a
+menos de tres minutos y en el 67\,\% entre diez y veinte minutos, frente al 24\,\% y el 25\,\% del horario publicado.
+Evaluados por días, un filtro de Kalman sobre el ritmo del propio autobús y una red neuronal reducen el error medio de
+las sumas de tramos un 4\,\% y entre un 6 y un 7\,\%, respectivamente. Se incluyen vectores de prueba y una
+implementación de referencia que los reproduce.
 
 \textit{Palabras clave:} predicción de llegadas, transporte público, posicionamiento GPS, GTFS, SIRI, estimación
 robusta, contracción, validación temporal
 
 \seccionprincipal{Abstract}
-\noindent Bizkaibus, the interurban bus network of Biscay, publishes the GPS position and the next stop of every
-vehicle but not its delay, and the intermediate times of its official timetable are interpolated at constant speed:
-of 169,308 actual stop passages, 85\% of those made after the first hour of travel come more than two minutes before
-the published time. This report describes, so that it can be reimplemented in any language, the method the
-Bizkaibus+ app uses to predict arrivals. The method works with timetable differences instead of absolute times, learns the
+\noindent Bizkaibus, the interurban bus network of Biscay, publishes the GPS position and next stop of every
+vehicle, but not its delay. The intermediate times of its official timetable are interpolated at constant speed:
+of 169,308 actual stop passages, 85\% of those occurring after the first hour of travel arrive more than two minutes
+before the published time. This report describes the method the Bizkaibus+ app uses to predict arrivals, so that it
+can be reimplemented in any language. The method works with timetable differences instead of absolute times, learns the
 actual travel time of every segment between stops by time band with medians shrunk towards the all-day median of the
-segment, and organizes the prediction in three layers with explicit abstention rules: the position projected on the
+segment, and organizes the prediction into three layers with explicit abstention rules: the position projected on the
 route, the last stop registered by the feed and a timetable corrected trip by trip. It recalibrates itself daily and only adopts
-changes that reduce the measured error. On 2.21 million predictions within twenty minutes, from 17 days,
+changes that reduce the measured error. Over 17 days, in 2.21 million predictions within twenty minutes of arrival,
 checked against the actual passage, the displayed arrival is within $\pm2$ minutes 96\% of the time when the bus is under three
-minutes away and 67\% at ten to twenty minutes, against 24\% and 25\% for the published timetable. Under a day-by-day
-evaluation protocol, a Kalman filter on the bus's own pace and a neural network reduce the mean error of sums of segment times by
-4\% and by 6 to 7\%. Test vectors and a reference implementation that
-reproduces them are included.
+minutes away and 67\% at ten to twenty minutes, against 24\% and 25\% for the published timetable. Under day-by-day
+evaluation, a Kalman filter on the bus's own pace and a neural network reduce the mean error of sums of segment times by
+4\% and by 6 to 7\%, respectively. Test vectors and a reference implementation that reproduces them are included.
 
 \textit{Keywords:} arrival time prediction, public transport, GPS positioning, GTFS, SIRI, robust estimation,
 shrinkage, temporal validation
@@ -51,7 +51,7 @@ jaisten duten aldaketak bakarrik onartzen ditu. Benetako igaroaldiarekin alderat
 aurreikuspenetan (hogei minutu barrukoak), erakutsitako iritsiera $\pm2$ minuturen barruan dago kasuen \%96an autobusa hiru minutu baino
 gutxiagora dagoenean, eta \%67an hamar eta hogei minutu artean; argitaratutako ordutegiak \%24 eta \%25 asmatzen ditu.
 Egunez eguneko ebaluazio-protokoloarekin, autobusaren beraren erritmoaren gaineko Kalman iragazki batek eta sare
-neuronal batek tarte-denboren baturen batez besteko errorea \%4 eta \%6-7 murrizten dute. Memoriak formulak, konstanteak, sasikodea, proba-bektoreak
+neuronal batek tarte-denboren baturen batez besteko errorea \%4 eta \%6-7 murrizten dute, hurrenez hurren. Memoriak formulak, konstanteak, sasikodea, proba-bektoreak
 eta horiek erreproduzitzen dituen erreferentziazko inplementazio bat ditu.
 
 \textit{Gako-hitzak:} iritsieren aurreikuspena, garraio publikoa, GPS kokapena, GTFS, SIRI, estimazio sendoa,

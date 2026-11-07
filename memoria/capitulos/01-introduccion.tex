@@ -14,17 +14,17 @@ minutos y cambia con la hora del día, el día de la semana y el tramo concreto 
 
 En una línea urbana que pasa cada cinco minutos, el viajero no necesita saber a qué hora llega el autobús: va a la
 parada y espera, en promedio, la mitad del intervalo. En una red interurbana eso no funciona, porque los intervalos son
-largos. En el horario de Bizkaibus de un miércoles laborable (28 de octubre de 2026), entre las 7:00 y las 21:00, la
+largos. En el horario de Bizkaibus de un miércoles laborable (28 de octubre de 2026), entre las 07:00 y las 21:00, la
 mitad de las combinaciones de línea y parada tienen, como mucho, un autobús por hora: el intervalo mediano es de
 60~minutos, el 68\,\% de las combinaciones tiene un intervalo mediano de una hora o más, el 87\,\% de media hora o más,
-y solo el 3\,\% pasa cada cuarto de hora o con más frecuencia.\footnote{Calculado sobre las 4\,932 combinaciones de
-línea y parada con servicio ese día, con el intervalo mediano entre salidas consecutivas de la misma línea en la misma
-parada.}
+y solo el 3\,\% tiene un autobús cada cuarto de hora o con más frecuencia.\footnote{Calculado sobre las 4\,932
+combinaciones de línea y parada con servicio ese día, tomando para cada una el intervalo mediano entre salidas
+consecutivas de la misma línea en la misma parada.}
 
 Con esos intervalos, el viajero planifica: decide a qué hora salir de casa a partir de la hora a la que cree que
 pasará el autobús. Si llega tarde, aunque sea por un minuto, pierde el autobús y espera el siguiente, a menudo una
 hora. Si llega con mucho margen, espera en una parada que con frecuencia está en el arcén de una carretera, sin
-marquesina ni información. Cuanto menos fiable es la hora que tiene, más margen deja, y más tiempo pierde.
+marquesina ni información. Cuanto menos fiable es la hora de que dispone, más margen deja y más tiempo pierde.
 
 \subsection{Lo que Cuesta No Saber Cuándo Llega}
 \label{sec:coste-incertidumbre}
@@ -36,18 +36,18 @@ la usaban, y además esperaban menos \citep{watkins2011}. Una revisión de la li
 información en tiempo real recoge, entre otros, menos tiempo de espera, menos tiempo total de viaje, más satisfacción,
 más sensación de seguridad y, en algunos estudios, más uso del transporte público \citep{brakewood2019}.
 
-Estos beneficios dependen de que la información sea \emph{precisa}. Una hora que se equivoca no solo no ayuda: lleva
-a perder el autobús o a esperar más que sin ella.
+Estos beneficios dependen de que la información sea \emph{precisa}. Una hora equivocada no solo no ayuda: hace perder
+el autobús o esperar más que sin ella.
 
 \subsection{El Horario Publicado Se Desvía en los Dos Sentidos}
 \label{sec:desvio-horario}
 
 Las horas de paso por las paradas intermedias que publica el horario de Bizkaibus son, como se explica en la
 sección «\nameref{sec:problema}», una interpolación a velocidad constante entre cabeceras. Son las que muestra cualquier
-aplicación que use el horario oficial en formato GTFS sin otra corrección. Para saber cuánto se desvían de la realidad
-se compararon con el paso real de los autobuses por las paradas, reconstruido con su GPS
-(sección «\nameref{sec:paso-real}»): 169\,308 pasos por parada de autobuses observados entre el 6 y el 31 de octubre de 2026,
-con el horario vigente el 30 de octubre.\footnote{Se descartan 521 pasos (el 0,3\,\%) con más de 45~minutos de
+aplicación que use el horario oficial en formato GTFS sin otra corrección. Para saber cuánto se desvían de la realidad,
+se compararon con el paso real de los autobuses por las paradas, reconstruido a partir de su GPS
+(sección «\nameref{sec:paso-real}»): 169\,308 pasos por parada observados entre el 6 y el 31 de octubre de 2026,
+frente al horario vigente el 30 de octubre.\footnote{Se descartan 521 pasos (el 0,3\,\%) con más de 45~minutos de
 diferencia, que suelen indicar un cambio de horario entre la fecha de la observación y la del horario usado. El cálculo
 está en \texttt{referencia/desvio-horario.py}.} La Tabla~\ref{tab:desvio-horario} y la Figura~\ref{fig:desvio-horario}
 muestran el resultado según el tiempo transcurrido desde la salida de cabecera.
@@ -95,24 +95,24 @@ Todos       & 169\,308 & $-2{,}4$ min & 52,1\,\% & 10,7\,\% & 25,3\,\%\\
 \addlegendentry{Pasa más de 5 min después}
 \end{axis}
 \end{tikzpicture}
-\nota{Cerca de la cabecera el autobús va algo retrasado; a medida que avanza, pasa cada vez más antes de la hora publicada, porque el horario reparte el tiempo a velocidad constante y el autobús recorre los tramos de carretera más deprisa.}
+\nota{Cerca de la cabecera el autobús va algo retrasado; a medida que avanza, se adelanta cada vez más a la hora publicada, porque el horario reparte el tiempo a velocidad constante y el autobús recorre los tramos de carretera más deprisa.}
 \end{figure}
 
 El resultado es el que predice la interpolación. Cerca de la cabecera el autobús va algo retrasado (desvío mediano de
 $+1{,}3$~min en los diez primeros minutos). A partir de ahí se adelanta cada vez más al horario: a media hora de la
 salida, la mitad de los pasos ocurre más de dos minutos antes de la hora publicada, y pasada la hora, el 85\,\%, con un
-adelanto mediano de casi catorce minutos. En fin de semana el adelanto es mayor (se adelantan más de dos minutos el 60\,\% de los pasos, frente al
-50\,\% en laborables), y de las 69 líneas con al menos 500 pasos observados, en 39 más de la mitad de los pasos se adelantan
-más de dos minutos. Solo una cuarta parte de los pasos cae dentro de $\pm2$~minutos de la hora publicada.
+adelanto mediano de casi catorce minutos. En fin de semana el adelanto es mayor: se adelantan más de dos minutos el
+60\,\% de los pasos, frente al 50\,\% en laborables. De las 69 líneas con al menos 500 pasos observados, en 39 la
+mayoría de los pasos se adelanta más de dos minutos. Solo una cuarta parte de los pasos cae dentro de $\pm2$~minutos de la hora publicada.
 
 Para el viajero, eso significa dos riesgos de signo contrario:
 
 \begin{itemize}
   \item \textbf{Perder el autobús.} Quien se guiara por la hora publicada y llegara a la parada dos minutos antes
-        encontraría que el autobús ya ha pasado en el 52\,\% de los casos. Con un intervalo típico de una hora, cada
+        encontraría que el autobús ya había pasado en el 52\,\% de los casos. Con un intervalo típico de una hora, cada
         autobús perdido es una hora de espera.
   \item \textbf{Esperar de más.} Cuando el autobús todavía no ha pasado, esa misma persona espera una mediana de
-        3,8~minutos, pero una de cada diez veces más de diez minutos, y el 10,7\,\% de los pasos llega más de cinco
+        3,8~minutos, pero una de cada diez veces, más de diez minutos, y el 10,7\,\% de los pasos llega más de cinco
         minutos tarde.
 \end{itemize}
 
@@ -137,8 +137,8 @@ este trabajo:
   \item Un \textbf{horario programado} en formato GTFS \citep{gtfs}, publicado en el Punto de Acceso Nacional de
         transporte multimodal \citep{nap}: líneas, viajes, paradas y la hora de paso de cada viaje por cada parada,
         junto con el trazado geográfico (\emph{shape}) de cada recorrido.
-  \item Un \textbf{feed en tiempo real} en formato SIRI Vehicle Monitoring \citep{siri}, actualizado una vez por
-        minuto, que para cada autobús en servicio indica el viaje que realiza, su posición GPS, la hora a la que se tomó
+  \item Un \textbf{feed en tiempo real} en formato SIRI Vehicle Monitoring \citep{siri}, actualizado aproximadamente
+        una vez por minuto, que para cada autobús en servicio indica el viaje que realiza, su posición GPS, la hora a la que se tomó
         esa posición y el número de orden de su próxima parada.
 \end{enumerate}
 
@@ -175,15 +175,15 @@ posición.
 \begin{itemize}
   \item Un método de predicción por \textbf{diferencias de horario} que neutraliza el error de forma de un horario
         interpolado (capítulo «\nameref{cap:modelo}», proposición~\ref{prop:diferencias}).
-  \item Un procedimiento de \textbf{localización} del GPS sobre el trazado oficial robusto ante recorridos que vuelven
-        sobre sí mismos (capítulo «\nameref{cap:localizacion}»).
+  \item Un procedimiento de \textbf{localización} que sitúa el GPS sobre el trazado oficial y es robusto ante los
+        recorridos que vuelven sobre sí mismos (capítulo «\nameref{cap:localizacion}»).
   \item Un \textbf{modelo de tiempos por tramo} con estimadores robustos, contracción hacia la mediana del tramo y una
         cascada de respaldo para los tramos sin datos (capítulo «\nameref{cap:modelo}»).
   \item Una arquitectura de \textbf{tres capas con abstención}, que elige en cada predicción la mejor fuente fiable y
-        nunca afirma un retraso que no puede sostener, con una \textbf{corrección por viaje} para cuando no hay ningún
+        nunca afirma un retraso que no pueda sostener, con una \textbf{corrección por viaje} para cuando no hay ningún
         dato del vehículo (capítulo «\nameref{cap:prediccion}»).
   \item Una \textbf{revisión de los datos de entrada} en la construcción del horario: los trazados dibujados al revés se
-        dan la vuelta y, en las redes que no publican los metros de cada parada, estos se miden sobre el trazado
+        invierten y, en las redes que no publican los metros de cada parada, estos se miden sobre el trazado
         (capítulo «\nameref{cap:datos}»).
   \item Un ciclo de \textbf{aprendizaje continuo} con validación cruzada y reglas de escritura conservadoras
         (capítulo «\nameref{cap:aprendizaje}»), un protocolo de \textbf{evaluación} por días que reproduce lo que ve el
@@ -195,8 +195,8 @@ posición.
 
 \section{Visión General del Sistema}
 
-La Figura~\ref{fig:tuberia} resume el recorrido de un dato desde el feed hasta la pantalla. Cada paso tiene su
-capítulo.
+La Figura~\ref{fig:tuberia} resume el recorrido de un dato desde el feed hasta la pantalla. Cada paso se describe en
+el capítulo correspondiente.
 
 \begin{figure}[ht]
 \centering
@@ -227,7 +227,7 @@ capítulo.
 \label{sec:convenciones}
 
 \begin{itemize}
-  \item \textbf{Tiempo.} Todas las horas son enteros en segundos desde la medianoche de la zona
+  \item \textbf{Tiempo.} Todas las horas son números enteros de segundos desde la medianoche de la zona
         \texttt{Europe/Madrid} del día de servicio. Siguiendo a GTFS, pueden superar $86\,400$: las 25:10 son
         $90\,600$~s. El feed y el reloj dan horas del día en curso; para un viaje del día anterior se les suman
         $86\,400$~s (sección «\nameref{sec:mas-de-24h}»). Las duraciones se expresan en segundos salvo que se diga otra
@@ -240,7 +240,7 @@ capítulo.
         ordenados $x_{(0)}\le\dots\le x_{(n-1)}$, $\mediana(x)=x_{(\lfloor (n-1)/2\rfloor)}$. En general, el percentil
         $p$ es $P_p(x)=x_{(\lfloor p\,(n-1)\rfloor)}$, sin interpolar.
   \item \textbf{Acotación.} $\clamp(x,a,b)=\max(a,\min(b,x))$.
-  \item \textbf{Nombres en el código.} Cuando conviene, se indica entre paréntesis y en \texttt{monoespaciada} el
+  \item \textbf{Nombres en el código.} Cuando conviene, se indica entre paréntesis y en letra \texttt{monoespaciada} el
         nombre de la constante o función del código, para facilitar la correspondencia.
 \end{itemize}
 
@@ -252,8 +252,8 @@ sitúan el trabajo respecto a la literatura de predicción de llegadas y a las h
 cinco siguientes describen el método completo: las fuentes de datos (capítulo «\nameref{cap:datos}»), la localización del
 vehículo (capítulo «\nameref{cap:localizacion}»), el modelo del tiempo de recorrido (capítulo «\nameref{cap:modelo}»), la
 predicción en tres capas (capítulo «\nameref{cap:prediccion}») y el aprendizaje de los parámetros
-(capítulo «\nameref{cap:aprendizaje}»). El capítulo «\nameref{cap:evaluacion}» presenta la precisión medida, en una muestra
+(capítulo «\nameref{cap:aprendizaje}»). El capítulo «\nameref{cap:evaluacion}» presenta la precisión medida en una muestra
 con las tres capas, a lo largo de 17 días y frente a otros métodos; el capítulo «\nameref{cap:discusion}» la interpreta y
-discute sus limitaciones y su aplicación a otras redes, y el capítulo «\nameref{cap:conclusiones}» cierra con las
+discute las limitaciones del método y su aplicación a otras redes, y el capítulo «\nameref{cap:conclusiones}» cierra con las
 conclusiones y las líneas futuras. Tras las referencias, los apéndices reúnen las constantes, el pseudocódigo
 completo, los formatos de datos, los vectores de prueba, la implementación de referencia y un glosario.

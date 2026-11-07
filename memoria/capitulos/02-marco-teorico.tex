@@ -18,49 +18,50 @@ al vehículo concreto.
 (hora, distancia, número de paradas, demanda) o con su propia historia reciente. Exigen elegir y mantener esas
 variables.
 
-\subsection{Filtros de Kalman} Combinan una predicción a priori con la observación más reciente, ponderando cada una
+\subsection{Filtros de Kalman} Combinan una predicción \emph{a priori} con la observación más reciente, ponderando cada una
 por su incertidumbre \citep{kalman1960}. Se han usado para predecir llegadas y salidas a partir de datos de
-localización automática de vehículos (AVL) y de conteo de pasajeros \citep{shalaby2004}.
+localización automática de vehículos (AVL) y de conteo automático de viajeros (APC) \citep{shalaby2004}.
 
 \subsection{Redes Neuronales} Aprenden la relación entre la posición y el tiempo restante a partir de muchos datos
 \citep{chien2002,jeong2005}. Suelen ser precisas cuando hay abundancia de datos homogéneos, pero son difíciles de
 auditar y de explicar a quien usa el sistema.
 
-\subsection{Trabajos Recientes} Dos revisiones recientes recogen el estado del campo: \citet{kumar2025review}, de punta
-a punta (datos, modelos, discretización del recorrido y medidas de evaluación), y \citet{singh2022review}, para los
-modelos de inteligencia artificial. Partir el viaje en tramos entre paradas consecutivas y predecir cada uno es
-habitual \citep{gal2017journey}, y la variabilidad del tiempo de recorrido depende mucho de la hora del día
-\citep{mazloumi2010variability}, lo que justifica aprender por franjas. \citet{lin1999experimental} compararon
-algoritmos con GPS que usan el horario para un servicio rural con frecuencias bajas, un caso parecido al de los
-autobuses interurbanos. Entre los filtros de Kalman, \citet{cathey2003prescription} propusieron el esquema de
+\subsection{Trabajos Recientes} Dos revisiones recientes recogen el estado del campo: \citet{kumar2025review}, que cubre
+el proceso completo (datos, modelos, discretización del recorrido y medidas de evaluación), y
+\citet{singh2022review}, centrada en los modelos de inteligencia artificial. Partir el viaje en tramos entre paradas
+consecutivas y predecir cada uno por separado es habitual \citep{gal2017journey}. La variabilidad del tiempo de
+recorrido depende mucho de la hora del día \citep{mazloumi2010variability}, lo que justifica aprender por franjas.
+\citet{lin1999experimental} compararon algoritmos que combinan el GPS con el horario en un servicio rural de baja
+frecuencia, un caso parecido al de los autobuses interurbanos. Entre los filtros de Kalman, \citet{cathey2003prescription} propusieron el esquema de
 seguimiento, filtrado y predicción para datos AVL, y \citet{vanajakshi2009kalman} lo aplicaron a autobuses en tráfico
 heterogéneo. Entre las redes neuronales se han usado redes recurrentes \citep{pang2019rnn}, redes LSTM convolucionales
 que predicen a la vez todos los enlaces de una línea \citep{petersen2019convlstm}, redes de grafos con atención para
 datos escasos \citep{ma2022multiattention} y transformadores entrenados con datos abiertos
 \citep{jeong2024battransformer}. En la predicción del tráfico, el aprendizaje profundo no siempre es la mejor técnica,
-y las referencias sencillas bien ajustadas importan \citep{manibardo2022deep}.
+y los métodos de referencia sencillos y bien ajustados siguen siendo importantes \citep{manibardo2022deep}.
 
 Otros trabajos parten, como este, de los datos que publican los operadores. \citet{wessel2017retrospective}
-reconstruyen el horario realmente cumplido a partir de un feed público de posiciones, como aquí la verdad de
-referencia. \citet{cats2016realtime} evaluaron las predicciones que ya se mostraban a los viajeros en Estocolmo y
-encontraron que subestimaban la espera, y \citet{garciamaurino2024improving} corrigen los errores sistemáticos de las
-predicciones de los operadores de Madrid y París solo con datos de sus API públicas. \citet{woodard2017predicting}
-modelan, para viajes en coche, un efecto propio de cada viaje y recurren a parámetros agrupados cuando un enlace tiene
-pocas observaciones, un análogo de la corrección por viaje y de la contracción de este método.
+reconstruyeron el horario realmente cumplido a partir de un feed público de posiciones, igual que aquí se reconstruye
+la verdad de referencia. \citet{cats2016realtime} evaluaron las predicciones que ya se mostraban a los viajeros en
+Estocolmo y encontraron que subestimaban la espera. \citet{garciamaurino2024improving} corrigieron los errores
+sistemáticos de las predicciones de los operadores de Madrid y París solo con datos de sus API públicas.
+\citet{woodard2017predicting} modelaron, para viajes en coche, un efecto propio de cada viaje y recurrieron a
+parámetros agrupados cuando un enlace tenía pocas observaciones, dos recursos análogos a la corrección por viaje y a la
+contracción de este método.
 
 El método de esta memoria pertenece a la primera familia en su forma de estimar tiempos (valores típicos por tramo y
-franja) y la combina con la observación en tiempo real de la posición, que hace de «reinicio» de la predicción en cada
+franja) y combina esa estimación con la observación en tiempo real de la posición, que hace de «reinicio» de la predicción en cada
 actualización del feed. La elección es deliberada: con un dato de posición por minuto y sin retrasos publicados, un
-modelo explicable, robusto y que se puede medir tramo a tramo resultó más útil que uno de caja negra. Las ideas que se
+modelo explicable, robusto y medible tramo a tramo resultó más útil que uno de caja negra. Las ideas que se
 probaron y no mejoraron la medida (entre ellas, corregir con la velocidad del último minuto del vehículo, la forma más
 simple de filtrar) se recogen en la sección «\nameref{sec:descartadas}». Un filtro de Kalman sobre la desviación del
-propio autobús en los tramos ya terminados, suavizada y olvidada con el tiempo, sí reduce un 4\,\% el error de las
+propio autobús en los tramos ya terminados, suavizada y olvidada con el tiempo, sí reduce un 4\,\% el error medio de las
 sumas de tramos (sección «\nameref{sec:comparacion}»): lo que decide es qué se filtra y cuánto se recuerda
 (sección «\nameref{sec:otros-enfoques}»).
 
 \section{Datos de Transporte: GTFS y SIRI}
 
-GTFS \citep{gtfs} es el formato de facto para publicar horarios programados. Describe agencias, líneas
+GTFS \citep{gtfs} es el formato \emph{de facto} para publicar horarios programados. Describe agencias, líneas
 (\texttt{routes}), viajes (\texttt{trips}), paradas (\texttt{stops}), horas de paso (\texttt{stop\_times}),
 calendarios (\texttt{calendar}, \texttt{calendar\_dates}) y trazados (\texttt{shapes}). Dos campos son centrales
 aquí: \texttt{shape\_dist\_traveled}, la distancia recorrida a lo largo del trazado hasta cada parada y cada punto del
@@ -70,14 +71,14 @@ trazado, y \texttt{timepoint}, que indica si la hora de paso es exacta (\texttt{
 GTFS Realtime \citep{gtfsrt} y SIRI \citep{siri} son los formatos más usados para datos en tiempo real. SIRI Vehicle
 Monitoring (SIRI-VM) publica, para cada vehículo, la actividad de su viaje: referencia del viaje
 (\texttt{VehicleJourneyRef}), posición (\texttt{VehicleLocation}), hora de la posición
-(\texttt{LocationRecordedAtTime}) y la llamada a la próxima parada (\texttt{MonitoredCall}), con su orden
+(\texttt{LocationRecordedAtTime}) y llamada a la próxima parada (\texttt{MonitoredCall}), con su orden
 (\texttt{Order} o \texttt{VisitNumber}).
 
 \section{Ajuste al Mapa}
 
 Situar una posición GPS sobre una red o un recorrido se conoce como \emph{map matching} \citep{quddus2007}. Los
 métodos van desde la proyección geométrica sobre el segmento más próximo hasta modelos probabilísticos que tienen en
-cuenta la topología y la trayectoria. En este problema el recorrido es conocido de antemano (es el trazado del viaje
+cuenta la topología y la trayectoria. Aquí el recorrido se conoce de antemano (es el trazado del viaje
 que el propio feed declara), lo que reduce el problema a una proyección sobre una polilínea. La dificultad que queda
 es la ambigüedad cuando el recorrido pasa dos veces por la misma calle; el capítulo «\nameref{cap:localizacion}» la resuelve
 con una ventana alrededor de la próxima parada y una regla de desempate.
@@ -98,13 +99,13 @@ muchas veces no pese más que uno visto una vez.
 \label{sec:marco-contraccion}
 
 Cuando se estiman muchas medias a la vez (un tiempo para cada tramo y cada franja horaria), algunas se apoyan en muy
-pocas observaciones y son ruidosas. \citet{jamesstein1961} demostraron que, al estimar a la vez tres o más medias de
+pocas observaciones y son ruidosas. \citet{jamesstein1961} demostraron que, al estimar simultáneamente tres o más medias de
 distribuciones normales, un estimador que contrae las medias observadas hacia un punto fijo tiene un error cuadrático
 total esperado menor que el de usar cada media por separado. \citet{efronmorris1975} mostraron su utilidad con datos
 reales, contrayendo cada media hacia la media común del grupo. En términos bayesianos
 \citep{gelman2013}, la contracción equivale a un modelo jerárquico con \emph{agrupamiento parcial}: cada grupo tiene su
-propio parámetro, pero estos se parecen entre sí, y la estimación de cada grupo es una media ponderada entre su dato
-propio y el valor común, con un peso que crece con el número de observaciones del grupo.
+propio parámetro, pero estos se parecen entre sí, y la estimación de cada grupo es una media ponderada de su dato
+propio y del valor común, en la que el peso del dato propio crece con el número de observaciones del grupo.
 
 El método aplica esta idea en dos sitios: el tiempo de un tramo en una franja se contrae hacia el tiempo del tramo a
 cualquier hora (sección «\nameref{sec:contraccion-tramo}»), y el factor de ritmo se contrae hacia~1 (sección «\nameref{sec:k}»).
@@ -121,5 +122,5 @@ días entre aprendizaje y prueba, y con ellos el tráfico y la meteorología de 
 deciden con la segunda. \citet{hyndmankoehler2006} distinguen entre las medidas de
 error que dependen de la escala de los datos, como el error absoluto medio, y las que no: las primeras sirven para
 comparar métodos sobre unos mismos datos, pero no entre conjuntos de datos con escalas distintas. Aquí todas las
-predicciones se miden en la misma unidad, segundos, de modo que se usan errores absolutos y porcentajes de aciertos
+predicciones se miden en la misma unidad (segundos), de modo que se usan errores absolutos y porcentajes de aciertos
 dentro de umbrales que tienen sentido para quien espera el autobús.
