@@ -3,7 +3,7 @@
 
 \section{Base de Datos del Horario}
 
-Una base SQLite por red, de solo lectura, reconstruida cada día desde el GTFS. Las tablas y columnas que usa el
+Es una base SQLite por red, de solo lectura, que se reconstruye cada día desde el GTFS. Las tablas y columnas que usa el
 motor son estas (los tipos son los de SQLite):
 
 \begin{lstlisting}[language=SQL,numbers=none]
@@ -59,7 +59,7 @@ llegada, salida, \texttt{dist\_m} y las coordenadas de la parada; la de un traza
         serializador JSON de PHP escribe un objeto con claves enteras consecutivas desde 0 como una \emph{lista}. Si
         están todos los cubos, \texttt{lengthRatios} es una lista de seis objetos (el índice es el cubo); si falta
         alguno, es un objeto con claves \texttt{"0"}, \texttt{"1"}, \dots{} Un lector debe aceptar las dos formas.
-  \item Una proporción con valor exacto, como $1$, puede aparecer como entero.
+  \item Una proporción entera, como $1$, puede aparecer escrita sin decimales.
 \end{itemize}
 
 \section{Factores de Ritmo: \texttt{pace-factors.json}}
@@ -110,7 +110,7 @@ habitual, y el número de capturas cuando se calibra directamente desde una carp
 
 \section{Muestras Acumuladas (JSON Lines)}
 
-Un objeto JSON por línea. Una muestra de tramo:
+Cada línea es un objeto JSON. Una muestra de tramo:
 
 \begin{lstlisting}[numbers=none]
 {"track":"2026-10-06|1112|trp_A3411_805_OP9FIN_45000_O9FI3411_341101_7","line":"3411",
@@ -135,7 +135,7 @@ muestras que escribe la captura los traen siempre.
 
 \section{Registro de Pasos}
 
-Un almacén clave-valor con dos tablas hash por red y día:
+Es un almacén clave-valor con dos tablas hash por red y día:
 
 \begin{center}
 \small
@@ -149,7 +149,7 @@ Clave & Campo & Valor\\
 \end{tabularx}
 \end{center}
 
-\noindent La primera guarda el último orden visto de cada viaje y es la que usa la predicción
+\noindent La primera guarda el último orden visto de cada referencia de viaje y es la que usa la predicción
 (sección «\nameref{sec:registro-pasos}»); la segunda guarda la hora en que se vio cada orden y sirve para el historial de una
 línea. Se escriben cada minuto. La \texttt{<fecha>} es la del día del viaje: pasada la medianoche, un autobús de un
 viaje de ayer se apunta en las tablas de ayer, con los segundos en las horas de su horario (más de $86\,400$; sección
@@ -157,7 +157,7 @@ viaje de ayer se apunta en las tablas de ayer, con los segundos en las horas de 
 
 \section{El Feed SIRI-VM}
 
-Fragmento mínimo de una actividad con los elementos que se leen (Tabla~\ref{tab:feed}):
+Este es un fragmento mínimo de una actividad con los elementos que se leen (Tabla~\ref{tab:feed}):
 
 \begin{lstlisting}[language=XML,numbers=none]
 <VehicleActivity>

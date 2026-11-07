@@ -3,10 +3,11 @@
 
 Un método de predicción solo vale lo que se puede medir. Este capítulo define la medida del error y explica cómo se
 obtiene la verdad de referencia sin un dato de «el autobús pasó por aquí». Después presenta los resultados por
-horizonte, por capa y por cobertura de tramos aprendidos, los repite con 17 días de capturas, evalúa la contracción de
-la sección «\nameref{sec:contraccion-tramo}» con un protocolo por días y compara el método, con ese mismo protocolo, con
-filtros de Kalman y redes neuronales. Termina con las ideas que se probaron y no entraron. La
-interpretación de los resultados y sus limitaciones están en el capítulo «\nameref{cap:discusion}».
+horizonte, por capa y por cobertura de tramos aprendidos, y los repite con 17 días de capturas. Con un protocolo por
+días evalúa la contracción de la sección «\nameref{sec:contraccion-tramo}» y la corrección por viaje de la capa 3, y
+compara el método con filtros de Kalman y redes neuronales. Mide también la corrección de los trazados, la espera en la
+cabecera y la fiabilidad de los estados que muestra la aplicación, y termina con las ideas que se probaron y no
+entraron. La interpretación de los resultados y sus limitaciones están en el capítulo «\nameref{cap:discusion}».
 
 \section{Medida del Error}
 \label{sec:medida}
@@ -30,23 +31,23 @@ precisión depende sobre todo de él. Para cada grupo se dan:
 \end{itemize}
 
 \noindent Los porcentajes dentro de un umbral son la medida principal porque responden a la pregunta del usuario
-(«¿llegaré a tiempo si salgo cuando dice?») y no se dejan dominar por unos pocos errores grandes, como el error
-cuadrático medio. Como todas las predicciones están en la misma unidad, las medidas en segundos y minutos son
+(«¿llegaré a tiempo si salgo cuando dice?») y, a diferencia del error cuadrático medio, no se dejan dominar por unos
+pocos errores grandes. Como todas las predicciones se expresan en la misma unidad, las medidas en segundos y minutos son
 comparables entre métodos (sección «\nameref{sec:marco-validacion}»). Los percentiles se calculan como en todo el método, sin interpolar
 ($P_p=x_{(\lfloor p(n-1)\rfloor)}$).
 
 \section{La Verdad de Referencia}
 \label{sec:verdad}
 
-Se usan dos reconstrucciones independientes del instante real de paso.
+Se usan dos reconstrucciones del instante real de paso, independientes entre sí.
 
 \subsection{Por Posición} Es la del aprendizaje (definición~\ref{def:paso-real}): interpolar la pista del autobús en
 la hora publicada de la parada. Sirve para calibrar y para la validación cruzada, pero no es del todo independiente de
 la predicción, porque ambas usan la misma proyección del GPS.
 
 \subsection{Por Cambio de Parada} Para medir lo que ve el usuario se usa una reconstrucción que no depende del GPS: el
-feed declara en cada instantánea la próxima parada $n$ de cada autobús. Si en la instantánea $m$ un autobús, que sigue
-en el mismo viaje desde la instantánea de la predicción, declara por primera vez una próxima parada posterior a $q$,
+feed declara en cada instantánea la próxima parada $n$ de cada autobús. Si en la instantánea $m$ un autobús que sigue
+en el mismo viaje desde la instantánea de la predicción declara por primera vez una próxima parada posterior a $q$,
 el paso por $p_q$ ocurrió entre las instantáneas $m-1$ y $m$, y se toma
 \begin{equation}
 \label{eq:verdad}
@@ -56,10 +57,10 @@ con $t_m$ la hora más reciente de las posiciones de la instantánea $m$. La res
 instantáneas, $\pm30$~s, y el error medido incluye ese margen. Se evalúan las paradas con $n\le q\le n+8$ y horizontes
 de 0 a 20~minutos.
 
-\section{Resultados}
+\section{Resultados de una Sesión de Captura}
 \label{sec:resultados}
 
-Las cifras de esta sección se midieron el 14 de octubre de 2026 con 15 capturas del feed real (14~minutos de un
+Las cifras de esta sección se midieron el 14 de octubre de 2026 con 15 instantáneas del feed real (14~minutos de un
 laborable), que dan 7\,627 predicciones con paso real conocido. Es una muestra pequeña, pero en ella cada llegada se
 puede calcular con las tres capas a la vez. La sección «\nameref{sec:varios-dias}» repite la medida principal con 17
 días de capturas.
@@ -88,8 +89,8 @@ tercera consecuencia de la proposición~\ref{prop:diferencias}.
 
 \subsection{Por Capa}
 
-Para medir las capas 2 y 3 se repite la evaluación sobre las mismas capturas quitando a todos los autobuses el GPS
-(capa 2) o todo dato del vehículo (capa 3), contra los mismos pasos reales.
+Para medir las capas 2 y 3 se repite la evaluación sobre las mismas instantáneas, contra los mismos pasos reales,
+quitando a todos los autobuses el GPS (capa 2) o cualquier dato del vehículo (capa 3).
 
 \begin{table}[ht]
 \centering
@@ -106,15 +107,16 @@ La parada queda a & \shortstack{Capa 1\\GPS} & \shortstack{Capa 2\\parada regist
 \end{tabular}
 \end{table}
 
-La parada registrada, sin ningún GPS, queda a pocos puntos de la capa 1: el dato que más información aporta es saber
+En las mismas llegadas, la parada registrada, sin ningún GPS, queda a pocos puntos de la capa 1: el dato que más información aporta es saber
 qué tramo recorre el autobús y desde cuándo. La capa 3, que no sabe nada del vehículo, duplica o triplica el acierto
 del horario publicado, porque corrige el error de forma de la interpolación (esta muestra es anterior a la corrección
-por viaje de la sección «\nameref{sec:eval-correccion}»). Por longitud del tramo en que está el
+por viaje de la sección «\nameref{sec:eval-correccion}»). Según la longitud del tramo en que está el
 autobús, la capa 2 acierta dentro de $\pm2$~min el 89\,\% en tramos de hasta 3~min, el 83\,\% de 3 a 6, el 86\,\% de 6
-a 10 y el 52\,\% de 10 a 20 (frente al 18, 20, 15 y 0\,\% del horario en las mismas llegadas); en tramos de más de
-20~min baja al 7\,\%, sin mejorar al horario (1\,\%), y por eso el umbral de la sección «\nameref{sec:capa2}».
+a 10 y el 52\,\% de 10 a 20 (frente al 18, 20, 15 y 0\,\% del horario en las mismas llegadas). En tramos de más de
+20~min baja al 7\,\%, apenas por encima del horario (1\,\%); de ahí el umbral de la sección «\nameref{sec:capa2}».
 
 \subsection{Por Cobertura de Tramos Aprendidos}
+\label{sec:cobertura-tramos}
 
 La variable que más explica el error, después del horizonte, es si todos los tramos del camino entre el autobús y la
 parada tienen tiempo aprendido.
@@ -124,14 +126,14 @@ parada tienen tiempo aprendido.
 \caption{Aciertos de la Capa 1 Según la Cobertura del Camino}\label{tab:cobertura}
 \begin{tabular}{@{}lcc@{}}
 \toprule
-El autobús llega en & Todo el camino aprendido & Algún tramo sin aprender\\
+La parada queda a & Todo el camino aprendido & Algún tramo sin aprender\\
 \midrule
 0--5 min   & 96\,\% $\pm2$ · 99\,\% $\pm3$ (3\,923) & 80\,\% $\pm2$ · 88\,\% $\pm3$ (528)\\
 5--10 min  & 87\,\% $\pm2$ · 96\,\% $\pm3$ (1\,811) & 59\,\% $\pm2$ · 75\,\% $\pm3$ (369)\\
 10--20 min & 76\,\% $\pm2$ · 93\,\% $\pm3$ (439)   & 61\,\% $\pm2$ · 79\,\% $\pm3$ (77)\\
 \bottomrule
 \end{tabular}
-\nota{Entre paréntesis, el número de llegadas. Solo cuentan las llegadas en directo, que son las que tienen cobertura
+\nota{Entre paréntesis, el número de llegadas. Solo cuentan las llegadas con datos del autobús, que son las que tienen cobertura
 calculada: 7\,147 de las 7\,627.}
 \end{table}
 
@@ -139,20 +141,22 @@ En llegadas a menos de 10~minutos, con todo el camino aprendido se acierta el 93
 sin aprender, el 76\,\%; con dos o más, el 59\,\%. Con el 86\,\% de las llegadas con todo el camino aprendido, la
 combinación da el 90\,\%. El 93\,\% es un techo para este feed: el 7\,\% restante se debe a la resolución de $\pm30$~s
 del paso real, a una sola posición por minuto y a lo que nadie puede prever (semáforos, tráfico, esperas en parada).
-Superarlo exige otra fuente de datos, no más capturas de esta.
+Los métodos que además usan lo que ocurre ese mismo día lo mejoran poco (sección
+«\nameref{sec:comparacion}»); superarlo con claridad exige otra fuente de datos, no más capturas de esta.
 
 \section{Evaluación a lo Largo de Varios Días}
 \label{sec:varios-dias}
 
 Desde el 15 de octubre de 2026, cada captura horaria medía la precisión de la llegada mostrada con el método de la
 sección «\nameref{sec:verdad}» y dejaba el resumen en el registro de la plataforma de ejecución. Se recuperaron esos
-resúmenes: 88 capturas de 17 días (del 15 al 31 de octubre), de las que 61 tienen predicciones (en las de madrugada el feed no
-trae posiciones de hoy: de 23:58 a 05:00 repite la lectura de las 23:58; sección «\nameref{sec:feed}»), con 2\,369\,529 predicciones contrastadas con el paso real, de las que 2\,208\,468 quedan a menos de 20~minutos (las
-de la Tabla~\ref{tab:varios-dias}). Hay dos diferencias con la sección
-anterior. Estas cifras incluyen todas las llegadas que muestra la aplicación, de cualquier capa, y no solo las de la
-capa 1. Y el método cambió durante esos días (por ejemplo, la contracción de la
-sección «\nameref{sec:contraccion-tramo}» se adoptó al final del periodo), así que miden la aplicación tal como estaba
-cada día.
+resúmenes: 88 capturas de 17 días (del 15 al 31 de octubre). De ellas, 61 tienen predicciones, porque en las de
+madrugada el feed no trae posiciones del día (de 23:58 a 05:00 repite la lectura de las 23:58; sección
+«\nameref{sec:feed}»). Suman 2\,369\,529 predicciones contrastadas con el paso real, de las que 2\,208\,468 quedan a
+menos de 20~minutos (las de la Tabla~\ref{tab:varios-dias}). Hay dos diferencias con la sección anterior. La primera
+es que estas cifras incluyen todas las llegadas que muestra la aplicación, de cualquier capa, y no solo las de la
+capa 1. La segunda, que el método cambió durante esos días (por ejemplo, la contracción de la
+sección «\nameref{sec:contraccion-tramo}» se adoptó al final del periodo), así que las cifras miden la aplicación tal
+como estaba cada día.
 
 Los intervalos de confianza del 95\,\% se obtienen por \emph{bootstrap} de capturas \citep{hastie2009}: se remuestrean
 capturas enteras y no predicciones sueltas, porque las predicciones de una misma captura comparten autobuses, tráfico y
@@ -173,12 +177,13 @@ La parada queda a & Predicciones & $\pm1$ min & $\pm2$ min (IC 95\,\%) & $\pm3$ 
 \end{tabular}
 \nota{Llegadas de cualquier capa en 61 capturas de unos 45~minutos, del 15 al 31 de octubre de 2026. IC: intervalo de
 confianza por \emph{bootstrap} de capturas. El horario publicado se mide en las mismas llegadas. Los porcentajes de
-cada captura se redondearon a enteros al imprimirse, y se suman ponderados por su número de predicciones.}
+cada captura se redondearon a enteros al imprimirse, y se promedian ponderados por su número de predicciones.}
 \end{table}
 
-La Tabla~\ref{tab:varios-dias} confirma la Tabla~\ref{tab:resultados} a corto plazo (96\,\% frente a 94\,\% dentro de
-$\pm2$~min a menos de 3~minutos) y la corrige a largo plazo: entre 10 y 20~minutos se acierta el 67\,\% y no el 73\,\%,
-porque la muestra de 14~minutos tenía pocas llegadas lejanas. El horario publicado acierta en torno al 24\,\% en todos
+La Tabla~\ref{tab:varios-dias} confirma la Tabla~\ref{tab:resultados} en el horizonte más corto (96\,\% frente a 94\,\%
+dentro de $\pm2$~min a menos de 3~minutos) y la corrige en el más largo: entre 10 y 20~minutos se acierta el 67\,\% y no el 73\,\%,
+porque la muestra de 14~minutos tenía pocas llegadas lejanas y la Tabla~\ref{tab:resultados} solo cuenta la capa 1,
+mientras que aquí entran llegadas de cualquier capa. El horario publicado acierta en torno al 24\,\% en todos
 los horizontes. La precisión apenas cambia con el tipo de día: dentro de $\pm2$~min, los laborables (40 capturas) dan
 el 96, 90, 82 y 67\,\% por horizonte, y los fines de semana (21 capturas), el 96, 90, 80 y 64\,\%, con intervalos que se
 solapan salvo a 6--10~minutos (82--83 frente a 79--81\,\%).
@@ -191,30 +196,31 @@ solapan salvo a 6--10~minutos (82--83 frente a 79--81\,\%).
 Llegadas a menos de 10 min & Predicciones & $\pm2$ min (IC 95\,\%)\\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Origen del dato y tramo en que está el autobús}}\\
-GPS, tramo de hasta 10 min      & 1\,299\,494 & 92\,\% (92--93)\\
-GPS, tramo de más de 10 min     & 58\,410     & 82\,\% (81--83)\\
+GPS, tramo corto                & 1\,299\,494 & 92\,\% (92--93)\\
+GPS, tramo largo                & 58\,410     & 82\,\% (81--83)\\
 Parada registrada, tramo corto  & 91\,533     & 77\,\% (76--78)\\
 Parada registrada, tramo largo  & 1\,813      & 59\,\% (56--62)\\
-Sin dato en vivo, tramo corto   & 111\,557    & 71\,\% (69--73)\\
-Sin dato en vivo, tramo largo   & 4\,898      & 17\,\% (14--20)\\
+Sin datos del autobús, tramo corto & 111\,557   & 71\,\% (69--73)\\
+Sin datos del autobús, tramo largo & 4\,898     & 17\,\% (14--20)\\
 \midrule
-\multicolumn{3}{@{}l}{\emph{Tramos sin tiempo aprendido hasta la parada (llegadas en vivo)}}\\
+\multicolumn{3}{@{}l}{\emph{Tramos sin tiempo aprendido hasta la parada (llegadas con datos del autobús)}}\\
 Ninguno     & 1\,251\,203 & 93\,\% (93--94)\\
 Uno         & 120\,897    & 76\,\% (76--77)\\
 Dos o más   & 49\,176     & 63\,\% (62--65)\\
 \bottomrule
 \end{tabular}
-\nota{«Parada registrada»: llegada en vivo sin posición GPS utilizable (capa 2). «Sin dato en vivo»: llegadas que no
-se muestran en vivo (estimadas u horario corregido). Tramo corto: el autobús recorre un tramo de hasta 10~minutos
-programados.}
+\nota{«Parada registrada»: llegadas con datos del autobús sin posición GPS utilizable (capa 2). «Sin datos del autobús»: llegadas
+que no se muestran en directo (estimadas u horario corregido). Tramo corto: el autobús recorre un tramo de hasta
+10~minutos programados; tramo largo: de más de 10~minutos.}
 \end{table}
 
 La Tabla~\ref{tab:varios-dias-origen} repite con 17 días los desgloses de las Tablas~\ref{tab:capas}
-y~\ref{tab:cobertura}, con el mismo orden: en tramos cortos se acierta el 92\,\% dentro de $\pm2$~min con la
-posición GPS, el 77\,\% con la parada registrada y el 71\,\% sin dato en vivo, y la cobertura del camino es, de
+y~\ref{tab:cobertura}, y el orden se mantiene: en tramos cortos se acierta el 92\,\% dentro de $\pm2$~min con la
+posición GPS, el 77\,\% con la parada registrada y el 71\,\% sin datos del autobús, y la cobertura del camino es, de
 nuevo, la variable que más mueve la precisión
-(del 93\,\% con todo el camino aprendido al 63\,\% con dos o más tramos sin aprender). Desde el 31 de octubre la
-captura es continua y guarda, por bloque de una hora, los errores en histogramas de 15~s por capa, horizonte, franja y
+(del 93\,\% con todo el camino aprendido al 63\,\% con dos o más tramos sin aprender).
+
+Desde el 31 de octubre la captura es continua y guarda, por bloque de una hora, los errores en histogramas de 15~s por capa, horizonte, franja y
 tipo de día, con la llegada calculada también sin GPS y sin feed: la recalibración diaria publica con ellos las mismas
 tablas con intervalos de confianza, ya separadas por capa.
 
@@ -223,13 +229,13 @@ tablas con intervalos de confianza, ya separadas por capa.
 
 La validación cruzada por pistas del capítulo «\nameref{cap:aprendizaje}» decide si se escribe una calibración, pero mezcla
 en entrenamiento y prueba autobuses del mismo día, que comparten tráfico y meteorología. Para decidir si una
-\emph{regla} nueva entra en el método se usa un protocolo más exigente, que reproduce lo que ocurre en producción
+\emph{regla} nueva entra en el método se usa un protocolo más exigente, que reproduce cómo aprende el método en producción
 \citep{hyndman2021}:
 
 \begin{enumerate}
   \item Para cada uno de los últimos siete días $D$ de las muestras, se aprende con todas las muestras de días
         anteriores a $D$ y se prueba con las de $D$.
-  \item Para cada pista de prueba, ordenada por \texttt{at}, y para cada tramo inicial, se encadenan los tramos
+  \item Para cada pista de prueba, con sus tramos ordenados por \texttt{at}, y para cada tramo inicial, se encadenan los tramos
         siguientes mientras sean consecutivos (el destino de uno es el origen del siguiente) y tengan tiempo
         aprendido. Se van sumando el tiempo real y el predicho con la franja del tramo inicial.
   \item Cada vez que el tiempo real acumulado cae en uno de los horizontes $[4,8)$, $[8,12)$ o $[12,20)$~min, se anota
@@ -237,9 +243,9 @@ en entrenamiento y prueba autobuses del mismo día, que comparten tráfico y met
   \item La regla se adopta si mejora en todos los horizontes y en casi todos los días, no solo en la media.
 \end{enumerate}
 
-\noindent Es una medida de punta a punta: un cambio puede mejorar cada tramo por separado y no la suma de varios, y
-eso es lo que ve el usuario. La Tabla~\ref{tab:contraccion} compara la mediana de la franja sola ($n_0=0$) con la
-contraída, para dos valores de $n_0$, con las muestras acumuladas a 31 de octubre de 2026 (195\,786 tramos de 26 días;
+\noindent Es una medida de punta a punta: un cambio puede mejorar cada tramo por separado y no la suma de varios, que
+es de lo que se compone la llegada que ve el usuario. La Tabla~\ref{tab:contraccion} compara la mediana de la franja sola ($n_0=0$) con la
+contraída, para dos valores de $n_0$, con las muestras acumuladas a 31 de octubre de 2026 (195\,786 muestras de tramo de 26 días;
 días de prueba del 25 al 31 de octubre).\footnote{La herramienta de evaluación usa la mediana del tramo cuando la
 franja tiene menos de dos pistas, aunque producción solo la guarda si hay muestras de dos franjas; esto afecta por igual
 a las reglas comparadas.}
@@ -256,12 +262,12 @@ Horizonte & Recorridos & $n_0=0$ & $n_0=5$ & $n_0=10$\\
 8--12 min  & 83\,336  & 62,7 & \textbf{61,7} & 62,4\\
 12--20 min & 113\,581 & 89,3 & \textbf{88,2} & 89,4\\
 \midrule
-\multicolumn{5}{@{}l}{\emph{Dentro de $\pm60$ s}}\\
+\multicolumn{5}{@{}l}{\emph{Dentro de $\pm60$~s}}\\
 4--8 min   & & 75,6\,\% & \textbf{76,3\,\%} & 75,9\,\%\\
 8--12 min  & & 58,2\,\% & \textbf{58,9\,\%} & 58,4\,\%\\
 12--20 min & & 42,7\,\% & \textbf{43,0\,\%} & 42,8\,\%\\
 \midrule
-\multicolumn{5}{@{}l}{\emph{Dentro de $\pm120$ s}}\\
+\multicolumn{5}{@{}l}{\emph{Dentro de $\pm120$~s}}\\
 4--8 min   & & 96,0\,\% & \textbf{96,2\,\%} & 96,0\,\%\\
 8--12 min  & & 87,4\,\% & \textbf{87,9\,\%} & 87,5\,\%\\
 12--20 min & & 73,6\,\% & \textbf{74,1\,\%} & 73,4\,\%\\
@@ -270,18 +276,18 @@ Horizonte & Recorridos & $n_0=0$ & $n_0=5$ & $n_0=10$\\
 \nota{Error absoluto medio de la suma de tramos y aciertos dentro de $\pm60$ y $\pm120$~s.}
 \end{table}
 
-Con $n_0=5$ mejoran todas las medidas en todos los horizontes. Con $n_0=10$ la mejora tramo a tramo se mantiene a
-corto plazo, pero a 12--20~min empeora frente a no contraer: la contracción excesiva borra diferencias reales entre
+Con $n_0=5$ mejoran todas las medidas en todos los horizontes. Con $n_0=10$ la mejora tramo a tramo se mantiene en los
+horizontes cortos, pero a 12--20~min empeora frente a no contraer: la contracción excesiva borra diferencias reales entre
 franjas, que se acumulan al sumar muchos tramos (el término $\beta^2$ de la
-proposición~\ref{prop:contraccion}). Cuando se adoptó la regla, con 193\,864 tramos de 25 días, la mejora se observó
+proposición~\ref{prop:contraccion}). Cuando se adoptó la regla, con 193\,864 muestras de tramo de 25 días, la mejora se observó
 en los siete días de prueba, y la validación por pistas bajó la suma de errores de 65\,854 a 63\,204~minutos.
 
 \section{Corrección por Viaje de la Capa 3}
 \label{sec:eval-correccion}
 
 La corrección por viaje (sección «\nameref{sec:correccion-viaje}») se evaluó con el protocolo por días: de 238\,740
-pasos reales con viaje reconocido en 27 días (del 6 de octubre al 1 de noviembre de 2026), se probaron los 7 últimos,
-y cada día de prueba aprendió con todos los anteriores (87\,333 pasos de prueba).
+pasos reales con viaje reconocido en 27 días (del 6 de octubre al 1 de noviembre de 2026), se probaron los 7 últimos
+días (87\,333 pasos de prueba), y para cada día de prueba se aprendió con todos los anteriores.
 
 \subsection{Corrección y Partes del Recorrido}
 
@@ -293,7 +299,7 @@ con cada nivel de la corrección.
 \caption{Error de la Hora sin Datos del Autobús, con y sin Corrección}\label{tab:correccion}
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
-Hora mostrada & Error medio & $\pm60$~s & $\pm120$~s & $\pm300$~s & Sesgo\\
+Hora mostrada & Error medio & $\pm60$~s & $\pm120$~s & $\pm300$~s & Desvío\\
 \midrule
 Horario publicado & 438~s & 13,1\,\% & 24,4\,\% & 49,8\,\% & $-263$~s\\
 Capa 3 sin corrección & 210~s & 27,0\,\% & 46,6\,\% & 76,3\,\% & $+131$~s\\
@@ -305,27 +311,29 @@ Por viaje y quinto & 159~s & 30,3\,\% & 53,9\,\% & 85,7\,\% & $+18$~s\\
 Por viaje y parada & 162~s & 30,1\,\% & 53,3\,\% & 85,3\,\% & $+18$~s\\
 \bottomrule
 \end{tabular}
-\nota{Sesgo: media de la hora real menos la mostrada; positivo si el autobús llega después de lo mostrado. 87\,333 pasos del 26 de octubre al 1 de noviembre de 2026. Cada fila usa las anteriores como respaldo: la del viaje usa la de la línea cuando el viaje no tiene datos.}
+\nota{Desvío: media de la hora real menos la mostrada (el signo contrario al de $e$); positivo si el autobús llega después de lo mostrado. Pasos de
+prueba: 87\,333, del 26 de octubre al 1 de noviembre de 2026. Cada fila usa las anteriores como respaldo: la del viaje
+usa la de la línea cuando el viaje no tiene datos.}
 \end{table}
 
 Quitar el sesgo con una sola cifra por franja baja el error medio, pero empeora los aciertos ajustados ($\pm60$ y
 $\pm120$~s): el sesgo no es igual en todas las líneas ni en todos los viajes. Con la corrección por viaje y tercio
-mejoran todas las columnas. El error medio baja un 25\,\%, y la hora que acierta con $\pm2$~minutos pasa del 47 al
+mejoran todas las columnas. El error medio baja un 25\,\%, y el acierto a $\pm2$~minutos pasa del 47 al
 54\,\%. Partir el recorrido en más trozos no mejora: con menos pasos por trozo, el ruido de cada día pesa más. Los
 tiempos por tramo de la capa 3 se aprendieron con los 27 días, también los de prueba, y eso favorece a la fila sin
-corrección: la mejora medida, si acaso, se queda corta.
+corrección: si acaso, la mejora medida se queda corta.
 
 \subsection{La Media o un Percentil}
 \label{sec:correccion-percentil}
 
 Hasta el 3 de noviembre de 2026, cada valor de la corrección era una media de desvíos. Los desvíos tienen una cola
 larga de retrasos (un día de atasco, un autobús que sale tarde de la cabecera), que sube la media por encima de lo
-típico: con la media, la hora mostrada quedaba casi siempre algo después del paso del autobús, y el que la creía podía
-perderlo. Se probó a tomar en cada grupo (franja, línea y franja, viaje y tercio de cada día) la mediana o un percentil
-más bajo, con el resto del cálculo igual.
+típico: con la media, la hora mostrada quedaba casi siempre algo después del paso del autobús, y quien se fiaba de ella
+podía perderlo. Se probó a tomar en cada grupo (la franja; la línea y la franja; el viaje y el tercio de cada día) la
+mediana o un percentil más bajo, con el resto del cálculo igual.
 
-La prueba es la más exigente posible. Se reconstruyó lo que habría enseñado la aplicación el lunes 2 y el martes 3 de
-noviembre de 2026, captura a captura (una de cada tres, de las 05:00 a las 23:00). Los tiempos por tramo y la corrección
+La prueba es la más exigente posible. Se reconstruyó lo que habría mostrado la aplicación el lunes 2 y el martes 3 de
+noviembre de 2026, instantánea a instantánea (una de cada tres, de las 05:00 a las 23:00). Los tiempos por tramo y la corrección
 se aprendieron solo con los días anteriores a cada uno, y cada fila «Estimado» sin autobús se comparó con el paso real
 del autobús por esa parada (Tabla~\ref{tab:percentil}).
 
@@ -336,39 +344,38 @@ del autobús por esa parada (Tabla~\ref{tab:percentil}).
 \toprule
 Valor & $\pm2$~min & $\pm5$~min & Error & Antes & Después\\
 \midrule
-Media (hasta ahora) & 51,5 / 58,2\,\% & 83,5 / 87,8\,\% & 190 / 162~s & 26,6 / 22,4\,\% & 22,0 / 19,4\,\%\\
+Media & 51,5 / 58,2\,\% & 83,5 / 87,8\,\% & 190 / 162~s & 26,6 / 22,4\,\% & 22,0 / 19,4\,\%\\
 Mediana & 53,6 / 59,8\,\% & 83,5 / 87,9\,\% & 187 / 160~s & 22,4 / 19,1\,\% & 24,0 / 21,2\,\%\\
 \textbf{Percentil 40} & \textbf{55,6 / 60,7\,\%} & 83,1 / 87,7\,\% & \textbf{187 / 159~s} & 17,1 / 15,2\,\% & 27,3 / 24,2\,\%\\
 Percentil 35 & 56,0 / 60,5\,\% & 82,7 / 87,5\,\% & 188 / 160~s & 15,1 / 13,7\,\% & 28,9 / 25,8\,\%\\
 \bottomrule
 \end{tabular}
 \nota{Lunes 2 / martes 3 de noviembre de 2026, sin verlos al aprender: 642\,427 y 488\,640 filas «Estimado» sin
-autobús con paso real. Error: error medio absoluto. Antes: el autobús pasa más de 2~min antes de la hora mostrada (se
-pierde si uno se fía); después: más de 2~min después (hay que esperarlo). El paso real es el punto medio entre las dos capturas en las que el feed deja atrás esa
-parada.}
+autobús con paso real. Media: la que se usaba hasta el 3 de noviembre. Error: error absoluto medio. Antes: el autobús pasa más de 2~min antes de la hora mostrada (se
+pierde si uno se fía). Después: pasa más de 2~min después (hay que esperarlo). El paso real es el punto medio de las
+dos instantáneas entre las que el feed deja atrás esa parada.}
 \end{table}
 
-El percentil 40 acierta más que la media con $\pm2$~minutos los dos días (4,1 y 2,5 puntos), con el mismo acierto a
-$\pm5$~minutos (0,4 y 0,1 puntos menos) y algo menos de error medio, y baja en un tercio las veces que el autobús pasa
-más de 2~minutos antes de la hora mostrada. A cambio, hay que esperarlo más a menudo, que es el error barato: llegar un
-poco antes a la parada no hace perder el autobús. El percentil 35 ya no acierta más que el 40 y pierde a $\pm5$
-minutos. Con la prueba de la recalibración (los 7 últimos días, aprendiendo a la vez con todos los anteriores:
-216\,534 pasos de
-todos los viajes, con autobús o sin él, hasta el 3 de noviembre), la media da 162~s de error medio y el 51,8\,\% a
-$\pm2$~min, y el percentil 40, 160~s y el 54,2\,\%.
+El percentil 40 acierta más que la media con $\pm2$~minutos los dos días (4,1 y 2,5 puntos), con casi el mismo acierto
+a $\pm5$~minutos (0,4 y 0,1 puntos menos) y algo menos de error medio, y baja en un tercio las veces que el autobús pasa
+más de 2~minutos antes de la hora mostrada. A cambio, hay que esperarlo más a menudo, que es el error menos costoso:
+llegar un poco antes a la parada no hace perder el autobús. El percentil 35 acierta casi lo mismo que el 40 a $\pm2$~minutos (0,4 puntos más el lunes y 0,2 menos el
+martes) y pierde a $\pm5$~minutos. Con la prueba de la recalibración (los 7 últimos días, aprendiendo a la vez con todos los anteriores:
+216\,534 pasos de todos los viajes, con autobús o sin él, hasta el 3 de noviembre), la media da 162~s de error medio y
+el 51,8\,\% a $\pm2$~min, y el percentil 40, 160~s y el 54,2\,\%.
 
 La corrección también da la llegada del autobús que espera en la cabecera (sección «\nameref{sec:cabecera}»). En esas
 filas, los mismos dos días, el acierto a $\pm2$~min pasa del 53,1 al 58,3\,\% y del 59,7 al 64,3\,\%, y las veces que
 el autobús pasa más de 2~minutos antes de lo mostrado, del 31,8 al 21,5\,\% y del 26,1 al 17,3\,\%. «Sin datos del
 bus» (\texttt{likely\_departed}) sale en un 13--14\,\% más de filas, con la misma fiabilidad: el 96,5 y el 94,8\,\% de
-esos viajes no se ven en todo el día, como con la media (con una de cada tres capturas de 05:00 a 23:00 y sin ver el
-día al aprender; la Tabla~\ref{tab:fiabilidad}, con una de cada seis capturas de 07:00 a 16:00 y lo aprendido hasta
-ese mediodía, da el 97{,}8\,\% el 3 de noviembre). Los estados con el autobús en ruta y «Ya pasó» no dependen de
-la corrección y no cambian. Desde ese día, la corrección usa un percentil y no la media.
+esos viajes no se ven en todo el día, como con la media. Estas cifras usan una de cada tres instantáneas de 05:00 a
+23:00, sin ver el día al aprender; la Tabla~\ref{tab:fiabilidad}, con una de cada seis instantáneas de 07:00 a 16:00 y
+lo aprendido hasta ese mediodía, da el 97{,}8\,\% el 3 de noviembre. Los estados con el autobús en ruta y «Ya salió» no
+dependen de la corrección y no cambian. Desde el 3 de noviembre de 2026, la corrección usa un percentil y no la media.
 
 El percentil no queda fijo: cada noche la recalibración prueba el 30, el 35, el 40, el 45 y el 50
 (\texttt{TRIP\_OFFSET\_RANKS}) con la misma prueba de los 7 últimos días, se queda el que más acierta a $\pm2$~min
-(con empate, el de menos error medio) y lo anota en \texttt{trip-offsets.json} (\texttt{rank}). Con las muestras del 3
+(en caso de empate, el de menor error medio) y lo anota en el campo \texttt{rank} de \texttt{trip-offsets.json}. Con las muestras del 3
 de noviembre, el 35 y el 40 empatan a 54,2\,\% y gana el 40 por un segundo de error medio (161 y 160~s); el 30 y el 50
 dan 53,8 y 53,3\,\%. Si el tráfico cambia la forma de los desvíos, el percentil cambia con él.
 
@@ -389,30 +396,30 @@ Tipo de día de la corrección & \shortstack{7 días\\de prueba} & \shortstack{F
 Sin corrección (el festivo, con tramos de laborable) & 210~s & 172~s\\
 Laborable o fin de semana por el día de la semana & 158~s & 196~s\\
 \textbf{Laborable o fin de semana; el festivo, fin de semana} & \textbf{158~s} & \textbf{162~s}\\
-Laborable, sábado y domingo o festivo & 159~s & 156~s\\
+Laborable; sábado; domingo o festivo & 159~s & 156~s\\
 Lunes a jueves, viernes, sábado y domingo & 160~s & ---\\
 Solo con los 14 últimos días & 163~s & ---\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Tratar el festivo por su día de la semana le aplicaba el retraso de un laborable con el tráfico de un domingo, y lo
-dejaba peor que sin corrección. Como fin de semana, con los tramos y la corrección que se aprendieron juntos, baja a
-162~s. Separar el sábado del domingo acierta algo más el festivo, pero algo menos el resto, con la mitad de datos por
-grupo; separar el viernes o usar solo los días recientes empeora. La temporada del año (verano, vacaciones escolares)
+Tratar el festivo según su día de la semana le aplica el retraso de un laborable con el tráfico de un domingo y lo deja
+peor que sin corrección. Tratado como fin de semana, con los tramos y la corrección aprendidos juntos, baja a
+162~s. Separar el sábado del domingo acierta algo más en el festivo, pero algo menos en el resto, con la mitad de datos
+por grupo; separar el viernes o usar solo los días recientes empeora. La temporada del año (verano, vacaciones escolares)
 no se puede medir con muestras de un solo mes. Mientras tanto, lo aprendido se recalcula cada día con las muestras de
 los últimos 120 días y se va adaptando a la estación.
 
 \section{Comparación con Otros Métodos}
 \label{sec:comparacion}
 
-El capítulo «\nameref{cap:marco}» describe tres familias de métodos: medias históricas, filtros de Kalman y redes
-neuronales. El método de este trabajo es de la primera. Para saber cuánto se pierde por no usar las otras, se
-compararon con el protocolo de la sección anterior: los mismos siete días de prueba, los mismos recorridos encadenados
-y los mismos horizontes. A diferencia del método, los rivales usan también lo que está pasando ese día. Cada uno
-predice, desde el instante $t_0$ en que el autobús sale del tramo inicial, la suma de los tramos siguientes, y solo
-puede usar los días anteriores y los tramos del propio día que terminaron al menos 60~s antes de $t_0$, lo que tarda
-el feed en publicar una posición nueva. Los métodos son estos:
+El capítulo «\nameref{cap:marco}» describe cuatro familias de métodos; aquí se comparan tres: medias históricas, filtros de
+Kalman y redes neuronales. El método de este trabajo es de la primera. Para saber cuánto se pierde por no usar las otras, se comparó
+el método con ellas mediante el protocolo de la sección «\nameref{sec:eval-contraccion}»: los mismos siete días de
+prueba, los mismos recorridos encadenados y los mismos horizontes. A diferencia del método, los rivales pueden usar
+también lo que está pasando ese día. Cada uno predice la suma de los tramos siguientes desde el instante $t_0$ en que el
+autobús sale del tramo inicial, y solo puede usar los días anteriores y los tramos del propio día que terminaron al
+menos 60~s antes de $t_0$, que es lo que tarda el feed en publicar una posición nueva. Los métodos son estos:
 
 \begin{itemize}
   \item \textbf{Horario}: la suma de los tiempos programados.
@@ -423,23 +430,23 @@ el feed en publicar una posición nueva. Los métodos son estos:
         de los últimos tres autobuses que lo terminaron, contraída hacia 1 como si valiera $n_0$ autobuses.
   \item \textbf{Kalman por tramo}: un filtro de Kalman \citep{kalman1960} por tramo cuyo estado es la desviación
         logarítmica de ese día frente a lo aprendido. Se actualiza con cada autobús que termina el tramo, vuelve a cero
-        con una constante de tiempo $\tau$ (un proceso de Ornstein-Uhlenbeck) y se proyecta a la hora en que el autobús
+        con una constante de tiempo $\tau$ (un proceso de Ornstein--Uhlenbeck) y se proyecta a la hora en que el autobús
         llegará al tramo. Es la idea de \citet{shalaby2004}, que usan los tiempos de los autobuses anteriores.
   \item \textbf{Kalman del propio autobús}: el mismo filtro, con la desviación del propio autobús en los tramos que ya
-        ha hecho.
+        ha recorrido.
   \item \textbf{Red neuronal}: un perceptrón con dos capas ocultas de 32 y 16 neuronas, como los de \citet{chien2002}
         y \citet{jeong2005}, que predice la desviación logarítmica de cada tramo frente al método actual. Usa 28
         variables: el tiempo aprendido y el programado, con cuántos autobuses se aprendió, la distancia y la posición en
         el recorrido, la hora, la franja y el tipo de día, y lo que se sabe del día (el ritmo del propio autobús, los
         autobuses previos en el tramo y la desviación media reciente en la red y en la línea). Se entrena para cada día
         de prueba con los anteriores (entre 424\,000 y 632\,000 filas), con pérdida de Huber.
-  \item \textbf{Red sin datos del día}: la misma red solo con las variables que no dependen de lo que pasa ese día.
+  \item \textbf{Red sin datos del día}: la misma red, solo con las variables que no dependen de lo que pasa ese día.
 \end{itemize}
 
 \noindent Los parámetros de los rivales se eligieron por búsqueda en rejilla con los siete días anteriores a los de
-prueba (del 18 al 24 de octubre), minimizando la suma de los errores medios de los tres horizontes: factor 1,02;
+prueba (del 18 al 24 de octubre), minimizando la suma de los errores medios de los tres horizontes: factor 1,02 para el escalado;
 ventana de 30~minutos y $n_0=4$ para los buses previos; $\tau=120$~min para el filtro por tramo y $\tau=30$~min para
-el del propio autobús, con una varianza estacionaria del estado de 0,5 y 0,1 veces la del ruido de observación. Ningún
+el del propio autobús, con una varianza estacionaria del estado de 0,5 y 0,1 veces la del ruido de observación, respectivamente. Ningún
 parámetro quedó en el borde de la rejilla. El método actual reproduce exactamente la columna $n_0=5$ de la
 Tabla~\ref{tab:contraccion}, lo que comprueba que todos los métodos se evalúan sobre los mismos recorridos.
 
@@ -448,7 +455,7 @@ Tabla~\ref{tab:contraccion}, lo que comprueba que todos los métodos se evalúan
 \caption{Comparación con Otros Métodos con el Protocolo por Días}\label{tab:comparacion}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
-& \multicolumn{3}{c}{Error medio (s)} & $\pm120$ s & Días mejor\\
+& \multicolumn{3}{c}{Error medio (s)} & $\pm120$~s & Días mejor\\
 \cmidrule(lr){2-4}
 Método & 4--8 min & 8--12 min & 12--20 min & 12--20 min & que el actual\\
 \midrule
@@ -464,13 +471,13 @@ Red neuronal               & \textbf{39,5} & \textbf{57,5} & \textbf{81,7} & \te
 \end{tabular}
 \nota{Error absoluto medio de la suma de tramos en 107\,052, 83\,336 y 113\,581 recorridos (días de prueba del 25 al 31
 de octubre de 2026). «Días mejor que el actual»: de los siete días de prueba, en cuántos el método tiene menos error
-medio que el actual, en los tres horizontes. Las redes, con la semilla 20261031; con otra semilla, la red neuronal da
+medio que el actual, en cada uno de los tres horizontes. Las redes se entrenaron con la semilla 20261031; con otra semilla, la red neuronal da
 39,5, 57,3 y 81,4~s, y la red sin datos del día, 40,8, 59,7 y 85,3~s.}
 \end{table}
 
 La Tabla~\ref{tab:comparacion} muestra que el método actual se queda con casi toda la mejora sobre el horario: el
-error medio a 4--8~minutos baja de 154 a 42~s. Las alternativas que usan el propio día mejoran algo más y en casi todos
-los días, pero poco. Los autobuses que acaban de pasar por los mismos tramos, solos o con un filtro de Kalman, restan
+error medio a 4--8~minutos baja de 154 a 42~s. Los rivales que usan el propio día mejoran algo más, en casi todos
+los días, aunque poco. Los autobuses que acaban de pasar por los mismos tramos, solos o con un filtro de Kalman, restan
 entre 0,3 y 1,8~s, un 1 o 2\,\%. El ritmo del propio autobús resta entre 1,6 y 3,6~s, un 4\,\%. La red neuronal, que
 combina todo, resta entre 2,5 y 6,5~s, entre un 6 y un 7\,\%, y es la única que mejora los siete días en los tres
 horizontes. Las diferencias con el método actual tienen intervalos de confianza del 95\,\% que no incluyen el cero
@@ -479,19 +486,18 @@ Kalman del propio autobús).
 
 Corregir solo el sesgo no explica la mejora. Sumar medianas subestima el recorrido largo, porque los tiempos de tramo
 tienen cola a la derecha: a 12--20~minutos la mediana del error del método actual es de $-29$~s. El factor único la
-lleva a $-11$~s pero apenas cambia el error medio (de 88,2 a 86,9~s). La red sin datos del día mejora con las dos
+lleva a $-11$~s, pero apenas cambia el error medio (de 88,2 a 86,9~s). La red sin datos del día mejora con las dos
 semillas, pero mucho menos con una que con otra (82,5 y 85,3~s a 12--20~minutos), así que esa parte de la mejora no es
-fiable. La de la red completa sí lo es: las dos semillas dan lo mismo (81,7 y 81,4~s). La
+fiable. La de la red completa sí lo es: las dos semillas dan prácticamente lo mismo (81,7 y 81,4~s). La
 sección «\nameref{sec:otros-enfoques}» discute qué significan estas cifras para el método.
 
-\section{Trazados del Derecho y Espera en la Cabecera}
+\section{Trazados Corregidos y Espera en la Cabecera}
 \label{sec:eval-trazados}
 
 Los dos cambios del 3 de noviembre de 2026 (secciones «\nameref{sec:trazados-gtfs}» y «\nameref{sec:cabecera}») se
-midieron con las capturas de ese día: diez bloques de unos 55~minutos, de 07:00 a 16:00, con el bloque siguiente
-para ver el paso real de las llegadas del final de cada uno. Son 689\,292 llegadas con paso real conocido, de las que
-586\,425 quedan a menos de 20~minutos. Todas las
-variantes usan la misma base del horario de ese día y las mismas capturas; solo cambian el motor y la corrección de los
+midieron con las capturas de ese día: diez bloques de unos 55~minutos, de 07:00 a 16:00, usando también el bloque
+siguiente para ver el paso real de las llegadas del final de cada uno. Son 689\,292 llegadas con paso real conocido,
+de las que 586\,425 quedan a menos de 20~minutos. Todas las variantes usan la misma base del horario de ese día y las mismas capturas; solo cambian el motor y la corrección de los
 trazados:
 
 \begin{itemize}
@@ -520,29 +526,29 @@ Sesgo medio a 10--20~min (media de $e$, negativa si el autobús llega después d
 $-0{,}54$ (B), $-1{,}02$ (C) y $-0{,}54$~min (D).}
 \end{table}
 
-La corrección de los trazados (B) mejora en todos los horizontes y no empeora en ninguno. Sus efectos mayores no
+La corrección de los trazados (B) mejora o iguala en todos los horizontes. Sus efectos mayores no
 están en la tabla, que mide la misma lista de llegadas en las cuatro columnas, sino en cuántas de ellas salen en
-directo: las llegadas calculadas en directo pasan de 470\,596 a 507\,023, y las que solo tienen el horario, de
-115\,829 a 79\,402. Contando cada autobús con GPS en una de cada tres capturas, el 73{,}8\,\% quedaba situado antes de
+directo: las llegadas calculadas con datos del autobús pasan de 470\,596 a 507\,023, y las que solo tienen el horario, de
+115\,829 a 79\,402. Contando cada autobús con GPS en una de cada tres instantáneas, el 73{,}8\,\% quedaba situado antes de
 los cambios y el 97{,}4\,\% después: el 81{,}2\,\% en ruta y el 16{,}2\,\% en la cabecera. Los demás aún no han
 salido y están lejos de la primera parada (1{,}7\,\%), van junto al recorrido sin situarse (0{,}7\,\%) o han
 terminado o van a más de 1~km de su recorrido (0{,}3\,\%). Con las capturas de ese día, las líneas que aprenden tramos
 pasan de 95 a 98 de 99, con 2\,624 tramos distintos frente a 2\,404; las líneas 2610, 3642 y 3932 no aprendían ninguno.
 
-Si el autobús de la cabecera sale a su hora en punto (C), se gana algo a menos de 6~minutos y se pierden 3 puntos a 10--20~minutos, con
-el doble de sesgo: los autobuses salen después de su hora. Con la llegada de la capa 3 (D), la precisión es la de B
-en todos los horizontes y las llegadas en directo suben a 569\,769, con solo 16\,656 de horario. Una captura en
-directo de 18~minutos de esa misma tarde, con 12\,825 llegadas, da lo mismo: D igual o mejor que A en cada horizonte,
-con 12\,421 llegadas en directo frente a 10\,941.
+Si se supone que el autobús de la cabecera sale a su hora en punto (C), se gana algo a menos de 6~minutos y se
+pierden 3 puntos a 10--20~minutos, con el doble de sesgo: los autobuses salen después de su hora. Con la llegada de la capa 3 (D), la precisión es la de B
+en todos los horizontes y las llegadas con datos del autobús suben a 569\,769, con solo 16\,656 de horario. Una captura en
+directo de 18~minutos de esa misma tarde, con 12\,825 llegadas, da el mismo resultado: D iguala o mejora a A en cada horizonte,
+con 12\,421 llegadas con datos del autobús frente a 10\,941.
 
 \section{Fiabilidad de lo que Dice la Aplicación}
 \label{sec:fiabilidad-estados}
 
 Cada estado de la Tabla~\ref{tab:estados} afirma algo: que el autobús ya pasó, que espera en la cabecera, que viene. Con
-las capturas del 3 de noviembre de 2026 se comprobó cada afirmación contra lo que pasó después: para una de cada seis
-capturas, el estado de cada parada de cada viaje cercano (de hora y media antes a una hora después), con el registro de
-pasos reconstruido desde las capturas anteriores, frente al paso real por cambio de parada. No cuentan las afirmaciones
-de la última hora de capturas, sin tiempo para ver qué pasó.
+las capturas del 3 de noviembre de 2026 se comprobó cada afirmación con lo que ocurrió después: para una de cada seis
+instantáneas se comparó el estado de cada parada de cada viaje cercano (de hora y media antes a una hora después),
+calculado con el registro de pasos reconstruido desde las instantáneas anteriores, con el paso real por cambio de
+parada. No se cuentan las afirmaciones de la última hora capturada, porque no queda tiempo para ver qué pasó.
 
 \begin{table}[ht]
 \centering
@@ -552,13 +558,13 @@ de la última hora de capturas, sin tiempo para ver qué pasó.
 Estado y lo que afirma & Veces & Resultado\\
 \midrule
 En directo en la cabecera: el autobús espera allí su viaje & 20\,924 & 97{,}0\,\% hizo después ese viaje desde allí\\
-Ya pasó (\texttt{departed}) & 158\,833 & 99{,}9\,\% había pasado; 0{,}1\,\% pasó después\\
+Ya salió (\texttt{departed}) & 158\,833 & 99{,}9\,\% había pasado; 0{,}1\,\% pasó después\\
 Estimado sin autobús (capa 3) & 170\,649 & 90{,}6\,\% vino un autobús ($\pm2$~min el 65\,\%, $\pm5$~min el 90\,\%); 5{,}2\,\% el viaje no se vio en todo el día\\
 Aún sin autobús asignado & 2\,372 viajes & 96{,}7\,\% recibió autobús después, con una mediana de 7~min antes de su salida (el 17\,\% después de su hora)\\
 Sin datos del bus (\texttt{likely\_departed}) & 2\,601 & 97{,}8\,\% de esos viajes no se vio en todo el día; 2{,}0\,\% sí había pasado\\
 \bottomrule
 \end{tabularx}
-\nota{Una de cada seis capturas de diez bloques del 3 de noviembre de 2026, de 07:00 a 16:00. El paso real es el primer
+\nota{Una de cada seis instantáneas de diez bloques del 3 de noviembre de 2026, de 07:00 a 16:00. El paso real es el primer
 instante en que el feed da como próxima parada una posterior.}
 \end{table}
 
@@ -568,8 +574,8 @@ el día al aprender, el mismo martes da el 58,2\,\% a $\pm2$~min, y el 60,7\,\% 
 
 Los estados que afirman algo del autobús aciertan casi siempre. El de \texttt{likely\_departed} no se puede comprobar:
 solo se aplica a viajes de los que no hay ningún dato, y casi ninguno aparece después. Por eso su texto pasó de
-«Probablemente ya ha pasado» a «Sin datos del bus: puede que ya haya pasado», y el del autobús en la cabecera, de «En
-ruta» a «En la parada».
+«Probablemente ya ha pasado» a «Sin datos del bus: puede que ya haya pasado». También cambió el del autobús en la
+cabecera, de «En ruta» a «En la parada».
 
 \section{Ideas Probadas y Descartadas}
 \label{sec:descartadas}
@@ -609,8 +615,8 @@ Autobús en la cabecera saliendo a su hora en punto & 67,0\,\% → 64,0\,\% dent
 Usar la parada del feed (\texttt{StopPointRef}) cuando no coincide con el orden $n$ & 2\,329 llegadas más en directo, pero 88,7\,\% → 88,5\,\% a 3--6~min y 15~ms más por petición & Descartada\\
 Arrastrar al viaje siguiente de la misma clave «$\ell|\nu$» el retraso del autobús que aún va en el anterior & Donde se aplica, 60,9\,\% → 5,8\,\% dentro de $\pm2$~min a 20--60~min y $+22$~min de sesgo: solo el 11\,\% de esos viajes los hace el mismo autobús & Descartada\\
 Seguir el autobús que desaparece del feed desde donde se le vio por última vez (hasta 30~min) & 39,8\,\% → 23,2\,\% dentro de $\pm2$~min y $-25$~min de sesgo en 22\,690 llegadas medidas tras volver al feed: el autobús que falta no suele estar recorriendo el viaje & Descartada\\
-Sin autobús pasada su hora de salida, no dar una llegada anterior a salir ahora mismo de la cabecera & En esas filas, del 26,5 al 27,8\,\% (2 de nov.) y del 32,3 al 32,7\,\% (3 de nov.) dentro de $\pm2$~min; en el conjunto, $+0{,}1$ y $+0{,}02$ puntos. Muchos de esos autobuses salen a su hora sin aparecer en el feed & Descartada\\
-Corregir la capa 3 con lo que se apartan ahora los demás viajes de la misma línea, sentido o red & Del 51,5\,\% al 51,9\,\% en el mejor caso (2 de nov.) y peor en casi todos: el desvío de un viaje un día es suyo (lo explica el autobús que lo hace), no de la línea & Descartada\\
+Sin autobús pasada su hora de salida, no dar una llegada anterior a salir ahora mismo de la cabecera & En esas filas, 26,5\,\% → 27,8\,\% (2 de nov.) y 32,3\,\% → 32,7\,\% (3 de nov.) dentro de $\pm2$~min; en el conjunto, $+0{,}1$ y $+0{,}02$ puntos. Muchos de esos autobuses salen a su hora sin aparecer en el feed & Descartada\\
+Corregir la capa 3 con lo que se apartan ahora los demás viajes de la misma línea, sentido o red & 51,5\,\% → 51,9\,\% en el mejor caso (2 de nov.) y peor en casi todos: el desvío de un viaje un día es suyo (lo explica el autobús que lo hace), no de la línea & Descartada\\
 \end{longtable}
 
 Por el mismo criterio, entraron estas otras:
@@ -619,15 +625,16 @@ Por el mismo criterio, entraron estas otras:
   \item el mínimo de 2 pistas por tramo en lugar de 3: un 17\,\% más de tramos, con el mismo error;
   \item conservar la llegada cuando el retraso no es creíble;
   \item la parada registrada hasta tramos de 20~min: sin GPS, del 79,8\,\% al 83,0\,\% dentro de $\pm2$~min;
-  \item el horario corregido de la capa 3: sin datos del autobús, del 18\,\% al 36\,\% dentro de $\pm2$~min;
+  \item el horario corregido de la capa 3: sin datos del autobús, duplica o triplica el acierto del horario publicado
+        dentro de $\pm2$~min (Tabla~\ref{tab:capas});
   \item la corrección por viaje de la capa 3: de 210 a 158~s de error medio y del 47 al 54\,\% dentro de $\pm2$~min;
   \item en la corrección por viaje, el percentil 40 de los desvíos en lugar de la media: en las filas «Estimado» sin
         autobús de dos días no vistos al aprender, del 51,5 al 55,6\,\% y del 58,2 al 60,7\,\% dentro de
-        $\pm2$~min, y un tercio menos de autobuses que pasan antes de la hora mostrada;
+        $\pm2$~min, y un tercio menos de autobuses que pasan más de 2~min antes de la hora mostrada;
   \item en la capa 3, el festivo entre semana como fin de semana: de 196 a 162~s el 12 de octubre;
   \item el respaldo por longitud: con un tramo sin aprender, del 69\,\% al 76\,\%; con dos o más, del 49\,\% al
         59\,\%;
-  \item la captura horaria, y después continua, y la contracción con $n_0=5$;
+  \item la captura horaria (después, continua) y la contracción con $n_0=5$;
   \item descargar el feed cada 20~s en lugar de 45~s: con 45~s se perdía alguna versión (46 guardadas en 45~minutos,
         cuando a una versión cada 55~s se publican unas 49).
 \end{itemize}

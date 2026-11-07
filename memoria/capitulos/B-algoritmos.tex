@@ -1,7 +1,8 @@
 \chapter{Pseudocódigo}
 \label{ap:algoritmos}
 
-Este apéndice reúne el pseudocódigo de todas las funciones del método, en el orden en que se usan. Los índices de
+Este apéndice reúne el pseudocódigo de las funciones del método, en el orden en que se usan (el de la
+decisión de cada fila está en el capítulo «\nameref{cap:prediccion}»). Los índices de
 paradas empiezan en 1, como en el texto: el viaje tiene paradas $p_1,\dots,p_N$ y el tramo $i$ va de $p_i$ a
 $p_{i+1}$. $\redondeo$ es el redondeo con las mitades alejándose del cero, $\mediana$ la mediana baja y $\clamp$ la
 acotación (sección «\nameref{sec:convenciones}»). «Nulo» significa que el valor no existe.
@@ -99,7 +100,7 @@ acotación (sección «\nameref{sec:convenciones}»). «Nulo» significa que el 
   \If{falta $n$ \textbf{o} el par $(J,v)$ no es fiable \textbf{o} $n<2$} \Return nulo \EndIf
   \State $\tref\gets\tgps$ si existe; si no, $t_{\mathrm{rec}}$
   \If{$\tref$ no existe \textbf{o} $\tnow-\tref>600$ \textbf{o} $\tref<d_1-60$} \Return nulo \EndIf
-  \If{no hay paradas de orden $n-1$ y $n$ \textbf{o} $a_n-a_{n-1}>1200$} \Return nulo \EndIf
+  \If{no hay paradas de orden $n-1$ y $n$ \textbf{o} $a_n-a_{n-1}>1\,200$} \Return nulo \EndIf
   \State $b\gets\franja(D,\tref)$;\ $k\gets k(\ell,D,\tref)$
   \State $\theta\gets\redondeo\big(0{,}5\cdot$\Call{Esperado}{$J,a_{n-1},a_n,b,k$}$\big)$
   \State \Return $\big(n,\ \tref,\ a_{n-1},\ a_n,\ \theta,\ \delta_{\mathrm{reg}}=\tref+\theta-a_n,\ g=a_n-a_{n-1}\big)$
@@ -155,7 +156,7 @@ acotación (sección «\nameref{sec:convenciones}»). «Nulo» significa que el 
   \State $R\gets(\texttt{scheduled},a_\dest,0)$
   \If{la tabla de tramos está vacía \textbf{o} $J$ no tiene paradas \textbf{o} $a_\dest\le d_1$} \Return $R$ \EndIf
   \State $D'\gets D$, o el domingo de esa semana si $D$ es festivo entre semana
-  \State $t_m\gets\lfloor(d_1+a_\dest)/2\rfloor$;\ $b\gets\franja(D',t_m)$;\ $k\gets k(\ell,D',t_m)$
+  \State $t_{\mathrm{mid}}\gets\lfloor(d_1+a_\dest)/2\rfloor$;\ $b\gets\franja(D',t_{\mathrm{mid}})$;\ $k\gets k(\ell,D',t_{\mathrm{mid}})$
   \State $C\gets d_1+60+\redondeo\big($\Call{Esperado}{$J,d_1-1,a_\dest,b,k$}$\big)+\redondeo\big($\Call{Corrección}{$J,q,D'$}$\big)$
   \If{$C\ge\tnow$} \Return $(\texttt{estimated},C,0)$ \EndIf
   \If{$C<\tnow-600$ \textbf{y} $a_\dest-C\ge600$ \textbf{y} \Call{ParteAprendida}{$J,d_1-1,a_\dest,b$}$\ \ge0{,}8$}
@@ -208,7 +209,7 @@ acotación (sección «\nameref{sec:convenciones}»). «Nulo» significa que el 
 \end{figure}
 
 \begin{figure}[ht]
-\caption{Ajuste de los Tiempos por Tramo}\label{alg:ajuste-tramos}
+\caption{Ajuste de los Tiempos por Tramo y de las Proporciones por Longitud}\label{alg:ajuste-tramos}
 \begin{algorithmic}[1]
 \Function{AjustarTramos}{muestras de tramo, en orden}
   \For{cada muestra $(\kappa,j,b,y)$}

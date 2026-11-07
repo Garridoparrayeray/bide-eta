@@ -1,5 +1,5 @@
 """Implementación de referencia del motor de llegadas de Bizkaibus+, escrita solo a partir de la especificación
-de la tesis (no del código PHP). Se valida contra los vectores de prueba generados con el código de producción.
+de la memoria técnica (no del código PHP). Se valida contra los vectores de prueba generados con el código de producción.
 
 Convenciones que hay que respetar al portar a otro lenguaje:
   * Tiempos en segundos desde la medianoche de Europe/Madrid del día de servicio (pueden pasar de 86 400).

@@ -1,10 +1,10 @@
 \chapter{Aprendizaje Continuo}
 \label{cap:aprendizaje}
 
-Los parámetros del modelo (los tiempos por tramo, las proporciones por longitud y los factores de ritmo) no se
+Los parámetros del modelo (los tiempos por tramo, las proporciones por longitud, los factores de ritmo y la corrección por viaje) no se
 escriben a mano: se aprenden del propio feed en tiempo real. Este capítulo describe el ciclo completo: cómo se captura
-el feed, cómo se reconstruye el instante real en que cada autobús pasa por cada parada, qué muestras se extraen, cuánto
-se conservan y con qué reglas se decide si una nueva calibración sustituye a la anterior.
+el feed, cómo se reconstruye el instante real en que cada autobús pasa por cada parada, qué muestras se extraen, cuántas
+se conservan y durante cuánto tiempo, y con qué reglas se decide si una nueva calibración sustituye a la anterior.
 
 \section{El Ciclo}
 \label{sec:ciclo}
@@ -14,7 +14,7 @@ se conservan y con qué reglas se decide si una nueva calibración sustituye a l
         versión distinta.
   \item \textbf{Muestras y medida}, al terminar cada bloque: se reconstruyen los pasos por parada, se extraen las
         muestras de tramo y de ritmo y se añaden a dos ficheros acumulados; además se mide la precisión de las
-        llegadas (capítulo «\nameref{cap:evaluacion}») y se archivan las capturas en bruto del bloque.
+        llegadas (capítulo «\nameref{cap:evaluacion}») y se archiva la captura en bruto del bloque.
   \item \textbf{Recalibración}, cada día a las 04:00 UTC: con todo lo acumulado se calculan nuevos parámetros, se
         validan y, solo si mejoran y cambian, se escriben.
   \item \textbf{Despliegue}, cada día a las 03:00 UTC: la aplicación se reconstruye con la última versión de los
@@ -22,8 +22,8 @@ se conservan y con qué reglas se decide si una nueva calibración sustituye a l
 \end{enumerate}
 
 Todo el ciclo usa el mismo código de localización y predicción que producción (la misma clase), de modo que lo que se
-aprende y lo que se mide es lo que ve el usuario. La captura se ejecuta en una plataforma de integración continua que
-limita cada trabajo a seis horas y que retrasa o se salta muchos trabajos programados: hasta el 31 de octubre de 2026
+aprende y lo que se mide corresponden a lo que ve el usuario. La captura se ejecuta en una plataforma de integración
+continua que limita cada trabajo a seis horas y que retrasa u omite muchos de los trabajos programados: hasta el 31 de octubre de 2026
 la captura era de 45~minutos cada hora y solo se ejecutaron 163 de unas 600 capturas previstas, algunas con horas de
 retraso. Desde entonces cada trabajo captura unas cinco horas y media y, si termina bien, lanza el siguiente, que
 espera su turno y empieza en cuanto acaba el anterior; un disparo programado cada hora queda como respaldo.
@@ -32,24 +32,24 @@ espera su turno y empieza en cuanto acaba el anterior; un disparo programado cad
 \label{sec:captura}
 
 Cuando se fijó el intervalo de descarga, en octubre de 2026, el servidor del feed publicaba una versión nueva cada
-55~s aproximadamente (el 5 de noviembre, cada 64~s de mediana). Cada 20~s (\texttt{intervalo\_s}) se
-descarga, y la versión se guarda solo si su marca \texttt{RecordedAtTime} es distinta de la anterior. Con el intervalo
+55~s aproximadamente (el 5 de noviembre, cada 64~s de mediana). El feed se descarga cada 20~s (\texttt{intervalo\_s}),
+y cada versión se guarda solo si su marca \texttt{RecordedAtTime} es distinta de la de la versión anterior. Con el intervalo
 inicial de 45~s se perdía alguna versión cuando dos publicaciones caían entre dos descargas (46 versiones guardadas en
 45~minutos, de unas 49 publicadas); con 20~s se guardan todas, y muestrear más deprisa no aporta nada, porque el feed
 no cambia entre publicaciones.
 
 La captura se organiza en bloques que terminan a la hora en punto, de modo que ninguno cruza la medianoche y cada uno
-usa el horario de su día. Las capturas no usan el emparejador de ayer de la sección «\nameref{sec:mas-de-24h}»: la
-parte de un viaje posterior a la medianoche no se sitúa con el GPS, y no aporta muestras ni entra en las medidas. En
-Bizkaibus afecta sobre todo a los 11 viajes de fin de semana que acaban después de las 29:00, porque el resto de la
+usa el horario de su día. Las capturas no usan el emparejador de ayer de la sección «\nameref{sec:mas-de-24h}», así que
+la parte de un viaje posterior a la medianoche no se sitúa con el GPS, no aporta muestras y no entra en las medidas. En
+Bizkaibus esto afecta sobre todo a los 11 viajes de las noches del viernes y del sábado que acaban después de las 29:00, porque el resto de la
 noche el feed no se actualiza. Mientras se captura un bloque se procesa el anterior, sin huecos entre ellos. Para medir la
-precisión de las predicciones de un bloque se usan también las capturas del bloque siguiente, solo para ver cuándo
-pasan los autobuses que estaban a punto de llegar al terminar el bloque. Las capturas en bruto de cada bloque,
-comprimidas (unos 250~KB por hora), se archivan junto con las muestras nuevas que salieron de él, sin límite de
+precisión de las predicciones de un bloque se usa también la captura del bloque siguiente, solo para ver cuándo
+pasan los autobuses que estaban a punto de llegar cuando terminó el bloque. La captura en bruto de cada bloque,
+comprimida (unos 250~KB por hora), se archiva junto con las muestras nuevas que salieron de él, sin límite de
 antigüedad: cualquier cálculo se puede repetir más adelante aunque los ficheros acumulados descarten lo antiguo.
 
-Al procesar una captura, cada fichero se identifica por su \texttt{RecordedAtTime}
-(los duplicados se ignoran) y se convierte a fecha y segundos de Madrid. Las instantáneas se ordenan por tiempo y se
+Al procesar una captura, cada fichero se identifica por su \texttt{RecordedAtTime} (los duplicados se ignoran), que se
+convierte a fecha y segundos en hora de Madrid. Las instantáneas se ordenan por tiempo y se
 agrupan en \emph{ventanas de observación}: una ventana termina cuando el hueco hasta la siguiente instantánea supera
 300~s (\texttt{MAX\_GAP\_BETWEEN\_SNAPSHOTS\_SECONDS}). Cada instantánea guarda el instante final de su ventana,
 $t_{\mathrm{fin}}$.
@@ -57,9 +57,9 @@ $t_{\mathrm{fin}}$.
 \section{Pistas}
 \label{sec:pistas}
 
-Para cada instantánea, en orden, se construye el emparejador con $\tnow$ igual a la hora de la instantánea y la fecha
-de la instantánea como fecha de servicio, y para cada entrada del feed con viaje conocido se calcula su posición
-(capa 1, con el contraste de la sección «\nameref{sec:desconfianza}»). Si existe, se añade el punto $(\tgps,\Tpos)$ a la
+Para cada instantánea, en orden, se construye el emparejador con $\tnow$ igual a la hora de la instantánea y con su
+fecha como fecha de servicio. Para cada entrada del feed con viaje conocido se calcula su posición (capa 1, con el
+contraste de la sección «\nameref{sec:desconfianza}») y, si existe, se añade el punto $(\tgps,\Tpos)$ a la
 \emph{pista} de la clave (vehículo, viaje).
 
 \begin{definicion}[Pista]
@@ -74,7 +74,7 @@ tampoco las posiciones en la cabecera (sección «\nameref{sec:cabecera}»), que
 \section{El Instante Real de Paso por una Parada}
 \label{sec:paso-real}
 
-No existe en el feed ningún dato de «el autobús pasó por esta parada». Se reconstruye a partir de la pista, usando el
+No existe en el feed ningún dato de «el autobús pasó por esta parada». El paso se reconstruye a partir de la pista, usando el
 horario como escala de distancia: cada $\theta_k$ indica, en horas del horario, dónde estaba el autobús.
 
 \begin{definicion}[Paso real]
@@ -92,12 +92,12 @@ P(a)=t_{k-1}+\frac{a-\theta_{k-1}}{\theta_k-\theta_{k-1}}\,\big(t_k-t_{k-1}\big)
 Si ningún par cumple las condiciones, el paso real no se conoce.
 \end{definicion}
 
-Es una interpolación lineal entre las dos observaciones que rodean a la parada. Los pares en que el autobús no avanza
-($\theta_k\le\theta_{k-1}$, por ejemplo una posición repetida) o separados más de cinco minutos se descartan, porque no
+Es una interpolación lineal entre las dos observaciones que rodean a la parada. Se descartan los pares en que el autobús
+no avanza ($\theta_k\le\theta_{k-1}$, por ejemplo una posición repetida) y los separados más de cinco minutos, porque no
 permiten interpolar con fiabilidad.
 
 \begin{ejemplo}
-Una pista $(28\,900,\,28\,880)$, $(28\,960,\,28\,940)$, $(29\,020,\,29\,030)$ y una parada con $a=28\,950$: el par que
+Con la pista $(28\,900,\,28\,880)$, $(28\,960,\,28\,940)$, $(29\,020,\,29\,030)$ y una parada con $a=28\,950$, el par que
 la rodea es el segundo, y $P=28\,960+\frac{28\,950-28\,940}{29\,030-28\,940}\cdot60=28\,966{,}67$~s. Para una parada con
 $a=28\,800$, anterior a la primera observación, el paso no se conoce.
 \end{ejemplo}
@@ -111,7 +111,7 @@ usa para evaluar (sección «\nameref{sec:verdad}»).
 \label{sec:muestras-tramo}
 
 Para cada pista y cada par de paradas consecutivas $(p_i,p_{i+1})$ de su viaje, si se conocen $P_i=P(a_i)$ y
-$P_{i+1}=P(a_{i+1})$ y $P_{i+1}>P_i$, se produce una muestra de tramo con los campos
+$P_{i+1}=P(a_{i+1})$, y además $P_{i+1}>P_i$, se produce una muestra de tramo con estos campos:
 \begin{center}
 \small
 \begin{tabular}{@{}ll@{}}
@@ -129,8 +129,8 @@ Campo & Valor\\
 \end{tabular}
 \end{center}
 
-\noindent La franja es la del momento en que el autobús entra en el tramo. La pista incluye la fecha para que el mismo
-vehículo en el mismo viaje en dos días distintos cuente como dos pistas.
+\noindent La franja es la del momento en que el autobús entra en el tramo. La clave de la pista incluye la fecha para que
+el mismo vehículo en el mismo viaje, en dos días distintos, cuente como dos pistas.
 
 \section{Muestras de Ritmo}
 \label{sec:muestras-ritmo}
@@ -138,28 +138,28 @@ vehículo en el mismo viaje en dos días distintos cuente como dos pistas.
 Las muestras de ritmo sirven para estimar $k$ (sección «\nameref{sec:k}»). En cada instantánea, para cada entrada con
 posición y cada parada de su viaje con $a_\dest>\Tpos$, se registra la predicción: la hora de la posición, $\Tpos$ y
 $a_\dest$. Cuando se conocen las pistas completas, se calcula el paso real $P(a_\dest)$ y la predicción se convierte en
-muestra si cumple:
+muestra si cumple estas condiciones:
 \begin{enumerate}
   \item el paso real se conoce;
-  \item la ventana de observación se extiende al menos 10~minutos después de la hora publicada:
+  \item la ventana de observación se extiende al menos diez minutos después de la hora publicada:
         $t_{\mathrm{fin}}\ge a_\dest+600$ (\texttt{OBSERVED\_AFTER\_PREDICTION\_SECONDS});
   \item el tiempo programado que faltaba es de al menos dos minutos: $H=a_\dest-\Tpos\ge120$~s
         (\texttt{MIN\_REMAINING\_SECONDS\_FOR\_FACTOR});
   \item el tiempo real que faltaba es positivo: $Y=P(a_\dest)-\tgps>0$.
 \end{enumerate}
 Se guardan la pista, el vehículo, la línea, la fecha, $\texttt{at}=\tgps$, la franja de $\tgps$, $H$, $Y$ y el paso
-real (estos dos con un decimal).
+real (estos dos últimos con un decimal).
 
 \subsection{Por Qué Exigir la Ventana} Solo se conoce el paso real de los autobuses que pasan antes de que termine la
 captura. Si se aceptaran todas las predicciones con paso conocido, las de autobuses lentos (que pasan después del
 final) quedarían fuera y $k$ saldría sesgado hacia autobuses rápidos: es un problema de \emph{censura}. Exigir que la
-ventana cubra al menos diez minutos después de la hora publicada reduce ese sesgo a los autobuses que van más de diez
-minutos tarde respecto a su horario en ese tramo. La misma regla, con la llegada estimada en lugar de la publicada,
-se aplica al medir el error (capítulo «\nameref{cap:evaluacion}»).
+ventana cubra al menos diez minutos después de la hora publicada limita ese sesgo a los autobuses que van más de diez
+minutos tarde respecto a su horario en ese tramo. Al medir el error (capítulo «\nameref{cap:evaluacion}») no se aplica: por
+eso la censura de los autobuses muy tardíos figura entre las limitaciones (capítulo «\nameref{cap:discusion}»).
 
 \subsection{Aclarado} Un autobús visto durante 45~minutos con veinte paradas por delante produce cientos de
-predicciones muy correlacionadas. Para que no pese más que otros, se conservan como mucho 30 por pista
-(\texttt{MAX\_SAMPLES\_PER\_TRACK}): si una pista tiene $c>30$ muestras, en su orden original, se conservan las de
+predicciones muy correlacionadas. Para que no pese más que los demás, se conservan como mucho 30 muestras por pista
+(\texttt{MAX\_SAMPLES\_PER\_TRACK}): si una pista tiene $c>30$, se conservan, en su orden original, las de
 índices
 \begin{equation}
 \label{eq:aclarado}
@@ -171,38 +171,38 @@ la pista.
 \section{Acumulación y Retención}
 \label{sec:retencion}
 
-Las muestras se añaden a dos ficheros JSON Lines acumulados (formatos en el Apéndice~\ref{ap:formatos}). Al añadir:
+Las muestras se añaden a dos ficheros JSON Lines acumulados (formatos en el Apéndice~\ref{ap:formatos}). Al añadirlas:
 
 \begin{itemize}
-  \item se descartan las muestras con fecha anterior a 120~días antes de hoy (\texttt{SAMPLES\_RETENTION\_DAYS});
-  \item en las muestras de tramo, si un tramo tiene más de 300 de un mismo tipo de día, laborable o fin de semana
-        (\texttt{MAX\_SAMPLES\_PER\_SEGMENT}), se conservan las 300 más recientes de ese tipo por (fecha, \texttt{at}),
+  \item se descartan las muestras con más de 120~días de antigüedad (\texttt{SAMPLES\_RETENTION\_DAYS});
+  \item en las muestras de tramo, si un tramo tiene más de 300 (\texttt{MAX\_SAMPLES\_PER\_SEGMENT}) de un mismo tipo
+        de día, laborable o fin de semana, se conservan las 300 más recientes de ese tipo según (fecha, \texttt{at}),
         sin alterar el orden del resto del fichero;
   \item en las de ritmo, si el total pasa de $500\,000$ (\texttt{MAX\_PACE\_SAMPLES}), se ordenan por (fecha,
         \texttt{at}) y se conservan las $500\,000$ más recientes.
 \end{itemize}
 
 \noindent Estos topes mantienen los ficheros por debajo de unos 120~MB y la recalibración por debajo de 2~GB de memoria,
-con un margen amplio respecto a los límites de la plataforma. El tope hace además de memoria: al quedarse solo lo más
-reciente, un cambio en la calle (un desvío, unas obras) entra en lo aprendido en uno o dos días.
+con un margen amplio respecto a los límites de la plataforma. El tope fija además cuánto recuerda el modelo: al quedarse
+solo lo más reciente, un cambio en la calle (un desvío, unas obras) entra en lo aprendido en uno o dos días.
 
 Hasta el 5 de noviembre de 2026 el tope era de 300 muestras por tramo, sin separar el tipo de día. Con las primeras
-capturas, 300 muestras eran unos diez días de un tramo muy transitado, y diez días siempre incluyen un fin de semana: se
-comprobó con 25~días que en los 109 tramos (de 2\,487) que llegaban al tope las franjas estaban igual de repartidas que
-en el resto. Desde el 2 de noviembre las capturas recogen unas diez veces más pasos al día, y el 5 de noviembre 533 de
-los 2\,757 tramos estaban en el tope: muchos guardaban solo los últimos 3 a 5~días, y 127 no tenían ninguna muestra de
-fin de semana. En esos tramos el sábado y el domingo se usaba el tiempo de laborable, y el lunes, al revés, la lista
+capturas, 300 muestras eran unos diez días de un tramo muy transitado, y diez días siempre incluyen un fin de semana: con
+25~días de muestras se comprobó que, en los 109 tramos (de 2\,487) que llegaban al tope, las franjas estaban igual de
+repartidas que en el resto. Desde el 2 de noviembre las capturas recogen unas diez veces más pasos al día y, el 5 de
+noviembre, 533 de los 2\,757 tramos estaban en el tope: muchos guardaban solo los últimos 3 a 5~días, y 127 no tenían ninguna muestra de
+fin de semana. En esos tramos, el sábado y el domingo se usaba el tiempo de laborable y, el lunes, al revés, la lista
 estaba llena de muestras del fin de semana.
 
-Con un tope por tipo de día cada lista se renueva por su cuenta y siempre queda un fin de semana guardado. Para medirlo
-se aprendió con las muestras anteriores a cada día y se probó en ese día (Tabla~\ref{tab:tope-tipo-dia}). Con el tope
-de 300 no se puede comparar con los datos guardados, porque el fichero ya venía recortado por el tope anterior; por eso
-se reprodujo la misma situación con topes menores en los tramos que conservan todo su historial. El tope por tipo de día
-nunca empeora y mejora sobre todo el lunes que sigue al fin de semana.
+Con un tope por tipo de día cada lista se renueva por su cuenta y siempre queda un fin de semana guardado. Para medir el
+efecto, se aprendió con las muestras anteriores a cada día y se probó en ese día (Tabla~\ref{tab:tope-tipo-dia}). Con el
+tope de 300, la comparación no puede hacerse con los datos guardados, porque el fichero ya venía recortado por el tope
+anterior; por eso se reprodujo la misma situación con topes menores (20, 40 y 80) en los tramos que conservan todo su
+historial. El tope por tipo de día no empeora en ningún caso y mejora sobre todo el lunes que sigue al fin de semana.
 
 \begin{table}[ht]
 \centering
-\caption{Error por Tramo con el Tope por Tramo y con el Tope por Tramo y Tipo de Día}\label{tab:tope-tipo-dia}
+\caption{Error por Tramo con un Tope por Tramo o por Tramo y Tipo de Día}\label{tab:tope-tipo-dia}
 \begin{tabular}{@{}llrrr@{}}
 \toprule
 Tope & Día de prueba & Pasos & Error medio (s) & Dentro de $\pm30$~s (\%)\\
@@ -235,18 +235,18 @@ de tramo que se usa si todavía no existe el fichero acumulado.
 \label{sec:recalibracion}
 
 Cada día se recalibran, en este orden, el factor de ritmo, los tiempos por tramo y la corrección por viaje. El orden
-importa: la validación de los tiempos por tramo compara contra el factor de ritmo que se acaba de escribir, y la
-corrección por viaje se mide contra el horario corregido que dan los tiempos recién escritos.
+importa: la validación de los tiempos por tramo se hace con el factor de ritmo que se acaba de escribir, y la
+corrección por viaje se mide frente al horario corregido que dan los tiempos por tramo recién escritos.
 
 \subsection{Pliegues}
 
-La validación es cruzada en dos pliegues por \emph{pistas}: cada muestra pertenece al pliegue
+La validación es cruzada, con dos pliegues formados por \emph{pistas}: cada muestra pertenece al pliegue
 \begin{equation}
 \label{eq:pliegue}
 \mathrm{pliegue}(x)=\mathrm{crc32}\big(\texttt{track}(x)\big)\bmod2,
 \end{equation}
 donde $\mathrm{crc32}$ es el CRC de 32 bits de IEEE 802.3 (el de \texttt{zlib}, PNG o Ethernet) aplicado a los bytes
-UTF-8 de la cadena, interpretado \emph{sin signo}. Todas las muestras de una misma pista caen en el mismo pliegue, de
+UTF-8 de la cadena, con el resultado interpretado \emph{sin signo}. Todas las muestras de una misma pista caen en el mismo pliegue, de
 modo que nunca se aprende y se mide con el mismo recorrido (un autobús en un viaje de un día). El mismo vehículo, en
 otro viaje u otro día, puede caer en el otro pliegue, y los dos pliegues comparten los días. Se aprende con un pliegue
 y se mide en el otro, y al revés.
@@ -262,43 +262,45 @@ y se mide en el otro, y al revés.
         e_{\mathrm{antes}}=\frac{|\texttt{at}+H-P|}{60},\qquad e_{\text{después}}=\frac{|\texttt{at}+k\,H-P|}{60}.
         \]
   \item Se escribe el fichero de factores solo si hay alguna muestra de prueba, si la media de $e_{\text{después}}$
-        es estrictamente menor que la de $e_{\mathrm{antes}}$, y si los factores nuevos no son iguales a los del fichero
+        es estrictamente menor que la de $e_{\mathrm{antes}}$, y si los factores nuevos difieren de los del fichero
         actual.
 \end{enumerate}
 
 \subsection{Tiempos por Tramo y Proporciones}
 
 \begin{enumerate}
-  \item Para cada pliegue $f$: se ajustan los tiempos por tramo con el otro pliegue y, para cada muestra de $f$ cuyo
+  \item Para cada pliegue $f$, se ajustan los tiempos por tramo con el otro pliegue y, para cada muestra de $f$ cuyo
         tramo tenga tiempo aprendido en su franja (ecuación~\eqref{eq:consulta-tramo}), se calculan
         \[
         e_{\mathrm{antes}}=\frac{|k\,h-y|}{60},\qquad e_{\text{después}}=\frac{|\tau-y|}{60},
         \]
         con $k$ el factor de ritmo vigente para la línea, la fecha y el instante de la muestra.
   \item Del mismo modo se validan las proporciones por longitud (con la longitud mediana de cada par de paradas en el
-        horario): para cada muestra de prueba con $h>0$ y respaldo definido, $|k\,h-y|$ frente a
-        $|\tau^{\mathrm{L}}-y|$. Las proporciones se incluyen en la tabla solo si la suma de errores baja.
+        horario): para cada muestra de prueba con $h>0$ y respaldo definido se compara $|k\,h-y|$ con
+        $|\tau^{\mathrm{L}}-y|$. Las proporciones se incluyen en la tabla de tiempos por tramo solo si la suma de
+        errores baja.
   \item Se escribe el fichero solo si la suma de $e_{\text{después}}$ de los tiempos por tramo es estrictamente
         menor que la de $e_{\mathrm{antes}}$ y si los tiempos o las proporciones cambian respecto al fichero actual. Si
         los tiempos por tramo no mejoran, no se escribe nada, aunque mejoren las proporciones.
 \end{enumerate}
 
 \noindent La línea de base de la validación es siempre lo que haría el sistema sin lo aprendido (el horario por el
-factor de ritmo). Con las 12\,755 medidas iniciales, el error medio por tramo bajó de 0,85~min a 0,39~min en las
+factor de ritmo). Con las 12\,755 medidas iniciales, el error medio por tramo bajó de 0,85 a 0,39~min en las
 medidas de prueba cuyo tramo estaba aprendido; con las proporciones por longitud, los tramos sin aprender pasaron de
-0,88 a 0,69~min. La Tabla~\ref{tab:curva} cuenta todas las medidas de prueba, aprendidas o no, y por eso parte de
-0,89~min.
+0,88 a 0,69~min. La Tabla~\ref{tab:curva} mide, en sus propios autobuses de prueba, todas las medidas, con tramo aprendido o
+sin él, y parte de 0,89~min.
 
 \subsection{Corrección por Viaje}
 
 \begin{enumerate}
   \item Con las muestras de tramo se reconstruye el paso real $R$ de cada viaje por cada parada y día: una muestra da
-        el paso por su parada de salida (\texttt{at}) y, si falta el de la de llegada, también ese (\texttt{at} más el
-        tiempo real del tramo). La pista dice el viaje, que se busca en el horario o en sus alias. Por eso el
-        recalibrado reconstruye antes la base del horario del día.
+        el paso por su parada de salida (\texttt{at}) y, si falta el de su parada de llegada, también este (\texttt{at}
+        más el tiempo real del tramo). La clave de la pista indica el viaje, que se busca en el horario o entre sus
+        alias; por eso la recalibración reconstruye antes la base del horario del día.
   \item Para cada paso se calcula el desvío $e=R-C_0$, donde $C_0$ es el horario corregido~\eqref{eq:capa3} sin
-        $\Delta_v$, con la $D'$ de ese día. Se saltan la cabecera, las paradas repetidas en un recorrido y los pasos a
-        más de 45~minutos de su hora publicada. Cada desvío se recorta a $\pm900$~s para que un día de atasco no mande.
+        $\Delta_v$, con la $D'$ de ese día. Se omiten la cabecera, las paradas repetidas en un recorrido y los pasos a
+        más de 45~minutos de su hora publicada. Cada desvío se recorta a $\pm900$~s para que un día de atasco no
+        domine el resultado.
   \item Con $b$ la franja de la salida de cabecera según $D'$, se calculan
         \begin{equation}
         \label{eq:correccion-tablas}
@@ -310,16 +312,16 @@ medidas de prueba cuyo tramo estaba aprendido; con las proporciones por longitud
         \end{equation}
         donde $Q_{0{,}4}$ es el percentil 40 (con la misma regla que la mediana baja: el valor de la posición
         $\lfloor0{,}4(n-1)\rfloor$ de los ordenados), $e_b$ los desvíos de la franja, $e_{\ell,b}$ los de la línea en
-        ella, $n_{\ell,b}$ su número y $e_{\text{día}}$ los del viaje en ese tercio cada día. Un tercio sin pasos toma el
-        valor de su línea. Todo se guarda en segundos enteros. Hasta el 3 de noviembre de 2026 eran medias; el 40 es el
-        percentil de partida, y la recalibración elige cada noche el que más acierta (sección
-        «\nameref{sec:correccion-percentil}»).
-  \item Se aprende con todos los días menos los 7 últimos y se mide en esos 7 (una sola partición; la evaluación de la
-        sección «\nameref{sec:eval-correccion}» es más exigente y aprende cada día de prueba con todos los anteriores),
-        con cada percentil entre el 30 y el 50;
-        se queda el que más acierta a $\pm2$~minutos. La tabla, aprendida con todos los días y ese percentil,
-        se escribe solo si el error medio absoluto de la capa 3 baja con la corrección y si cambia respecto a la
-        actual. La herramienta informa además de cada festivo de las muestras, aprendiendo con los demás días.
+        ella, $n_{\ell,b}$ su número y $e_{\text{día}}$ los del viaje en el tercio $p$ cada día. Un tercio sin pasos toma
+        el valor de su línea. Todo se guarda en segundos enteros. Hasta el 3 de noviembre de 2026 se usaban medias en
+        lugar de percentiles; el 40 es el percentil de partida, y la recalibración elige cada noche el que más acierta
+        (sección «\nameref{sec:correccion-percentil}»).
+  \item Para cada percentil entre el 30 y el 50, se aprende con todos los días menos los 7 últimos y se mide en esos 7
+        (una sola partición; la evaluación de la sección «\nameref{sec:eval-correccion}» es más exigente y aprende cada
+        día de prueba con todos los anteriores), y se queda el percentil que más acierta a $\pm2$~minutos. La tabla,
+        aprendida con todos los días y ese percentil, se escribe solo si el error absoluto medio de la capa 3 baja con
+        la corrección y si cambia respecto a la actual. Además, la herramienta da el resultado de cada festivo de las
+        muestras, aprendiendo con los demás días.
 \end{enumerate}
 
 \noindent Aquí la validación es por días y no por pistas: la corrección es de cada viaje, y con pliegues por pistas
@@ -327,8 +329,8 @@ el mismo viaje de otro día estaría en las dos mitades.
 
 \subsection{Qué Garantiza y Qué No}
 
-Las reglas de escritura son conservadoras: un día con datos anómalos (una avería del feed, un festivo atípico) solo
-cambia el modelo si el cambio mejora la predicción en recorridos que no se usaron para aprenderlo. Si no hay cambios,
+Las reglas que deciden si se escribe un fichero son conservadoras: un día con datos anómalos (una avería del feed, un
+festivo atípico) solo modifica el modelo si el cambio mejora la predicción en recorridos que no se usaron para aprenderlo. Si no hay cambios,
 no se escribe nada y el fichero conserva su fecha. La validación por pistas es una \emph{salvaguarda} diaria, no un
 método para elegir reglas: para decidir si una regla nueva entra en el método se usa la evaluación por días del
 capítulo «\nameref{cap:evaluacion}», que reproduce mejor lo que pasará con datos futuros.
@@ -336,16 +338,16 @@ capítulo «\nameref{cap:evaluacion}», que reproduce mejor lo que pasará con d
 \section{Curva de Aprendizaje}
 \label{sec:curva}
 
-Para saber cuánto mejora el modelo con más datos, se separó la mitad de los autobuses de la primera sesión de
-captura (12\,755 medidas de tramo, un laborable a mediodía) para probar, y con la otra mitad se aprendieron los tiempos
-por tramo usando cada vez más autobuses (Tabla~\ref{tab:curva}).
+Para saber cuánto mejora el modelo con más datos, se reservó para la prueba la mitad de los autobuses de la primera
+sesión de captura (12\,755 medidas de tramo, un laborable a mediodía) y con la otra mitad se aprendieron los tiempos
+por tramo usando cada vez más autobuses (Tabla~\ref{tab:curva} y Figura~\ref{fig:curva}).
 
 \begin{table}[ht]
 \centering
 \caption{Curva de Aprendizaje con la Primera Sesión de Captura}\label{tab:curva}
 \begin{tabular}{@{}rrrrr@{}}
 \toprule
-Autobuses & Tramos vistos & Cobertura & Aprendido y $k$ & Solo $k\cdot h$\\
+Autobuses & Tramos vistos & Cobertura & Aprendido o $k\cdot h$ & Solo $k\cdot h$\\
 \midrule
 16  & 278   & 1,2\,\%  & 0,89 & 0,89\\
 45  & 610   & 13,0\,\% & 0,84 & 0,89\\
@@ -381,8 +383,10 @@ su franja; las demás usan $k\cdot h$.}
 \end{axis}
 \end{tikzpicture}
 \nota{Las medidas de prueba sin tramo aprendido (100\,\% menos la cobertura de la Tabla~\ref{tab:curva}) bajan del
-98,8 al 22,5\,\%, un 40--45\,\% en cada una de las dos últimas duplicaciones, y el error sigue bajando.}
+98,8 al 22,5\,\%, un 40--45\,\% en cada una de las dos últimas veces que se duplican los autobuses, y el error sigue
+bajando.}
 \end{figure}
 
 El error no se había estabilizado con 379 autobuses. Desde entonces la captura pasó a ser horaria, y a finales de
-octubre de 2026 las muestras acumuladas suman 195\,786 tramos de 18\,604 pistas en 26 días, con 2\,454 tramos aprendidos.
+octubre de 2026 se habían acumulado 195\,786 muestras de tramo de 18\,604 pistas en 26 días, con 2\,454 tramos
+aprendidos.

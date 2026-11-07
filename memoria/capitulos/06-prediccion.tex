@@ -142,8 +142,8 @@ esperado del tiempo que le falta es la mitad del tiempo del tramo. Se midieron r
 \subsubsection{Por Qué Tramos de Hasta 20 Minutos} En tramos largos (salidas de cabecera, regulaciones) la incertidumbre
 de «a mitad del tramo» es de muchos minutos. Contrastada con el GPS en 201 autobuses, la estimación de la parada
 registrada se desvía 0,7~min de mediana y 1,7~min en el percentil 90 en tramos de hasta 5~min, pero 10~min de mediana
-en tramos de más de 10~min. Con el umbral de 20~min, la capa 2 mejora al horario en todas las longitudes de tramo en que
-se usa; por encima de ese umbral, no.
+en tramos de más de 10~min. Con el umbral de 20~min, la capa 2 mejora con claridad al horario en todas las longitudes de tramo
+en que se usa; por encima, apenas (el 7 frente al 1\,\% dentro de $\pm2$~min; capítulo «\nameref{cap:evaluacion}»).
 
 \subsection{La Llegada}
 
@@ -234,7 +234,7 @@ $h_i$ (sin los pesos $w_i$).
 
 Las tres condiciones de~\eqref{eq:probablemente}, que llevan al estado \texttt{likely\_departed}, identifican un caso
 concreto y frecuente: un horario publicado mucho más lento que la realidad (típicamente, un viaje con un tramo largo de
-autopista), en el que el horario corregido dice que el autobús pasó hace más de diez minutos, la hora publicada queda al
+autopista). En él, el horario corregido dice que el autobús pasó hace más de diez minutos, la hora publicada queda al
 menos diez minutos después de esa hora corregida (a menudo, todavía no ha llegado), y la corrección se apoya en tramos medidos en al menos el 80\,\% del camino. Mostrar la
 hora publicada como si el autobús fuera a venir haría que alguien esperase un autobús que ya se fue. No se oculta
 porque no hay ningún dato del vehículo que lo confirme: se muestra al final de la lista, con su hora publicada y el
@@ -340,7 +340,8 @@ del feed, el último orden de parada visto y su hora:
 donde $t$ es la hora del registro en que el feed dio ese orden de parada (la capa 2 y la memoria del feed prefieren, en
 cambio, $\tgps$) y $D$ es el día del viaje, no el del reloj: pasada la medianoche, un autobús de un viaje de ayer se
 apunta en los pasos de ayer, con $t$ en las horas de su horario (sección «\nameref{sec:mas-de-24h}»). Hasta el 7 de
-noviembre de 2026 se apuntaba en el día del reloj: el autobús de las 23:30 de ayer, visto a las 00:30, quedaba en los
+noviembre de 2026 se apuntaba en el día del reloj: en un feed que siga actualizándose de noche, el autobús de las 23:30 de ayer,
+visto a las 00:30, quedaba en los
 pasos de hoy, y las paradas del viaje de las 23:30 de hoy, que tiene la misma referencia, salían esa noche como ya
 pasadas hasta su salida. Los pasos de cada día caducan 36~horas después de terminar ese día. Al responder, y solo para
 los viajes de las filas que no tienen entrada en el feed, se leen los pasos de todas sus referencias (un viaje
@@ -398,8 +399,8 @@ El horario cuenta las horas desde la medianoche del día del viaje: un autobús 
 sábado figura a las 26:10 ($94\,200$~s). En el horario de Bizkaibus del 5 de noviembre de 2026, 52 viajes pasan de las 24:00, y 43 de ellos salen ya pasada esa
 hora: 6 circulan todas las noches, hasta las 26:05; 33, solo las noches del viernes o del sábado, y llegan hasta las
 32:10, las 08:10 del día siguiente; y 4, solo en fechas concretas. El feed, en cambio, da $\tgps$ y $t_{\mathrm{rec}}$ en horas del día en curso, y la referencia
-de un viaje que circula todos los días es la misma cada día. Con un solo emparejador, el autobús de las 23:30 de ayer,
-visto a las 00:30, se emparejaría con el viaje de las 23:30 de hoy, y no con el suyo.
+de un viaje que circula todos los días es la misma cada día. Con un solo emparejador, en un feed que siga actualizándose de noche, el autobús de las
+23:30 de ayer, visto a las 00:30, se emparejaría con el viaje de las 23:30 de hoy, y no con el suyo.
 
 Por eso, cada entrada del feed se asigna al día de su viaje. Una entrada es de un viaje de ayer si la salida de cabecera
 de su referencia queda más de 12~h por delante de la hora actual (\texttt{RealtimeMatcher::daysAgo}):

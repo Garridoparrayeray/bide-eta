@@ -5,7 +5,7 @@ Los vectores de prueba son entradas concretas con la salida \emph{exacta} del c�
 \texttt{referencia/vectores.php}, que se publica aunque no puede ejecutarse sin el código privado: carga el motor tal
 como está (las clases del emparejador, los factores y los tiempos por tramo, y las funciones de calibración del script
 de aprendizaje, sin ejecutar su programa principal) y escribe \texttt{referencia/vectores.json}. Una implementación
-en cualquier lenguaje puede darse por correcta cuando reproduce todos los vectores; \texttt{referencia/comprobar.py} lo hace para la implementación de referencia del
+en cualquier lenguaje puede darse por correcta cuando reproduce todos los vectores; \texttt{referencia/comprobar.py} lo comprueba para la implementación de referencia del
 Apéndice~\ref{ap:referencia}.
 
 Los valores reales se dan con todos sus decimales para comprobar también los cálculos en coma flotante; los
@@ -150,9 +150,9 @@ muestras y cuenta la última (70); la mediana baja de $\{70,60\}$ es 60.
 \toprule
 Proporciones por pista $\rho_j$ & $k$\\
 \midrule
-0,80, 0,82, 0,84, 0,86, 0,88, 0,90, 0,92, 0,94 & 0,938\\
+0,80; 0,82; 0,84; 0,86; 0,88; 0,90; 0,92; 0,94 & 0,938\\
 cuarenta veces 0,85 & 0,88\\
-1,6, 1,7, \dots, 2,5 & 1,2\\
+1,6; 1,7; \dots; 2,5 & 1,2\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -274,26 +274,26 @@ $\Tpos=29\,020$ con el método «trazado»; no hay posición en los demás.
 
 \section{Del Feed a la Pantalla}
 
-Las reglas de esta sección rodean al emparejador: cómo se lee el feed, a qué viaje del horario se asigna cada bus, qué
-pasa con un bus que falta en una lectura o con un viaje que pasa de medianoche, qué se guarda de cada paso, qué retraso
+Las reglas de esta sección acompañan al emparejador: cómo se lee el feed, a qué viaje del horario se asigna cada
+autobús, qué pasa con un autobús que falta en una lectura o con un viaje que pasa de las 24:00, qué se guarda de cada paso, qué retraso
 se muestra y cómo se elige cada noche el percentil de la corrección por viaje. Sus vectores salen del mismo motor y
 \texttt{comprobar.py} los comprueba igual que los anteriores.
 
 \subsection{Lectura del Feed} Un fragmento SIRI con cuatro actividades, leído con fecha 2026-10-28. La referencia
 \texttt{trp\_A0651\_737\_ABC1\_28500} da la línea \texttt{651} (sin el cero), el viaje \texttt{737} y la salida
 $28\,500$; su \texttt{Delay} \texttt{PT2M30S} son 150~s; la hora de la posición, \texttt{07:02:30Z}, es
-$\tgps=28\,950$ en Madrid, y la de la lectura, $t_{\mathrm{rec}}=28\,960$. La segunda actividad no trae posición, su
-orden sale de \texttt{VisitNumber} y su \texttt{Delay} \texttt{-PT45S} son $-45$~s. La tercera se registró el día
+$\tgps=28\,950$ en Madrid, y la de la lectura, $t_{\mathrm{rec}}=28\,960$. La segunda actividad no trae posición; su
+orden sale de \texttt{VisitNumber}, y su \texttt{Delay} \texttt{-PT45S} son $-45$~s. La tercera se registró el día
 anterior: entra en el feed, pero sin horas ni posición. La cuarta tiene una referencia de otro formato y no entra.
 
-\subsection{Emparejado} Con la referencia exacta \texttt{trp\_A9999\_101\_X\_28800} del viaje \texttt{J} en la tabla de
+\subsection{Emparejamiento} Con la referencia exacta \texttt{trp\_A9999\_101\_X\_28800} del viaje \texttt{J} en la tabla de
 alias:
 
 \begin{center}
 \small
 \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X l l@{}}
 \toprule
-Buses de la línea \texttt{9999}, viaje \texttt{101} & Viaje pedido & Bus elegido\\
+Autobuses de la línea \texttt{9999}, viaje \texttt{101} & Viaje pedido & Autobús elegido\\
 \midrule
 Uno con la referencia exacta y otro con otra referencia y la misma salida & \texttt{J} & el exacto\\
 Sin referencia exacta, salida a 120~s & \texttt{J} & ese\\
@@ -306,21 +306,21 @@ El de \texttt{J} y otro sin referencia exacta & \texttt{K} & el otro\\
 \end{tabularx}
 \end{center}
 
-\subsection{Buses que Faltan} Con $\tnow=29\,010$, de la lectura anterior se conservan, marcados como retenidos, el
-bus visto hace 110~s y el que solo tiene hora de lectura de hace 180~s justos. No se conservan: el de hace 190~s ni el
-de hace 210~s; el de un viaje que en la lectura nueva lleva otro bus; el que aparece en la lectura nueva en otro viaje;
-el que no tiene hora; el de hora posterior a ahora; ni el que no tiene identificador de vehículo.
+\subsection{Autobuses que Faltan} Con $\tnow=29\,010$, de la lectura anterior se conservan, marcados como retenidos,
+el autobús visto hace 110~s y el que solo tiene hora de lectura de hace 180~s justos. No se conservan el de hace 190~s,
+el de hace 210~s, el de un viaje que en la lectura nueva lleva otro autobús, el que aparece en la lectura nueva en otro
+viaje, el que no tiene hora, el de hora posterior a ahora ni el que no tiene identificador de vehículo.
 
-\subsection{Viajes que Pasan de Medianoche} A las 00:30 ($\tnow=1\,800$), el viaje que salió a las 23:30
+\subsection{Viajes que Pasan de las 24:00} A las 00:30 ($\tnow=1\,800$), el viaje que salió a las 23:30
 ($84\,600$) y el de las 24:10 del horario de ayer ($87\,000$) son de ayer; uno que sale a las 12:30 ($45\,000$, justo
 12~h por delante) es de hoy, y uno a $45\,001$, de ayer. Para los de ayer, sus horas pasan a contarse desde la
-medianoche de ayer: un dato de las 00:28:20 ($1\,700$) pasa a $88\,100$. Un bus sin hora de hoy no cuenta en ningún día.
+medianoche de ayer: un dato de las 00:28:20 ($1\,700$) pasa a $88\,100$. Un autobús sin hora de hoy no cuenta en ningún día.
 
 \subsection{Registro de Pasos} De cada referencia se guarda «orden:hora», con la hora de la lectura o, sin ella, la de
 la posición: \texttt{3:29000} y \texttt{2:28900}. No se guardan las entradas sin orden, sin referencia o sin hora. Al
 leer, por viaje del horario queda el orden mayor de sus referencias (\texttt{3:29000} y \texttt{5:29100} dan orden 5 a
-las $29\,100$); los valores nulos o mal formados se ignoran. Con ese paso, un viaje sin bus en el feed tiene pasadas las
-paradas de orden menor:
+las $29\,100$); los valores nulos o mal formados se ignoran. Con ese paso, un viaje sin autobús en el feed tiene pasadas
+las paradas de orden menor:
 
 \begin{center}
 \small
@@ -336,10 +336,12 @@ orden 2 a las $29\,000$ & $28\,990$ & \texttt{S0} pasada a las $28\,990$ (ahora)
 
 \noindent En el segundo caso, \texttt{S1} queda en el horario ($28\,890$) y \texttt{S2} con la capa 3 ($29\,110$).
 
-\subsection{El Retraso Mostrado} Los minutos son los segundos entre 60 redondeados con mitades hacia fuera del cero:
-29~s dan 0; 30, 1; 89, 1; 90, 2; $-30$, $-1$; $2\,700$, 45; y un retraso de más de $2\,700$~s no se muestra. Del bus
+\subsection{El Retraso Mostrado} Los minutos son los segundos divididos entre 60 y redondeados con las mitades
+alejándose del cero:
+29~s dan 0; 30, 1; 89, 1; 90, 2; $-30$, $-1$; $2\,700$, 45; y un retraso de más de $2\,700$~s no se muestra. Del autobús
 del escenario 1, con GPS, se muestra el retraso que llevará en su próxima parada, 10~s, aunque su retraso en la
-posición sea 0; sin GPS (escenario 4), el de la parada registrada, 10~s; y con un dato de más de 10~min y sin hora de
+posición sea 0; sin GPS (escenario 4), el de la parada registrada, 10~s, que la ficha del autobús no afirma (la marca como
+estimada y sin retraso); y con un dato de más de 10~min y sin hora de
 lectura, 0.
 
 \subsection{Elección del Percentil} Con un viaje de la línea \texttt{L1} y cinco desvíos en cada uno de cuatro días,

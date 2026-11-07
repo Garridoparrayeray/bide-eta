@@ -15,7 +15,7 @@ constante. El método se resume en cuatro pasos:
         franja, contraídos hacia el tiempo del tramo a cualquier hora, y con una cascada de respaldo por longitud y por
         factor de ritmo.
   \item \textbf{Elegir} en cada predicción la mejor fuente fiable entre el GPS, la última parada registrada y el
-        horario corregido, con reglas explícitas para abstenerse y sin afirmar nunca un retraso que no se puede
+        horario corregido, con reglas explícitas para abstenerse y sin afirmar nunca un retraso que no se pueda
         sostener.
   \item \textbf{Aprender y medir} cada día con el propio feed, y cambiar los parámetros solo si el error baja en
         recorridos que no se usaron para aprenderlos; las reglas nuevas, solo si mejoran en días no vistos al aprender.
@@ -23,18 +23,18 @@ constante. El método se resume en cuatro pasos:
 
 \section{Resultados}
 
-En 2,21~millones de llegadas a menos de veinte minutos, de 17 días, la llegada mostrada cae dentro de $\pm2$~minutos
+En 2,21~millones de llegadas a menos de veinte minutos, recogidas en 17 días, la llegada mostrada cae dentro de $\pm2$~minutos
 en el 96\,\% de los casos cuando el autobús está a menos de tres minutos y en el 67\,\% entre diez y veinte minutos,
-frente al 24\,\% y el 25\,\% del horario publicado, con intervalos de confianza de uno a tres puntos. En una muestra
+frente al 24\,\% y el 25\,\% del horario publicado, con intervalos de confianza de, como mucho, tres puntos. En una muestra
 de 14~minutos con GPS, la llegada no tiene sesgo y acierta el 94\,\% a menos de tres minutos. Sin GPS, con solo la
 parada registrada, el acierto es el mismo a menos de tres minutos (94\,\%) y baja seis puntos entre diez y veinte
-(del 73 al 67\,\%). Sin ningún dato del
+minutos (del 73 al 67\,\% en esa muestra). Sin ningún dato del
 vehículo, el horario corregido duplica o triplica el acierto del horario publicado, y la corrección por viaje baja su
 error medio de 210 a 158~s; con el percentil 40 de los desvíos en lugar de la media, la hora sin autobús acierta
 entre 2 y 4 puntos más a $\pm2$~minutos en días no vistos al aprender. Cuando todo el camino tiene tiempos
 aprendidos, el 93\,\% de las llegadas a menos de diez minutos cae dentro de $\pm2$~minutos, el techo que permite
-para ellas la resolución de este feed. Con el mismo protocolo por días, un filtro de Kalman sobre el ritmo del propio autobús y
-una red neuronal reducen el error de las sumas de tramos un 4\,\% y entre un 6 y un 7\,\%.
+para ellas la resolución de este feed. Con el protocolo de evaluación por días, un filtro de Kalman sobre el ritmo del propio autobús y
+una red neuronal reducen el error de las sumas de tramos un 4\,\% y entre un 6 y un 7\,\%, respectivamente.
 
 \section{Lecciones}
 
@@ -50,13 +50,15 @@ situados del 73{,}8 al 97{,}4\,\%, más que cualquier mejora del modelo.
 
 \subsection{Medir Antes de Adoptar} Muchas ideas razonables empeoraron la medida: corregir con la velocidad del
 último minuto,
-mezclar lo aprendido con el horario, calcular la franja de cada tramo a la hora prevista, tratar los festivos como fin
+mezclar lo aprendido con el horario, tratar los festivos como fin
 de semana en los tiempos por tramo, suponer que el autobús de la cabecera sale a su hora, arrastrar el retraso del
-viaje anterior o seguir al autobús que desaparece del feed. Tratar los festivos como fin de semana sí mejora la capa 3
-corregida, donde la primera versión los empeoraba: cada caso se midió por separado. La regla de adoptar solo lo que mejora la medida, por días y de punta a punta, ha sido más útil que
+viaje anterior o seguir al autobús que desaparece del feed; calcular la franja de cada tramo a la hora prevista de paso no
+cambió nada. En la capa 3 corregida, en cambio, tratar los
+festivos como fin de semana sí mejora, mientras que la primera versión de la corrección, que los trataba por su día de
+la semana, los dejaba peor que sin corregir: cada caso se midió por separado. La regla de adoptar solo lo que mejora la medida, por días y de punta a punta, ha sido más útil que
 cualquier intuición sobre el tráfico.
 
-\subsection{Abstenerse Es Parte de la Precisión} Mostrar «estimado» o «solo horario» cuando no hay datos, ocultar un
+\subsection{Abstenerse Es Parte de la Precisión} Mostrar «Estimado» o «Solo horario» cuando no hay datos, ocultar un
 retraso no creíble y desconfiar de dos fuentes que se contradicen no aumentan los aciertos medidos, pero evitan los
 errores que más daño hacen a la confianza del usuario.
 
@@ -77,17 +79,17 @@ cifra que muestre la aplicación se puede explicar.
   \item \textbf{Temporada y tipo de día.} Con meses de muestras se podrá medir si conviene separar el verano y las
         vacaciones escolares, o el sábado del domingo, en la corrección por viaje y en los tiempos por tramo.
   \item \textbf{Fechas especiales.} Los tiempos aprendidos distinguen laborable y fin de semana, pero no los días de
-        fiestas, eventos o Navidad. Marcar esas fechas para que no cuenten al aprender evitaría que contaminen los días
+        fiesta, de eventos o de Navidad. Marcar esas fechas para que no cuenten al aprender evitaría que contaminen los días
         normales; aprenderlas aparte exige capturas del año anterior.
   \item \textbf{Viajes sin autobús.} Distinguir en la aplicación el viaje que ya debería haber salido y no tiene
         autobús en el feed (en torno al 4\,\% de los que deberían estar en marcha), en lugar de darlo como estimado.
         Antes de su hora, la ficha ya dice que aún no tiene autobús asignado.
   \item \textbf{De madrugada.} De 23:58 a 05:00 el feed de Bizkaibus no se actualiza y los nocturnos salen sin directo
-        (sección «\nameref{sec:mas-de-24h}»). Si el operador lo mantiene de noche, el emparejador de ayer los situará sin
+        (sección «\nameref{sec:mas-de-24h}»). Si el operador lo mantiene activo de noche, el emparejador de ayer los situará sin
         cambios; para medir esas llegadas y aprender de ellas, la captura tendría que separar también los viajes de ayer.
   \item \textbf{La secuencia de cada vehículo.} En una cabecera, el autobús que empieza un viaje suele ser uno que
         acaba de terminar otro, y su retraso pasa al siguiente. La clave del feed no lo dice (solo el 11\,\% de los
-        viajes seguidos de una clave los hace el mismo autobús), pero las capturas guardan qué vehículo hace cada viaje
+        viajes consecutivos de una clave los hace el mismo autobús), pero las capturas guardan qué vehículo hace cada viaje
         cada día. Si esa secuencia se repite de un día a otro, se podría seguir al autobús en su viaje anterior y
         estimar la salida real; hay que medir antes si se repite.
   \item \textbf{Revisión externa.} Que otras personas repliquen el método con la implementación de referencia y lo
