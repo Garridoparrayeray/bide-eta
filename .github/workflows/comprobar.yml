@@ -1,0 +1,23 @@
+name: Comprobar
+
+# En cada cambio: la implementación de referencia contra los vectores del motor de producción, y que el evaluador
+# público arranca.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  referencia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: referencia.py contra los vectores
+        run: |
+          python3 referencia/comprobar.py | tee salida.txt
+          grep -q "^\([0-9]*\) de \1 comprobaciones coinciden" salida.txt
+      - name: El evaluador arranca
+        run: python3 referencia/evaluar.py --help
