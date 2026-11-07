@@ -3,9 +3,9 @@
 \section{Constants}
 \label{app:constants}
 
-Table~\ref{tab:constants} lists every constant of the method with the name it has in the reference implementation
-(\texttt{referencia/referencia.py}) where it exists. Those marked M were fixed by measurement on Bizkaibus and should be
-measured again on another network.
+Tables~\ref{tab:constants} and~\ref{tab:constants-2} list every constant of the method, with its name in the reference implementation
+(\texttt{referencia/referencia.py}) where one exists. Constants marked M were fixed by measurement on Bizkaibus and
+should be re-measured on another network.
 
 \begin{table}[ht]
 \centering
@@ -18,7 +18,7 @@ measured again on another network.
 Meaning & Name in the reference & Value & M \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Matching and localisation}} \\
-Fallback matching tolerance & --- & 180~s &  \\
+Fallback matching tolerance & \texttt{MATCH\_TOLERANCE} & 180~s &  \\
 Metres per degree & \texttt{METERS\_PER\_DEGREE} & 111,320~m &  \\
 Window: segments before / from the next stop & \texttt{SEGMENTS\_BEHIND},\newline\texttt{\_AHEAD} & 3 / 2~segments &  \\
 Slack beyond the next stop & \texttt{BEYOND\_SLACK} & 100~m &  \\
@@ -30,36 +30,55 @@ Trip counts as started before departure & \texttt{NOT\_STARTED\_GRACE} & 60~s & 
 Maximum wait at the first stop & \texttt{MAX\_WAIT\_AT\_ORIGIN} & 3,600~s &  \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Segment times, length fallback and pace factor}} \\
-Start of the six periods of a band & \texttt{BANDS} & 0, 6, 9, 13, 16, 20~h &  \\
+Start of the six periods of the day & \texttt{BANDS} & 0, 6, 9, 13, 16, 20~h &  \\
 Shrinkage weight $n_0$ & \texttt{SEGMENT\_BAND\_PRIOR\_TRACKS} & 5~tracks & M \\
 Minimum tracks per segment and group & \texttt{MIN\_TRACKS\_PER\_SEGMENT} & 2~tracks & M \\
-Length cuts & \texttt{LENGTH\_CUTS} & 300, 600, 1,000, 1,500, 3,000~m &  \\
+Length-bucket cuts & \texttt{LENGTH\_CUTS} & 300, 600, 1,000, 1,500, 3,000~m &  \\
 Minimum ratios per bucket and group & --- & 20~samples &  \\
 Bounds of the length ratio & \texttt{RATIO\_MIN},\newline\texttt{RATIO\_MAX} & 0.3, 1.5 &  \\
 Bounds of the pace factor & \texttt{K\_MIN},\newline\texttt{K\_MAX} & 0.6, 1.2 & M \\
 Shrinkage of the pace factor & \texttt{SHRINKAGE\_TRACKS} & 10~tracks &  \\
 Minimum tracks: band / line (and vehicles) & --- & 8 / 25 (5)~tracks & M \\
 Minimum scheduled remaining time of a pace sample & --- & 120~s &  \\
-\midrule
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Constants of the method (continued).}
+\label{tab:constants-2}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{4.3cm}>{\raggedleft\arraybackslash}p{2.9cm}c@{}}
+\toprule
+Meaning & Name in the reference & Value & M \\
 \multicolumn{4}{@{}l}{\emph{Three layers}} \\
-Share of the segment left in layer 2 & \texttt{REGISTRATION\_SHARE} & 0.5 & M \\
+Remaining share of the segment in layer 2 & \texttt{REGISTRATION\_SHARE} & 0.5 & M \\
 Longest segment for layer 2 & \texttt{REGISTRATION\_MAX\_SEGMENT} & 1,200~s & M \\
 Cross-check: longest segment / disagreement & \texttt{CROSSCHECK\_MAX\_SEGMENT},\newline\texttt{MAX\_GPS\_VS\_STOP} & 360 / 360~s & M \\
 Late departure from the terminal & \texttt{SCHEDULE\_ORIGIN\_OFFSET} & 60~s & M \\
 \texttt{likely\_departed}: passed / gap / learned share & \texttt{WRONG\_SCHEDULE\_*} & 600~s / 600~s / 0.8 &  \\
 Parts of the route in the per-trip correction & \texttt{TRIP\_PARTS} & 3 & M \\
-Clip / prior weights of the per-trip correction & \texttt{TRIP\_OFFSET\_*} & 900~s / 20~passages / 1~day &  \\
+Clip of each deviation in the per-trip correction & \texttt{TRIP\_OFFSET\_CLIP} & 900~s & M \\
+Weight of the band in the line correction & \texttt{TRIP\_OFFSET\_LINE\_PRIOR} & 20~passages &  \\
+Weight of the line in the trip correction & \texttt{TRIP\_OFFSET\_TRIP\_PRIOR\_DAYS} & 1~day & M \\
+Percentile of the per-trip correction: start / nightly choice & \texttt{TRIP\_OFFSET\_RANK},\newline\texttt{\_RANKS} & 0.4 / 0.3--0.5 & M \\
+Test days of the per-trip correction & --- & 7~days &  \\
+Passages left out of the per-trip correction (deviation from the published time) & --- & 2,700~s &  \\
 GPS distance that confirms a passage & \texttt{PASSED\_DISTANCE} & 150~m &  \\
-Arriving without confirmed passage & \texttt{ARRIVING\_MAX} & 180~s &  \\
+Arriving without a confirmed passage & \texttt{ARRIVING\_MAX} & 180~s &  \\
 Implausible delay & \texttt{MAX\_PLAUSIBLE\_DELAY} & 2,700~s & M \\
 Grace for a past layer-2 arrival & \texttt{STALE\_GRACE} & 120~s &  \\
-Hold of a vehicle missing from the feed & --- & 180~s & M \\
-Entry of yesterday's trip & --- & 43,200~s &  \\
+Hold of a vehicle missing from the feed & \texttt{HOLD\_SECONDS} & 180~s & M \\
+Entry of yesterday's trip (departure ahead of now by more than) & \texttt{DAY\_SECONDS}/2 & 43,200~s &  \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Learning}} \\
 Feed download interval & --- & 20~s &  \\
 Largest gap between track points & \texttt{MAX\_GAP\_BETWEEN\_SNAPSHOTS} & 300~s &  \\
-Pace samples per track & \texttt{MAX\_SAMPLES\_PER\_TRACK} & 30~samples &  \\
+Maximum pace samples per track & \texttt{MAX\_SAMPLES\_PER\_TRACK} & 30~samples &  \\
+Observation window after the published time (pace samples) & --- & 600~s &  \\
+Lifetime of the passage log, after the end of its day & --- & 36~h &  \\
 Retention / samples per segment and day type / pace samples & --- & 120~days / 300 / 500,000 &  \\
 \bottomrule
 \end{tabularx}

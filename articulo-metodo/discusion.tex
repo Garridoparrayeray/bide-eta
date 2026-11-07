@@ -2,29 +2,30 @@
 
 \subsection{Where the accuracy comes from}
 
-Three observations separate the contributions. First, knowing which segment the vehicle is in carries most of the
-information: deleting every GPS position, so that only the stop registered by the feed remains, costs nothing below
-three minutes and three points at ten to twenty minutes (Table~\ref{tab:ablation}). What matters, as
+Three observations help to separate the contributions. First, knowing which segment the vehicle is in carries most of
+the information: deleting every GPS position, so that only the stop registered by the feed remains, costs nothing
+below three minutes and three percentage points at ten to twenty minutes (Table~\ref{tab:ablation}). What matters, as
 Proposition~\ref{prop:differences} anticipates, is to start from where the vehicle is rather than from the published
-time. Second, correcting the shape of the timetable already improves on it a lot: without any live data, the corrected
-timetable doubles the hit rate of the published one. Third, the coverage of learned segments is what moves accuracy the
-most: in the sample of the technical report \parencite{garrido2026memoria}, arrivals under ten minutes were within $\pm2$~minutes in 93\% of cases when the
-whole path was learned, 76\% with one unlearned segment and 59\% with two or more. The remaining error is limited by the
-data themselves, one position per minute and a ground truth known to $\pm30$~s, and by what no model can foresee with
-them: traffic lights, traffic and dwell times.
+time. Second, correcting the shape of the timetable already improves on it substantially: without any live data, the
+corrected timetable doubles the hit rate of the published one. Third, the coverage of learned segments is what changes
+accuracy the most: in the sample of the technical report \parencite{garrido2026memoria}, arrivals less than ten minutes
+away were within $\pm2$~minutes in 93\% of cases when the whole path was learned, in 76\% with one unlearned segment and
+in 59\% with two or more. The remaining error is limited by the data themselves (one position per minute and a ground
+truth known to within $\pm30$~s) and by what no model can foresee from them: traffic lights, traffic conditions and
+dwell times.
 
-A neural network that also uses what happens that day reduces the error of segment sums by 6--7\%, and a Kalman filter
-on the vehicle's own pace by 4\% with two parameters. The method keeps medians per segment, a shrinkage with a single
-constant and a four-level fallback because every parameter has a physical meaning and can be checked by hand, because
-any figure the app shows can be explained, and because it runs without a server. The own-pace filter is the natural
-next step, once it is measured on the full arrival.
+A neural network that also uses same-day data reduces the error of segment sums by 6--7\%, and a two-parameter Kalman
+filter on the vehicle's own pace reduces it by 4\%. The method nevertheless keeps per-segment medians, shrinkage with a
+single constant and a four-level fallback, because every parameter has a physical meaning and can be checked by hand,
+because any figure the app shows can be explained, and because it runs without a server. The own-pace filter is the
+natural next step, once it has been evaluated on the full arrival shown to the user.
 
 \subsection{Abstention}
 
-Several rules do not increase the measured hit rate but avoid the errors that most damage trust: labelling estimates
-as estimates, hiding a delay that is not credible while keeping the arrival, distrusting two sources that contradict
-each other, and saying that a bus may already have passed rather than announcing it as coming. On 3 November 2026,
-97.8\% of the trips shown as \texttt{likely\_departed} were not seen in the feed for the rest of the day.
+Several rules do not raise the measured hit rate but prevent the errors that most damage trust: labelling estimates as
+such, hiding an implausible delay while keeping the arrival, discarding two sources that contradict each other, and
+stating that a bus may already have passed rather than announcing it as approaching. On 3 November 2026, 97.8\% of the
+trips shown as \texttt{likely\_departed} were not seen in the feed at all that day.
 
 \subsection{Limitations}
 \label{sec:limitations}
@@ -32,20 +33,21 @@ each other, and saying that a bus may already have passed rather than announcing
 \begin{itemize}
   \item \textbf{A changing method.} The figures describe the app as it ran each day, with calibrations and rules that
         changed during the evaluation, not a frozen version.
-  \item \textbf{Ground truth.} The actual passage is known to $\pm30$~s, which especially affects the $\pm1$~minute
-        figures, and it is the moment the feed changes its next stop, which may lag slightly behind the physical passage
-        (equally for the method and the timetable).
+  \item \textbf{Ground truth.} The actual passage is known to within $\pm30$~s, which especially affects the
+        $\pm1$-minute figures, and it is the moment at which the feed changes the next stop, which may lag slightly
+        behind the physical passage (equally for the method and the timetable).
   \item \textbf{Censoring and dependence.} Only passages observed within the capture are evaluated, so very late buses
-        may be missed; successive predictions for the same vehicle are correlated, so the effective sample is smaller
-        than the number of predictions.
+        may be missed; successive predictions for the same vehicle are correlated, so the effective sample size is
+        smaller than the number of predictions.
   \item \textbf{Season and holidays.} The data cover October and early November 2026, with a single weekday holiday;
-        summer and school holidays are unmeasured.
+        summer and school holidays have not been measured.
   \item \textbf{What the feed does not say.} A trip without a vehicle in the feed is shown with layer 3 even if it does
-        not run (about 4\% of the trips that should be running cannot be interpreted at the moment), extra services
-        not in the timetable do not appear, and night trips are not measured because the feed is frozen.
+        not run (at any given moment, about 4\% of the trips that should be running cannot be interpreted), extra services
+        not in the timetable do not appear, and night trips are not measured because the feed is frozen at night.
   \item \textbf{One network, one evaluator.} All results are from Bizkaibus and were obtained by the author with his own
-        tools. The reference implementation, the test vectors and the public evaluator allow checking that the method
-        described is the one measured, but they do not replace an independent replication on other data.
+        tools. The reference implementation, the test vectors and the public evaluator make it possible to check that
+        the method described is the one that was measured, but they are no substitute for independent replication on
+        other data.
 \end{itemize}
 
 \subsection{Applying the method to another network}
@@ -53,38 +55,42 @@ each other, and saying that a bus may already have passed rather than announcing
 
 The method needs, in order of importance: a GTFS timetable; a real-time feed that identifies the trip of each vehicle
 and its next stop, with the time of the record (enough for layers 2 and 3); the GPS position and its time (for layer 1
-and learning); shapes with distances (otherwise localisation uses straight lines between stops); and a way to capture
-the feed periodically. Only the reading of the feed and the matching depend on the operator's format. The time bands
-reflect demand in Biscay, and four constants were measured there and should be re-measured: the 50~m corridor, the
-20-minute limit of layer 2, the 45-minute cap and the 60~s late departure from the terminal. With no samples, the model
-reduces to timetable differences with $k=1$, which already removes the accumulated delay; learned segments appear after
-a few days of capture. The steps for another city are: check what the operator publishes; build the timetable database
-with merged variants, aliases and corrected shapes; adapt the reading of the feed and check that every vehicle finds
-its trip; start the capture and the daily recalibration; measure with the protocol of Section~\ref{sec:protocol} before
-showing anything as live; and check that the implementation reproduces the test vectors. If the operator already
-publishes predictions per stop (GTFS-Realtime Trip Updates), they can be used directly after checking that they are
-real data and not a copy of the timetable.
+and for learning); shapes (if stop distances along them are missing, they are measured at build time; without shapes, localisation
+uses straight lines between stops); and a way to
+capture the feed periodically. Only the reading of the feed and the matching depend on the operator's format. The time
+bands reflect demand in Biscay, and several constants were measured there and should be re-measured (those marked M
+in Appendix~\ref{app:constants}), notably the 50~m corridor,
+the 20-minute limit of layer 2, the 45-minute cap on plausible delays and the 60~s late departure from the terminal.
+With no samples, the model reduces to timetable differences with $k=1$, which already removes the accumulated delay;
+learned segments appear after a few days of capture. The steps for another city are: check what the operator
+publishes; build the timetable database with merged calendar variants, trip aliases and corrected shapes; adapt the
+reading of the feed and check that every vehicle is matched to its trip; start the capture and the daily
+recalibration; evaluate with the protocol of Section~\ref{sec:protocol} before showing anything as live; and check
+that the implementation reproduces the test vectors. If the operator already publishes per-stop predictions
+(GTFS-Realtime Trip Updates), they can be used directly, after checking that they are based on real data and are not a
+copy of the timetable.
 
 \subsection{Open problems}
 \label{sec:open}
 
-The following questions are open and suitable for further research, including bachelor's and master's theses; the
-public data and evaluator allow comparing any answer with the method on equal terms.
+The following questions remain open and are suitable for further research, including bachelor's and master's theses;
+the public data and evaluator allow any answer to be compared with the method on equal terms.
 
 \begin{enumerate}
-  \item \textbf{Own pace.} Measure the Kalman filter on the vehicle's own pace on the full arrival shown to the user.
-  \item \textbf{Prediction intervals.} Estimate the dispersion of each segment, not only its median, and show an
-        interval (``in 6 to 8 minutes'') with a measured coverage.
-  \item \textbf{Comparison with the operator's predictions.} Compare the method with the waiting times that the operator
-        itself shows, on the same vehicles and stops; a capture for this purpose is running in the public repository.
-  \item \textbf{Season, special days and events.} With months of data, measure whether summer, school holidays,
+  \item \textbf{Own pace.} Evaluate the Kalman filter on the vehicle's own pace on the full arrival shown to the user.
+  \item \textbf{Prediction intervals.} Estimate the dispersion of each segment time, not only its median, and show an
+        interval (``in 6 to 8 minutes'') with measured coverage.
+  \item \textbf{Comparison with the operator's predictions.} Compare the method with the waiting times shown by the
+        operator itself, on the same vehicles and stops; a capture for this purpose is running in the public
+        repository.
+  \item \textbf{Season, special days and events.} With months of data, measure whether summer, school holidays, local
         festivities or events should be learned separately.
-  \item \textbf{Trips without a vehicle.} Distinguish a trip that should already have left and has no vehicle in the
-        feed from one that is merely late.
-  \item \textbf{Vehicle sequences.} Follow the vehicle on its previous trip to estimate the real departure from the
+  \item \textbf{Trips without a vehicle.} Distinguish a trip that should already have departed but has no vehicle in
+        the feed from one that is merely late.
+  \item \textbf{Vehicle sequences.} Follow the vehicle on its previous trip to estimate its actual departure from the
         terminal, if the assignment of vehicles to trips repeats from day to day.
   \item \textbf{Other networks.} Apply the method to other cities with position-only feeds and check how much of what
-        was measured here holds.
-  \item \textbf{Journey planning.} Feed the predicted arrivals to a planner with transfers so that proposed journeys use
-        real times rather than published ones.
+        was measured here still holds.
+  \item \textbf{Journey planning.} Feed the predicted arrivals into a journey planner with transfers, so that proposed
+        journeys use predicted rather than published times.
 \end{enumerate}

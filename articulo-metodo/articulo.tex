@@ -55,25 +55,24 @@ with an open reference implementation}
 
 \author{Yeray Garrido\fnref{orcid}}
 \fntext[orcid]{Independent researcher, Bilbao, Biscay, Spain. ORCID:
-\href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}. Contact through
+\href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}. Contact via
 \url{https://github.com/Garridoparrayeray/bide-eta}.}
 
 \begin{abstract}
-Many public transport networks publish the position of their vehicles in real time but not their delay, and many
-timetables give intermediate stop times interpolated at constant speed rather than observed. Bizkaibus, the
-interurban bus network of Biscay (Spain), has both properties: after the first hour of a trip, 85\% of buses pass a
-stop more than two minutes before the published time. This paper describes, in enough detail to be reimplemented in
-any language, the arrival prediction method of the Bizkaibus+ app. The method works with timetable differences
-instead of absolute times, learns the actual travel time of every segment between consecutive stops by time band
-with medians shrunk towards the all-day median of the segment, and predicts in three layers with explicit
-abstention rules: the vehicle position projected on the route, the last stop registered by the feed, and the
-timetable corrected trip by trip. It recalibrates itself every day and only adopts changes that reduce the error
-measured on held-out days. On 9.1 million predictions over 23 days checked against the actual passage, the displayed
-arrival is within $\pm2$~minutes in 92--96\% of cases when the bus is less than three minutes away and in 67\% at
-ten to twenty minutes, against 23--25\% for the published timetable. Without any live data, the corrected timetable
-alone doubles the accuracy of the published one. A reference implementation in Python, test vectors with 407 checks produced
-by the production engine, a public evaluator that reproduces the production evaluation exactly, and the learned tables
-and evaluation data are openly available.
+Many public transport networks publish real-time vehicle positions but not delays, and many timetables give
+intermediate stop times interpolated at constant speed rather than observed. Bizkaibus, the interurban bus network
+of Biscay (Spain), has both properties: after the first hour of a trip, 85\% of buses pass a stop more than two
+minutes before the published time. This paper specifies the arrival prediction method of the Bizkaibus+ app in
+enough detail to reimplement it in any language. The method uses timetable differences instead of absolute times;
+learns the actual travel time between consecutive stops by time band, as a median shrunk towards the all-day median
+of the segment; and predicts from three layers with explicit abstention rules: the GPS position projected onto the
+route, the last stop registered by the feed, and the timetable corrected trip by trip. It recalibrates itself daily,
+adopting only changes that reduce the error on held-out data. In 9.1 million predictions over 23 days, checked
+against the actual passage, the arrival shown is within $\pm2$~minutes in 92--96\% of cases when the bus is less than
+three minutes away and in 67\% at ten to twenty minutes, against 23--25\% for the published timetable. Without any
+live data, the corrected timetable alone doubles the accuracy of the published one. A reference implementation in
+Python, test vectors with 407 checks produced by the production engine, a public evaluator that reproduces the production
+histograms, and the learned tables and evaluation data are openly available.
 \end{abstract}
 
 \begin{keyword}
@@ -87,65 +86,68 @@ shrinkage \sep temporal validation \sep reproducibility
 \section{Introduction}
 \label{sec:intro}
 
-Real-time arrival information reduces the time passengers wait at stops and the uncertainty of the wait, and makes
-public transport more attractive \parencite{watkins2011,brakewood2019}. Producing it requires two inputs that are not
-always available in the form a prediction method expects: a reliable reference schedule and a live estimate of how
-far each vehicle is from it.
+Real-time arrival information reduces both the time passengers wait at stops and the uncertainty of that wait, and
+makes public transport more attractive \parencite{watkins2011,brakewood2019}. Producing it requires two inputs that
+are not always available in the form a prediction method expects: a reliable reference schedule and a live estimate
+of how far each vehicle is from it.
 
-Bizkaibus, the interurban bus network of the province of Biscay in northern Spain, publishes both through open
-data: a GTFS timetable \parencite{gtfs} and a SIRI Vehicle Monitoring feed \parencite{siri} with the GPS position and
-the next stop of every vehicle in service. The feed, however, does not carry the delay of the vehicle, and the
-intermediate times of the timetable are not commitments of the operator: they are a linear interpolation between
-the times of the terminals, at constant speed along the route. The real bus is slower in towns and faster on
-highways, so the published intermediate times drift away from the real passages as the trip advances.
-Section~\ref{sec:data} quantifies the drift: over 169,308 observed stop passages, after the first hour of a trip 85\%
-of buses pass more than two minutes before the published time, with a median of almost fourteen minutes early. A
-passenger who trusted the published time and reached the stop two minutes early would find that the bus had already
-gone in 52\% of cases.
+Bizkaibus, the interurban bus network of the province of Biscay in northern Spain, publishes both as open data: a
+GTFS timetable \parencite{gtfs} and a SIRI Vehicle Monitoring feed \parencite{siri} with the GPS position and the
+next stop of every vehicle in service. The feed, however, does not report vehicle delays, and the intermediate times
+of the timetable are not operator commitments: they are interpolated linearly between the terminal times, at
+constant speed along the route. Real buses are slower in towns and faster on highways, so the published intermediate
+times drift further from the actual passage times as the trip progresses. Section~\ref{sec:drift} quantifies this drift:
+over 169,308 observed stop passages, after the first hour of a trip 85\% of buses pass more than two minutes before
+the published time, and the median passage is almost fourteen minutes early. A passenger who trusted the published
+time and reached the stop two minutes beforehand would find that the bus had already gone in 52\% of cases.
 
-The setting is not specific to Bizkaibus. Position-only feeds are common in automatic vehicle location systems, and
+This setting is not specific to Bizkaibus. Position-only feeds are common in automatic vehicle location systems, and
 interpolated intermediate times are allowed by GTFS (\texttt{timepoint=0}) and widespread in regional networks. Under
 these conditions, the absolute published time is a poor reference, and a method that predicts arrivals by adding a
 delay to it inherits its error.
 
 This paper describes the method that the Bizkaibus+ app\footnote{\url{https://www.bideplus.eus}. The app is
-independent and has no relation with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the service.}
-uses to predict arrivals under these conditions. Its purpose is to make the method reusable: every rule is given with
-its formula and constants, the evaluation protocol is specified so that it can be repeated on other data, and the
+independent and is not affiliated with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the service.}
+uses to predict arrivals under these conditions. The aim is to make the method reusable: every rule is given with its
+formula and constants, the evaluation protocol is specified so that it can be repeated on other data, and the
 reference implementation, test vectors, evaluator and data are public. A longer technical report in Spanish
-\parencite{garrido2026memoria} gives the measurements behind each constant, the history of each rule and the full
-evaluation. The contributions are:
+\parencite{garrido2026memoria} gives the measurements behind each constant, the history of each rule and the
+evaluation of the first period used here. The contributions are:
 
 \begin{enumerate}
-  \item A representation of the vehicle state in \emph{timetable time}: the GPS position is projected on the route
+  \item A representation of the vehicle state in \emph{timetable time}: the GPS position is projected onto the route
         and converted into the scheduled time at that point, so that predictions are built from timetable
-        differences, which are reliable even when absolute times are not (Section~\ref{sec:method}).
+        differences, which are reliable even when absolute times are not (Sections~\ref{sec:localisation}
+        and~\ref{sec:differences}).
   \item A segment travel-time model learned from the feed itself, by time band and day type, with medians shrunk
-        towards the all-day median of each segment, and a daily recalibration that only adopts changes that reduce
-        the error on held-out days.
-  \item A three-layer prediction with explicit abstention rules, which decides for every stop whether the vehicle
-        position, the last registered stop or the corrected timetable gives the best available estimate, and says so.
+        towards the all-day median of each segment, and a daily recalibration that adopts only changes that reduce
+        the error on data not used to fit them: other vehicles, or later days for the per-trip correction
+        (Sections~\ref{sec:segments} and~\ref{sec:learning}).
+  \item A three-layer prediction with explicit abstention rules, which decides for each stop whether the vehicle
+        position, the last registered stop or the corrected timetable gives the best available estimate, and states
+        which one it used (Section~\ref{sec:layers}).
   \item An open, verifiable package: a reference implementation written only from the specification, test
-        vectors with 407 checks produced by the production engine, an evaluator that reproduces the production histograms bin by
-        bin, and the learned tables and evaluation data (Section~\ref{sec:reuse}).
+        vectors with 407 checks produced by the production engine, an evaluator that reproduces the production
+        histograms bin by bin, and the learned tables and evaluation data (Section~\ref{sec:reuse}).
 \end{enumerate}
 
 \noindent The rest of the paper reviews related work (Section~\ref{sec:related}), describes the data and the problem
-(Section~\ref{sec:data}), the method (Section~\ref{sec:method}) and the evaluation (Section~\ref{sec:evaluation}),
-explains how to reproduce and reuse the results (Section~\ref{sec:reuse}), discusses limitations and open problems
-(Section~\ref{sec:discussion}) and concludes (Section~\ref{sec:conclusions}).
+(Section~\ref{sec:data}), presents the method (Section~\ref{sec:method}) and its evaluation
+(Section~\ref{sec:evaluation}), explains how to reproduce and reuse the results (Section~\ref{sec:reuse}), discusses
+limitations and open problems (Section~\ref{sec:discussion}) and concludes (Section~\ref{sec:conclusions}).
 
 \begin{figure}[t]
 \centering
 \fbox{\begin{minipage}{0.94\textwidth}\small
-\textbf{The method in plain words.} The timetable says, for every stop, when the bus should pass; its intermediate
+\textbf{The method in plain language.} The timetable says, for every stop, when the bus should pass; its intermediate
 times are wrong in absolute terms but consistent with each other. The method first asks \emph{where in the timetable}
-the bus is: it projects the GPS position on the route and reads the scheduled time at that point. A bus that is
+the bus is: it projects the GPS position onto the route and reads the scheduled time at that point. A bus that is
 physically where the timetable puts it at 10:20 is, in timetable terms, at 10:20, whatever the clock says. To predict
-the arrival at a later stop, it does not add a delay to the published time of that stop; it adds, to the current
-clock time, how long the remaining segments \emph{actually} take, learned from weeks of observed passages. When the
-GPS is missing or unreliable, it uses the last stop the feed says the bus passed; when there is no live data at all,
-it uses the timetable corrected with what each trip usually does. Each prediction says which of these three it is.
+the arrival at a later stop, the method does not add a delay to the published time of that stop; it adds, to the
+time at which the GPS position was taken, how long the remaining segments \emph{actually} take, as learned from weeks of observed passages.
+When the GPS position is missing or unreliable, it uses the last stop that the feed reports the bus has passed; when
+there is no live data at all, it uses the timetable corrected by what each trip usually does. Each prediction states
+which of these three sources it comes from.
 \end{minipage}}
 \end{figure}
 
@@ -160,28 +162,28 @@ it uses the timetable corrected with what each trip usually does. Each predictio
 \label{sec:data}
 
 \subsection{Timetable}
-The timetable is the GTFS feed of Bizkaibus published through the Spanish National Access Point for transport
+The timetable is the Bizkaibus GTFS feed published through the Spanish National Access Point for transport
 \parencite{nap}. It contains about 100 lines. Every line has an identifier (\texttt{route\_id}, e.g.\ \texttt{651})
 and a public name (\texttt{route\_short\_name}, e.g.\ \texttt{A0651}). Intermediate stops carry
-\texttt{timepoint=0}: their times are interpolated linearly in distance between the times of the terminals.
+\texttt{timepoint=0}: their times are interpolated linearly with distance between the terminal times.
 
 \subsection{Live feed}
 The SIRI Vehicle Monitoring feed is a public XML document regenerated about once a minute, with about 250 vehicles at
-peak hours. For every vehicle it gives the trip reference (equal to a GTFS \texttt{trip\_id}), the vehicle
-identifier, the GPS position and its time, and the order of the next stop of the trip. It does not give the delay.
-From 23:58 to 05:00 the feed repeats the vehicles seen before midnight with their old times; those entries carry no
-time of the new day and are ignored (Section~\ref{sec:method}).
+peak times. For every vehicle it gives the trip reference (equal to a GTFS \texttt{trip\_id}), the vehicle
+identifier, the GPS position and its time, and the order of the next stop in the trip. It does not report the delay.
+From 23:58 to 05:00 the feed repeats the vehicles seen before midnight with their old times; these entries carry no
+time of the new day and are ignored (Section~\ref{sec:practical}).
 
 \subsection{Why the timetable is not an absolute reference}
 \label{sec:drift}
 
-Figure~\ref{fig:drift} shows the deviation between the actual passage and the published time over 169,308 observed
-stop passages, as a function of the scheduled time elapsed since the departure from the terminal. Near the terminal
-buses are slightly late (median $+1.3$~min in the first ten minutes). From there on they are increasingly early: at
-half an hour from the departure, half of the passages happen more than two minutes before the published time, and
-after one hour 85\% do, with a median of almost fourteen minutes early. Only a quarter of all passages fall within
+Figure~\ref{fig:drift} shows the deviation of the actual passage from the published time over 169,308 observed stop
+passages, as a function of the scheduled time elapsed since departure from the terminal. Near the terminal, buses are
+slightly late (median $+1.3$~min in the first ten minutes). From there on they are increasingly early: half an hour
+after departure, half of the passages occur more than two minutes before the published time, and after one hour 85\%
+do, the median passage being almost fourteen minutes early. Only a quarter of all passages fall within
 $\pm2$~minutes of the published time. These figures are not a judgement on the punctuality of the service, since the
-intermediate times are not commitments of the operator; they are, however, the times that a passenger sees in any
+intermediate times are not operator commitments; they are, however, the times that a passenger sees in any
 application that does not correct them.
 
 \begin{figure}[t]
@@ -192,7 +194,7 @@ application that does not correct them.
   ybar, bar width=9pt,
   symbolic x coords={0--10,10--20,20--30,30--45,45--60,60+},
   xtick=data,
-  xlabel={Scheduled minutes since the departure from the terminal},
+  xlabel={Scheduled minutes since departure from the terminal},
   ylabel={Stop passages (\%)},
   ymin=0, ymax=100,
   axis lines*=left, ymajorgrids, grid style={gris!20},
@@ -206,9 +208,9 @@ application that does not correct them.
 \addlegendentry{More than 5 min after}
 \end{axis}
 \end{tikzpicture}
-\caption{Deviation of the actual passage from the published time, by scheduled time since the departure (169,308
-stop passages). Because the timetable spreads time at constant speed and buses run faster on the road sections, they
-pass increasingly early as the trip advances.}
+\caption{Deviation of the actual passage from the published time, by scheduled time since departure (169,308 stop
+passages). Because the timetable assumes constant speed and buses run faster on open-road sections, they pass
+increasingly early as the trip progresses.}
 \label{fig:drift}
 \end{figure}
 
@@ -225,7 +227,8 @@ pass increasingly early as the trip advances.}
 \subsection{Protocol}
 \label{sec:protocol}
 
-The evaluation replays captures of the live feed: snapshots taken every 20~s and stored in one-hour blocks. In each
+The evaluation replays captures of the live feed, which is polled every 20~s; each new version of the feed (about
+one per minute) is kept as a snapshot, and snapshots are stored in one-hour blocks. In each
 snapshot, for every vehicle and every stop from its declared next stop $n$ to $n+8$, the method predicts the arrival
 $t_{\mathrm{shown}}$ that a user would see, and the published time $a$ is kept for comparison. The error is
 \begin{equation}
@@ -233,42 +236,46 @@ e=\frac{t_{\mathrm{shown}}-t_{\mathrm{actual}}}{60}\ \text{minutes},
 \end{equation}
 positive when the bus arrives before the time shown.
 
-\paragraph{Ground truth} The feed has no passage events, so the actual passage is reconstructed from the change of the
-next stop: if in snapshot $m$ a vehicle that has stayed on the same trip declares for the first time a next stop
-later than $q$, it passed stop $q$ between snapshots $m-1$ and $m$, and
+\paragraph{Ground truth} The feed has no passage events, so the actual passage is reconstructed from changes in the
+declared next stop: if, in snapshot $m$, a vehicle still on the same trip declares for the first time a next stop
+beyond $q$, it passed stop $q$ between snapshots $m-1$ and $m$, and
 \begin{equation}
 t_{\mathrm{actual}}=\frac{t_{m-1}+t_m}{2},
 \end{equation}
-where $t_m$ is the most recent position time in snapshot $m$. The resolution is half the interval between
-snapshots, and the measured error includes it. This reconstruction does not use the GPS, and is therefore independent
-of the projection that the method itself uses.
+where $t_m$ is the most recent position time in snapshot $m$. The resolution is half the interval between snapshots,
+about $\pm30$~s, and the measured error includes this uncertainty. The reconstruction does not use GPS positions and is
+therefore independent of the projection used by the method.
 
-\paragraph{Metrics} Predictions are grouped by horizon, the time that actually remained until the arrival (0--3,
-3--6, 6--10 and 10--20 minutes), because accuracy depends mostly on it. The main metric is the share of predictions
+\paragraph{Metrics} Predictions are grouped by horizon, i.e.\ the time actually remaining until the arrival (0--3,
+3--6, 6--10 and 10--20 minutes), because accuracy depends mainly on it. The main metric is the share of predictions
 within $\pm1$, $\pm2$ and $\pm3$ minutes, which answers the passenger's question (``will I make it if I leave when it
-says?'') and is not dominated by a few large errors as the mean squared error would be. Errors are stored as
-histograms of 15-second bins, so that any figure can be recomputed by adding captures.
+says?'') and, unlike the mean squared error, is not dominated by a few large errors. Errors are stored as histograms
+of 15-second bins, so that any figure can be recomputed by summing the histograms of the captures involved.
 
-\paragraph{Modes} Besides the full method, two ablations replay the same captures: \emph{without GPS}, where all
-positions are deleted and only the stop registered by the feed remains, and \emph{without feed}, where the method
+\paragraph{Modes} In addition to the full method, two ablations replay the same captures: \emph{without GPS}, where
+all positions are deleted and only the stop registered by the feed remains, and \emph{without feed}, where the method
 sees no live data and can only use the corrected timetable.
 
-\paragraph{Data} Two consecutive periods are evaluated. From 15 to 31 October 2026 the evaluation kept summaries per
-capture block (17 days with predictions, 2.21 million predictions within 20 minutes). From 31 October to 6 November
-it kept the full histograms (7 days, 6.87 million predictions within 20 minutes in each mode), and the raw captures
-are archived, so that this period can be re-evaluated with any version of the method. The method was updated during
-both periods; the figures describe it as it ran in production.
+\paragraph{Data} Two periods are evaluated, which overlap on 31 October (23 distinct days). From 15 to 31 October 2026, the evaluation stored a summary
+of each capture block (17 days with predictions, 2.21 million predictions within 20 minutes). From 31 October to
+6 November, it stored the full histograms (7 days, 6.87 million predictions within 20 minutes in each mode), and the
+raw captures were archived, so that this period can be re-evaluated with any version of the method. The method was
+updated during both periods; the figures describe it as it ran in production. The technical report
+\parencite{garrido2026memoria} covers the first period; the second period, the ablations and the breakdowns by
+layer and day type are new in this paper and are recomputed from the public data by
+\texttt{articulo-metodo/resultados.py}.
 
 \subsection{Results}
 
-Table~\ref{tab:horizons} gives the accuracy by horizon. In both periods the arrival shown is within $\pm2$~minutes in
-92--96\% of cases below three minutes and in 67\% between ten and twenty minutes, while the published timetable
-stays at 23--25\% at every horizon. The median absolute error grows from 30~s below three minutes to 90~s at ten to
-twenty minutes (second period, at the 15-second resolution of the histograms).
+Table~\ref{tab:horizons} gives the accuracy by horizon. In both periods, the arrival shown is within $\pm2$~minutes
+in 92--96\% of cases below three minutes and in 67\% at ten to twenty minutes, while the published timetable stays at
+23--25\% at every horizon. The median absolute error grows from 30~s below three minutes to 90~s at ten to twenty
+minutes (second period, at the 15-second resolution of the histograms).
 
 \begin{table}[t]
 \centering
-\caption{Share of arrivals within $\pm1$, $\pm2$ and $\pm3$ minutes of the actual passage, by horizon.}
+\caption{Share (\%) of predicted arrivals within $\pm1$, $\pm2$ and $\pm3$ minutes of the actual passage, by
+horizon.}
 \label{tab:horizons}
 \small
 \begin{tabular}{@{}lrrrrrrr@{}}
@@ -292,19 +299,20 @@ Horizon (min) & Predictions & $\pm1$ & $\pm2$ & $\pm3$ & $\pm1$ & $\pm2$ & $\pm3
 \end{tabular}
 \end{table}
 
-\paragraph{What each source of information contributes} Table~\ref{tab:ablation} compares the full method with the two
-ablations on the second period. Deleting the GPS costs little: the stop registered by the feed is updated often
-enough that, below three minutes, accuracy is the same, and at ten to twenty minutes it drops from 67\% to 64\%.
-Without any live data, the corrected timetable reaches 50--54\% within $\pm2$~minutes at every horizon, twice the
-published timetable: half of the gain comes from learning how long the segments really take, before any live data is
-used.
+\paragraph{What each source of information contributes} Table~\ref{tab:ablation} compares the full method with the
+two ablations over the second period. Deleting the GPS positions costs little: the stop registered by the feed is
+updated often enough that accuracy below three minutes is unchanged, and at ten to twenty minutes it drops from 67\%
+to 64\%. Without any live data, the corrected timetable reaches 50--54\% within $\pm2$~minutes at every horizon,
+twice the share of the published timetable: between 40\% and two thirds of the gain over the timetable, depending
+on the horizon, comes from learning how long the segments really take, before any live data is used.
 
 \begin{table}[t]
 \centering
-\caption{Share of arrivals within $\pm2$ minutes with all the information, without GPS positions and without any
-live data (31 October--6 November 2026).}
+\caption{Share (\%) of predicted arrivals within $\pm2$~minutes with all the information, without GPS positions and
+without any live data, compared with the published timetable (31 October--6 November 2026).}
 \label{tab:ablation}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Horizon (min) & Full method & Without GPS & Without feed & Published timetable \\
@@ -317,15 +325,15 @@ Horizon (min) & Full method & Without GPS & Without feed & Published timetable \
 \end{tabular}
 \end{table}
 
-\paragraph{By layer} In the second period the first layer (GPS position) produced 85--94\% of the predictions,
-depending on the horizon, with 97\%, 92\%, 84\% and 68\% within $\pm2$~minutes from the shortest to the longest
-horizon. The second layer (registered stop) produced about 3\% of the predictions, and the third (corrected
-timetable) between 3\% and 13\%. Third-layer predictions at less than three minutes are rarely right (6\%): they
-correspond to buses that should be arriving but send no usable data. This is why accuracy below three minutes is
-lower in the second period than in the first.
+\paragraph{By layer} In the second period, layer 1 (GPS position) produced 85--94\% of the predictions, depending on
+the horizon, with 97\%, 92\%, 84\% and 68\% within $\pm2$~minutes from the shortest to the longest horizon. Layer 2
+(registered stop) produced about 3\% of the predictions, and layer 3 (corrected timetable) between 3\% and 13\%.
+Layer-3 predictions below three minutes are rarely accurate (6\%): they correspond to buses that should be arriving
+but send no usable data. This probably contributes to the lower accuracy below three minutes in the second period
+than in the first, for which no breakdown by layer is available.
 
-\paragraph{By day type} Weekday and weekend accuracy are similar (92\% and 92\% below three minutes, 67\% and 65\% at
-ten to twenty minutes).
+\paragraph{By day type} Accuracy is similar on weekdays and at weekends (92\% for both below three minutes; 67\% and
+65\%, respectively, at ten to twenty minutes).
 
 \input{evaluacion-dias}
 
@@ -339,24 +347,27 @@ All the material needed to verify the results and to reuse the method is in the 
 \begin{itemize}
   \item \texttt{referencia/referencia.py} implements the method in Python using only the standard library. It was
         written from the specification, not from the production code.
-  \item \texttt{referencia/vectores.json} contains test vectors with 407 checks: concrete inputs and the exact output
-        of the production engine, covering the reading of the feed, the matching of each vehicle to its trip, vehicles
-        missing from one download, trips past midnight, the projection, the three layers, the segment model, the pace
-        factor, the per-trip correction, the passage log, the delay shown, the calibration and the nightly choice of
-        the percentile. \texttt{comprobar.py} runs the reference implementation on all of them; it reproduces the 407
-        outputs.
+  \item \texttt{referencia/vectores.json} contains test vectors with 407 checks: concrete inputs with the exact
+        outputs of the production engine, covering feed parsing, the matching of each vehicle to its trip, vehicles
+        missing from a single download, trips past midnight, the projection, the three layers, the segment model, the
+        pace factor, the per-trip correction, the passage log, the delay shown, the calibration and the nightly choice
+        of the percentile. \texttt{referencia/comprobar.py} runs the reference implementation on all of them and
+        reproduces all 407 outputs.
   \item \texttt{referencia/evaluar.py} replays captures of the live feed and writes the same 15-second histograms as
-        the production evaluation. On 40 minutes of the live feed of 7 November 2026 (92,686 predictions), its
-        histograms are identical bin by bin to those of the production evaluator in the three modes.
+        the production evaluation. On 40 minutes of the live feed from 7 November 2026 (92,686 predictions), its
+        histograms are identical, bin by bin, to those of the production evaluator in all three modes.
   \item \texttt{memoria/} holds the technical report \parencite{garrido2026memoria}, which describes the same method
         in more detail.
   \item \texttt{datos/} holds the learned tables (segment times, pace factors and per-trip corrections) and the
-        evaluation data behind every table of this paper; \texttt{articulo-metodo/resultados.py} recomputes them.
+        evaluation data behind Tables~\ref{tab:horizons} and~\ref{tab:ablation} and the breakdowns by layer and day type,
+        which \texttt{articulo-metodo/resultados.py} recomputes; the day-by-day evaluation of
+        Section~\ref{sec:day-by-day} is documented in the technical report.
 \end{itemize}
 
-\noindent Three conventions must be kept when porting the method to another language: times are seconds since
-midnight of the service day and may exceed 86,400; rounding sends halves away from zero; and medians are low medians,
-the element $\lfloor p(n-1)\rfloor$ of the sorted values.
+\noindent Three conventions must be preserved when porting the method to another language: times are seconds since
+midnight of the service day and may exceed 86,400; halves are rounded away from zero; and medians and other
+percentiles are taken without interpolation, as the element $\lfloor p(n-1)\rfloor$ of the sorted values (the low
+median for $p=0.5$).
 
 % =====================================================================================================================
 \section{Discussion and limitations}
@@ -369,23 +380,23 @@ the element $\lfloor p(n-1)\rfloor$ of the sorted values.
 \label{sec:conclusions}
 
 Bus networks that publish vehicle positions but not delays, with intermediate times interpolated at constant speed,
-can still offer accurate arrival predictions. Working in timetable time, learning the real duration of every segment
-by time band with shrunk medians, and choosing for every stop the most reliable of three sources with explicit
-abstention rules, the method described here puts the arrival shown within $\pm2$~minutes in 92--96\% of cases below
+can still offer accurate arrival predictions. By working in timetable time, learning the real duration of every
+segment by time band with shrunk medians, and choosing for each stop the most reliable of three sources with explicit
+abstention rules, the method described here places the arrival shown within $\pm2$~minutes in 92--96\% of cases below
 three minutes and in 67\% at ten to twenty minutes, against 23--25\% for the published timetable, and doubles the
-accuracy of the timetable even without live data. More complex models that use what happens each day improve the
-error of segment sums by only 4--7\%, which supports keeping a method that can be audited by hand.
+accuracy of the published timetable even without live data. More complex models that also use same-day data reduce
+the error of segment sums by only 4--7\%, which supports keeping a method that can be audited by hand.
 
 Every rule, constant and evaluation step is specified, and the reference implementation, the test vectors, the
 evaluator, the learned tables and the evaluation data are public, so that the method can be reproduced, applied to
-other networks and compared with new ones on equal terms. A comparison with the waiting times that the operator itself
-shows is under way with the same tools.
+other networks and compared with new methods on equal terms. A comparison with the waiting times shown by the operator
+itself is under way with the same tools.
 
 \section*{Data and code availability}
 The technical report, reference implementation, test vectors, evaluator, learned tables and evaluation data are
-available at
-\url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for text and data). The
-timetable and the live feed are open data of their publishers. The production engine of the app is not public.
+available at \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for text and data).
+The timetable and the live feed are open data from their respective publishers. The production engine of the app is
+not public.
 
 \printbibliography
 
