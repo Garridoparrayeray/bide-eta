@@ -1,0 +1,479 @@
+\chapter{Modelo del Tiempo de Recorrido}
+\label{cap:modelo}
+
+El capítulo anterior sitúa al autobús en el horario: da la hora $\Tpos$ a la que el horario lo pone en el punto donde
+está. Falta saber cuánto tardará en llegar desde ahí hasta una parada. Este capítulo explica por qué se trabaja con
+diferencias de horario, qué unidad de tiempo se aprende (el tramo entre paradas, por franja), cómo se estima cada
+tiempo, qué se hace cuando un tramo no tiene datos y cómo se suman los tramos para obtener el tiempo esperado entre dos
+puntos del recorrido.
+
+\section{Por Qué Diferencias de Horario}
+\label{sec:diferencias}
+
+Sea $J$ un viaje y $s\in[s_1,s_N]$ un punto de su recorrido, medido en metros desde la cabecera. Se definen tres
+funciones:
+
+\begin{itemize}
+  \item $T(s)$, la hora a la que el \emph{horario} pone al autobús en $s$. En las paradas, $T(s_i)=a_i$; entre ellas,
+        se interpola linealmente (ecuación~\eqref{eq:tpos}).
+  \item $R(s)$, la hora \emph{real} a la que el autobús pasa por $s$. Es desconocida salvo en el punto donde se ha
+        visto al autobús.
+  \item $\Delta(s)=R(s)-T(s)$, el \emph{desfase} en $s$.
+\end{itemize}
+
+El autobús se ha visto en $s_p$ a la hora $\tgps=R(s_p)$, y la parada de interés está en $s_d>s_p$, con hora
+publicada $a_\dest=T(s_d)$. La cantidad que se quiere predecir es $R(s_d)$.
+
+\begin{proposicion}[El error de las diferencias]
+\label{prop:diferencias}
+Sean dos estimadores de $R(s_d)$:
+\[
+\widehat R_{\mathrm{hor}}=T(s_d)\qquad\text{(solo horario)},\qquad
+\widehat R_{\mathrm{dif}}=\tgps+\big(T(s_d)-T(s_p)\big)\qquad\text{(diferencias)}.
+\]
+Sus errores son
+\[
+R(s_d)-\widehat R_{\mathrm{hor}}=\Delta(s_d),\qquad
+R(s_d)-\widehat R_{\mathrm{dif}}=\Delta(s_d)-\Delta(s_p).
+\]
+Más en general, si $\widehat E$ es cualquier estimación del tiempo real entre $s_p$ y $s_d$ y
+$\widehat R=\tgps+\widehat E$, el error es $\big(R(s_d)-R(s_p)\big)-\widehat E$, que no depende de $\Delta(s_p)$.
+\end{proposicion}
+
+\begin{proof}
+La primera igualdad es la definición de $\Delta$. Para la segunda, como $\tgps=R(s_p)=T(s_p)+\Delta(s_p)$,
+\begin{align*}
+R(s_d)-\tgps-T(s_d)+T(s_p)&=\big(T(s_d)+\Delta(s_d)\big)-\big(T(s_p)+\Delta(s_p)\big)-T(s_d)+T(s_p)\\
+&=\Delta(s_d)-\Delta(s_p).
+\end{align*}
+La tercera es inmediata: $R(s_d)-\tgps-\widehat E=\big(R(s_d)-R(s_p)\big)-\widehat E$.
+\end{proof}
+
+La proposición tiene tres consecuencias que guían todo el diseño.
+
+\begin{enumerate}
+  \item \textbf{El retraso acumulado no importa.} Un autobús que va veinte minutos tarde desde la cabecera tiene
+        $\Delta(s_p)\approx\Delta(s_d)\approx1200$~s; el horario solo yerra en 20 minutos, las diferencias en casi
+        nada. La predicción no necesita saber cuánto retraso lleva el autobús, solo dónde está.
+  \item \textbf{El error de forma del horario sí importa.} Como el horario intermedio es una interpolación a velocidad
+        constante (sección «\nameref{sec:interpolado}»), $T(s_d)-T(s_p)$ puede estar muy lejos del tiempo real entre esos dos
+        puntos: en un tramo de autopista, el doble. Las diferencias de horario eliminan el desfase acumulado, pero no
+        este error. Por eso se sustituye $T(s_d)-T(s_p)$ por una estimación aprendida $\widehat E$ del tiempo real
+        (el resto de este capítulo).
+  \item \textbf{El error crece con la distancia.} El error $\big(R(s_d)-R(s_p)\big)-\widehat E$ suma la variación de
+        todos los tramos entre el autobús y la parada. Si los tiempos de los tramos fueran independientes, su varianza
+        sería la suma de las varianzas de cada tramo y crecería aproximadamente de forma lineal con el número de
+        tramos. Es lo que se observa: la precisión cae de forma regular con el horizonte (capítulo «\nameref{cap:evaluacion}»).
+\end{enumerate}
+
+\section{La Unidad de Aprendizaje: El Tramo}
+\label{sec:unidad-tramo}
+
+El error de forma del horario se produce tramo a tramo: en cada tramo de autopista el horario se queda corto y en
+cada tramo urbano congestionado se queda largo. Si se aprende el tiempo real de cada tramo, el error de forma
+desaparece al sumar. Esta es la razón de aprender \emph{por tramo} y no por línea:
+
+\begin{itemize}
+  \item un factor único por línea (por ejemplo, «la línea 3414 tarda un 4\,\% menos que su horario») no puede corregir
+        un viaje que combina ciudad y autopista, porque la corrección tiene signos distintos en cada parte;
+  \item el tramo se identifica por sus dos paradas (definición de tramo, sección «\nameref{sec:notacion}»), de modo que las
+        medidas de todas las líneas que lo recorren se suman y el modelo aprende más deprisa;
+  \item el tiempo de un tramo es una magnitud física estable (depende de la calle, los semáforos y la demanda de esa
+        parada) y fácil de auditar: se puede comparar con lo que tarda uno mismo en recorrerlo.
+\end{itemize}
+
+El tiempo de un tramo cambia con la hora y el día. Se aprende por \emph{franja} (definición~\ref{def:franja}): doce
+combinaciones de tipo de día (laborable, fin de semana) y periodo del día (madrugada, punta de la mañana, mañana,
+mediodía, punta de la tarde, noche). Las fronteras de las franjas siguen los periodos de demanda habituales en el
+transporte urbano. Con los datos de octubre de 2026, los tiempos de un mismo tramo difieren entre franjas un 8--13\,\%
+de media, y la noche es un 12\,\% más rápida que la punta de la tarde.
+
+\section{Estimador del Tiempo de un Tramo}
+\label{sec:estimador-tramo}
+
+\subsection{Las Muestras}
+
+El capítulo «\nameref{cap:aprendizaje}» explica cómo se reconstruye, a partir de las capturas del feed, el instante real en
+que un autobús pasa por cada parada. Con dos pasos consecutivos se obtiene una \emph{muestra de tramo}:
+
+\begin{definicion}[Muestra de tramo]
+Una muestra de tramo es una tupla $x=(\kappa,\ j,\ b,\ y)$. El primer elemento, $\kappa=u_i{>}u_{i+1}$, es el
+identificador del tramo. $j$ es la \emph{pista}: el par vehículo y viaje en una fecha concreta, que identifica un
+recorrido físico de un autobús. $b$ es la franja del instante en que el autobús pasó por $p_i$, e $y>0$ es el tiempo
+real, en segundos, que tardó en ir de $p_i$ a $p_{i+1}$.
+\end{definicion}
+
+\subsection{Un Valor por Pista}
+
+Para cada tramo $\kappa$ y cada \emph{grupo} $g$ (una franja concreta, o el grupo especial \texttt{all} que reúne
+todas las franjas) se forma el conjunto de pistas que tienen alguna muestra de $\kappa$ en $g$. Cada pista aporta
+\emph{un solo valor}: si una pista tuviera varias muestras del mismo tramo y grupo, se queda la \emph{última} en el
+orden del fichero de muestras.\footnote{En la práctica una pista recorre cada tramo una sola vez. La regla de «la
+última» importa solo para reproducir exactamente el resultado con datos duplicados; los vectores de prueba la
+comprueban (Apéndice~\ref{ap:vectores}).} Sea $Y_{\kappa,g}$ la lista de esos valores y $n_{\kappa,g}=|Y_{\kappa,g}|$
+el número de pistas distintas.
+
+Un valor por pista evita que un autobús visto muchas veces pese más que otro visto una vez, y es el sentido en que el
+estimador es \emph{robusto}: un autobús que se queda parado veinte minutos aporta un valor extremo, pero uno solo.
+
+\subsection{Mediana y Contracción Hacia el Tramo a Cualquier Hora}
+\label{sec:contraccion-tramo}
+
+Para cada tramo $\kappa$ se calcula la mediana baja a cualquier hora,
+\begin{equation}
+m_{\kappa}=\mediana\big(Y_{\kappa,\texttt{all}}\big),
+\end{equation}
+y, para cada franja $b$ con $n_{\kappa,b}\ge2$ pistas, la mediana de la franja $m_{\kappa,b}=\mediana(Y_{\kappa,b})$
+contraída hacia $m_\kappa$:
+\begin{equation}
+\label{eq:contraccion-tramo}
+\boxed{\;\tau_{\kappa,b}=\redondeo\!\left(\frac{n_{\kappa,b}\,m_{\kappa,b}+n_0\,m_\kappa}{n_{\kappa,b}+n_0}\right),
+\qquad n_0=5\;}
+\end{equation}
+(\texttt{SEGMENT\_BAND\_PRIOR\_TRACKS}). El valor a cualquier hora se guarda como
+$\tau_{\kappa,\texttt{all}}=\redondeo(m_\kappa)$, pero solo si el tramo tiene muestras en al menos dos franjas
+distintas. Las reglas completas de qué se guarda son:
+
+\begin{enumerate}
+  \item Un tramo se considera solo si $n_{\kappa,\texttt{all}}\ge2$ (\texttt{MIN\_TRACKS\_PER\_SEGMENT}).
+  \item Una franja $b$ se guarda solo si $n_{\kappa,b}\ge2$.
+  \item El grupo \texttt{all} se guarda solo si hay muestras de al menos dos franjas distintas, aunque alguna de ellas
+        tenga una sola pista. Con una sola franja, el valor a cualquier hora sería el de esa franja con otro nombre, y
+        se usaría en otras franjas para las que no hay ninguna medida: lo medido a mediodía acabaría usándose en hora
+        punta.
+  \item El tramo se guarda si se guardó al menos un grupo. Se guarda también $n_{\kappa,\texttt{all}}$ como
+        información (clave \texttt{n}).
+\end{enumerate}
+
+Todos los valores se guardan como enteros (segundos, con $\redondeo$).
+
+La ecuación~\eqref{eq:contraccion-tramo} es una media ponderada entre lo que dice la
+franja y lo que dice el tramo a cualquier hora, con pesos $n_{\kappa,b}$ y $n_0$. Es exactamente la forma de la media
+a posteriori de un modelo normal jerárquico \citep{gelman2013}: si las pistas de la franja $b$ se distribuyen
+alrededor de su media $\mu_b$ con varianza $\sigma^2$, y las medias de las franjas se distribuyen alrededor de la media
+del tramo $\mu$ con varianza $\sigma_0^2$, la media a posteriori de $\mu_b$ es
+\[
+\mathbb{E}[\mu_b\mid\text{datos}]=\frac{n\,\bar y_b+(\sigma^2/\sigma_0^2)\,\mu}{n+\sigma^2/\sigma_0^2}.
+\]
+La constante $n_0$ representa el cociente $\sigma^2/\sigma_0^2$: cuántas pistas de la franja hacen falta para que su
+propia mediana pese lo mismo que la del tramo. Con pocas pistas manda el tramo; con muchas, la franja. El método
+sustituye las medias por medianas para conservar la robustez, y fija $n_0$ por validación (no por una estimación de las
+varianzas), lo que es más sencillo y se comprobó suficiente.
+
+\begin{proposicion}[Por qué contraer reduce el error]
+\label{prop:contraccion}
+Sea $\hat\theta_b$ un estimador insesgado de $\theta_b$ con varianza $\sigma^2/n$, y $\mu$ un valor fijo con
+$\theta_b-\mu=\beta$. Para el estimador contraído $\tilde\theta_b=w\hat\theta_b+(1-w)\mu$, con $w=n/(n+n_0)$, el error
+cuadrático medio es
+\[
+\mathrm{ECM}(\tilde\theta_b)=w^2\frac{\sigma^2}{n}+(1-w)^2\beta^2 ,
+\]
+que es menor que el de $\hat\theta_b$ ($\sigma^2/n$) siempre que $\beta^2<\sigma^2\,(2n+n_0)/(n\,n_0)$. En particular,
+la ganancia es mayor cuanto menor es $n$.
+\end{proposicion}
+
+\begin{proof}
+$\tilde\theta_b-\theta_b=w(\hat\theta_b-\theta_b)-(1-w)\beta$; el primer término tiene media cero y varianza
+$w^2\sigma^2/n$ y el segundo es constante, de donde sale la expresión. La desigualdad
+$w^2\sigma^2/n+(1-w)^2\beta^2<\sigma^2/n$ equivale a $(1-w)^2\beta^2<(1-w^2)\sigma^2/n$, es decir,
+$\beta^2<\frac{1+w}{1-w}\cdot\frac{\sigma^2}{n}$, y con $w=n/(n+n_0)$ se tiene $\frac{1+w}{1-w}=\frac{2n+n_0}{n_0}$.
+\end{proof}
+
+La proposición~\ref{prop:contraccion} explica el comportamiento medido (sección «\nameref{sec:eval-contraccion}»): la contracción mejora las franjas
+con pocas pistas, donde la mediana es ruidosa, y apenas cambia las que tienen muchas. Un $n_0$ demasiado grande sesga
+las franjas que de verdad son distintas (el término $\beta^2$), y por eso el valor 10 resultó peor que el 5 a 12--20
+minutos. La proposición supone un estimador insesgado y un $\mu$ fijo; el método usa medianas bajas y estima $\mu$
+($m_\kappa$) con datos que incluyen las pistas de la propia franja, así que es una justificación heurística, no una
+garantía: el valor de $n_0$ lo decide la medida.
+
+\begin{ejemplo}
+\label{ej:contraccion}
+Un tramo $A{>}B$ tiene dos pistas en \texttt{laborable.punta\_manana} (90 y 100~s) y seis en
+\texttt{laborable.mediodia} (60, 58, 62, 64, 59 y 61~s). Las ocho juntas, ordenadas, son 58, 59, 60, 61, 62, 64, 90,
+100, y su mediana baja es el elemento $\lfloor 7/2\rfloor=3$: $m_{AB}=61$. Entonces
+\begin{align*}
+\tau_{AB,\texttt{punta\_manana}}&=\redondeo\!\left(\tfrac{2\cdot90+5\cdot61}{7}\right)=\redondeo(69{,}29)=69,\\
+\tau_{AB,\texttt{mediodia}}&=\redondeo\!\left(\tfrac{6\cdot60+5\cdot61}{11}\right)=\redondeo(60{,}45)=60,
+\end{align*}
+y $\tau_{AB,\texttt{all}}=61$ porque hay dos franjas. Sin contracción, la punta de la mañana valdría 90~s, apoyada solo
+en dos autobuses. Un tramo $C{>}D$ con tres pistas, todas de noche (200, 210 y 190~s), guarda solo
+\texttt{laborable.noche} $=200$ (la contracción hacia sí mismo no cambia nada) y ningún valor \texttt{all}.
+\end{ejemplo}
+
+\subsection{Consulta}
+
+Dado un tramo $\kappa$ y una franja $b$, el tiempo aprendido es
+\begin{equation}
+\label{eq:consulta-tramo}
+\tau(\kappa,b)=\begin{cases}
+\tau_{\kappa,b} & \text{si existe},\\
+\tau_{\kappa,\texttt{all}} & \text{si no, y si existe},\\
+\text{indefinido} & \text{en otro caso.}
+\end{cases}
+\end{equation}
+
+Se dice que el tramo está \emph{aprendido} en la franja $b$ si $\tau(\kappa,b)$ está definido. Obsérvese que un tramo
+con datos solo de noche está aprendido de noche y no lo está a mediodía: entonces se usa el respaldo de la sección
+siguiente, no el valor nocturno.
+
+\section{Respaldo por Longitud del Tramo}
+\label{sec:respaldo-largo}
+
+Un tramo sin tiempo aprendido no se puede dejar sin estimar, porque la llegada suma todos los tramos del camino. La
+primera idea fue usar el horario multiplicado por un factor de ritmo de la línea (sección «\nameref{sec:k}»), pero eso
+reproduce el error de forma del horario interpolado. La observación que lleva al respaldo es que ese error depende
+sobre todo de la \emph{longitud} del tramo: los tramos cortos son urbanos (el autobús tarda lo que dice el horario o
+algo más), y los largos son interurbanos y de autopista (el autobús tarda bastante menos de lo programado, porque la
+interpolación reparte el tiempo a velocidad constante).
+
+\subsection{Cubos de Longitud}
+
+La longitud de un tramo es $L=s_{i+1}-s_i$, a partir de \texttt{shape\_dist\_traveled}. Se clasifica en seis cubos
+(\texttt{LENGTH\_CUTS\_METERS}):
+\begin{equation}
+\label{eq:cubo}
+c(L)=\begin{cases}
+0 & L<300\\
+1 & 300\le L<600\\
+2 & 600\le L<1000\\
+3 & 1000\le L<1500\\
+4 & 1500\le L<3000\\
+5 & L\ge3000
+\end{cases}
+\end{equation}
+Los cortes son cerrados por abajo: un tramo de exactamente 300~m está en el cubo 1.
+
+\subsection{Proporción Real/Horario por Cubo y Franja}
+
+Para cada muestra de tramo con duración programada $h=a_{i+1}-a_i>0$ y longitud conocida $L>0$, se calcula la
+proporción $q=y/h$. Para cada cubo $c$ y grupo $g$ (franja o \texttt{all}) se toma la mediana baja de \emph{todas} las
+proporciones del grupo (aquí sin reducir a un valor por pista, porque cada proporción ya es adimensional y compara
+tramos distintos):
+\begin{equation}
+\label{eq:proporcion}
+r_{c,g}=\redondeo_3\big(\mediana\{q\}\big),
+\end{equation}
+siempre que el grupo tenga al menos 20 proporciones (\texttt{MIN\_SAMPLES\_PER\_LENGTH\_RATIO}); si no, $r_{c,g}$ no
+existe. Aquí $\redondeo_3(x)=\redondeo(1000x)/1000$ redondea a tres decimales con la misma regla de las mitades. La longitud
+$L$ de un tramo, al calibrar, es la mediana baja de las longitudes $s_{i+1}-s_i$ de ese par de paradas en todos los
+viajes del horario que lo recorren (puede variar algo entre viajes si los trazados difieren).
+
+\subsection{Consulta}
+
+Al predecir, para un tramo no aprendido con duración programada $h$ y longitud $L$ del viaje concreto,
+\begin{equation}
+\label{eq:respaldo}
+\tau^{\mathrm{L}}(h,L,b)=\clamp\big(\hat r,\ 0{,}3,\ 1{,}5\big)\cdot h,\qquad
+\hat r=\begin{cases}
+r_{c(L),b} & \text{si existe},\\
+r_{c(L),\texttt{all}} & \text{si no.}
+\end{cases}
+\end{equation}
+Si no existe ninguna de las dos proporciones, si $L$ no se conoce o si $L\le0$, $\tau^{\mathrm{L}}$ está indefinido.
+Las cotas $[0{,}3;\,1{,}5]$ impiden que un dato corrupto (una proporción de 0,1 o de 2) se traslade a la predicción.
+Si el viaje no tiene distancias (sin \texttt{shape\_dist\_traveled}), $L$ no se conoce y este respaldo no se aplica.
+
+La Tabla~\ref{tab:proporciones} muestra las proporciones calibradas el 31 de octubre de 2026. En la columna
+\texttt{all} la tendencia es clara y monótona: los tramos de menos de 300~m se recorren en el tiempo programado y los
+de más de 3~km en algo más de la mitad. En las franjas, los cubos 3 y 4 quedan casi iguales.
+
+\begin{table}[ht]
+\centering
+\caption{Proporción Entre Tiempo Real y Tiempo Programado por Cubo de Longitud}\label{tab:proporciones}
+\begin{tabular}{@{}clcccc@{}}
+\toprule
+Cubo & Longitud & $r_{c,\texttt{all}}$ & \shortstack{Laborable\\punta mañana} & \shortstack{Laborable\\mediodía} & \shortstack{Fin de semana\\mañana}\\
+\midrule
+0 & $<300$~m        & 0,987 & 1,016 & 1,052 & 0,894\\
+1 & 300--600~m      & 0,907 & 0,937 & 0,949 & 0,823\\
+2 & 600--1\,000~m   & 0,769 & 0,811 & 0,793 & 0,716\\
+3 & 1\,000--1\,500~m & 0,647 & 0,665 & 0,659 & 0,606\\
+4 & 1\,500--3\,000~m & 0,640 & 0,668 & 0,669 & 0,600\\
+5 & $\ge3\,000$~m    & 0,534 & 0,565 & 0,524 & 0,523\\
+\bottomrule
+\end{tabular}
+\nota{Columna $r_{c,\texttt{all}}$: grupo \texttt{all}; las demás, la franja de su título. Muestras acumuladas a 31
+de octubre de 2026.}
+\end{table}
+
+\section{Factor de Ritmo}
+\label{sec:k}
+
+El factor de ritmo $k$ es el último recurso de la cascada y, además, el único modelo cuando no existe ninguna tabla de
+tiempos por tramo (por ejemplo, al poner el método en marcha en una red nueva). Entonces las capas 1 y 2 usan
+$E=k\,(t_1-t_0)$, la capa 3 no se aplica (las filas sin datos del autobús salen con el horario publicado) y el autobús
+que espera en la cabecera se calcula con la ecuación~\eqref{eq:eta-capa1}. Mide cuánto tarda de verdad un autobús
+frente a lo que dice el horario, de forma global por franja y, con datos suficientes, por línea y franja.
+
+\subsection{Consulta}
+
+\begin{equation}
+\label{eq:k}
+k(\ell,D,t)=\clamp\big(\hat k,\ 0{,}6,\ 1{,}2\big),\qquad
+\hat k=\begin{cases}
+k_{\ell,b} & \text{si existe},\\
+k_b & \text{si no, y si existe},\\
+1 & \text{en otro caso,}
+\end{cases}\qquad b=\franja(D,t),
+\end{equation}
+donde $\ell$ es la línea del viaje (\texttt{MIN\_FACTOR}, \texttt{MAX\_FACTOR}). El número de línea se escribe
+siempre como en el horario, sin ceros a la izquierda: el feed pone \texttt{A0651} y se lee como \texttt{651}, y una
+tabla guardada con la otra forma vale igual (\texttt{PaceFactors::lineKey}).
+
+\subsection{Estimación}
+
+Las \emph{muestras de ritmo} (capítulo «\nameref{cap:aprendizaje}») son tuplas $(j,\ \ell,\ v,\ b,\ H,\ Y)$: la pista $j$,
+la línea $\ell$, el vehículo $v$, la franja $b$ del instante de la observación, el tiempo que según el horario faltaba
+para llegar a una parada, $H=a_\dest-\Tpos\ge120$~s, y el tiempo que de verdad faltaba, $Y=t_{\mathrm{real}}-\tgps>0$.
+
+Para un conjunto de pistas $\mathcal J$ (las de una franja, o las de una línea en una franja), se calcula para cada
+pista la proporción de sumas
+\begin{equation}
+\rho_j=\frac{\sum Y}{\sum H}\qquad\text{(sumas sobre las muestras de la pista $j$)},
+\end{equation}
+que pondera cada muestra por su duración (una predicción a 15 minutos pesa más que una a 2), y después
+\begin{equation}
+\label{eq:k-contraido}
+\boxed{\;k=\redondeo_3\!\left(\clamp\!\Big(1+\big(\tilde\rho-1\big)\frac{m}{m+10},\ 0{,}6,\ 1{,}2\Big)\right),\qquad
+\tilde\rho=\mediana_j\,\rho_j,\quad m=|\mathcal J|\;}
+\end{equation}
+(\texttt{SHRINKAGE\_TRACKS}). Es una contracción hacia $k=1$ (el horario tal cual) con peso equivalente a diez pistas:
+la misma idea que la sección «\nameref{sec:contraccion-tramo}», con el horario como valor común.
+
+Se estima $k_b$ si la franja tiene al menos $m\ge8$ pistas (\texttt{MIN\_TRACKS\_PER\_BAND}), y $k_{\ell,b}$ si la
+línea en esa franja tiene al menos 25 pistas y 5 vehículos distintos (\texttt{MIN\_TRACKS\_PER\_LINE},
+\texttt{MIN\_VEHICLES\_PER\_LINE}). La exigencia de vehículos distintos evita que el factor de una línea refleje a un
+solo conductor o a un autobús averiado.
+
+\begin{ejemplo}
+Ocho pistas con proporciones 0,80, 0,82, \dots, 0,94 (en pasos de 0,02) tienen mediana baja $\tilde\rho=0{,}86$ (el
+elemento $\lfloor3{,}5\rfloor=3$). Entonces $k=1-0{,}14\cdot8/18=0{,}93778$, que se redondea a $0{,}938$. Con 40
+pistas de proporción 0,85, $k=1-0{,}15\cdot40/50=0{,}88$. Con diez pistas de proporciones 1,6, 1,7, \dots, 2,5, la mediana baja es $2{,}0$ y la fórmula
+da $1+1{,}0\cdot10/20=1{,}5$, que queda en la cota: $k=1{,}2$.
+\end{ejemplo}
+
+Con los datos de octubre de 2026 los factores globales van de $0{,}756$ (fin de semana, punta de la mañana) a $0{,}928$
+(laborable, punta de la tarde), y 54 líneas tienen factor propio en alguna franja.
+
+\section{Tiempo Esperado Entre Dos Instantes del Horario}
+\label{sec:tiempo-esperado}
+
+Con los tres niveles anteriores se define la función central del método: el tiempo real que se espera que tarde el
+autobús en ir desde el punto donde el horario lo pone a la hora $t_0$ hasta el punto donde lo pone a la hora $t_1$.
+Los dos extremos se dan como \emph{horas del horario}, no como distancias, porque es lo que proporciona la
+localización ($\Tpos$) y lo que define a cada parada ($a_\dest$).
+
+\begin{definicion}[Tiempo de un tramo]
+Para el tramo $i$ de $J$, con duración programada $h_i=a_{i+1}-a_i$, longitud $L_i=s_{i+1}-s_i$ (si se conoce),
+identificador $\kappa_i$, franja $b$ y factor $k$:
+\begin{equation}
+\label{eq:cascada}
+\tau_i=\begin{cases}
+\tau(\kappa_i,b) & \text{si está definido (tiempo aprendido)},\\
+\tau^{\mathrm{L}}(h_i,L_i,b) & \text{si no, y si está definido (respaldo por longitud)},\\
+k\cdot h_i & \text{en otro caso (factor de ritmo).}
+\end{cases}
+\end{equation}
+\end{definicion}
+
+\begin{definicion}[Tiempo esperado]
+\label{def:tiempo-esperado}
+Sea $J$ un viaje con llegadas $a_1\le\dots\le a_N$, y sean $t_0<t_1$ dos horas del horario, una franja $b$ y un
+factor $k$. Si no existe ninguna tabla de tiempos por tramo (la tabla \texttt{segments} está vacía),
+\[
+E(J,t_0,t_1,b,k)=k\,(t_1-t_0).
+\]
+En otro caso,
+\begin{equation}
+\label{eq:tiempo-esperado}
+\boxed{\;E(J,t_0,t_1,b,k)=\sum_{i\in I(t_0,t_1)}\max(0,w_i)\,\tau_i\;}
+\end{equation}
+con
+\begin{equation}
+\label{eq:pesos}
+w_i=\begin{cases}\dfrac{\min(a_{i+1},t_1)-\max(a_i,t_0)}{a_{i+1}-a_i} & \text{si } a_{i+1}>a_i,\\[2mm] 1 & \text{si } a_{i+1}=a_i,\end{cases}
+\end{equation}
+donde el conjunto de tramos $I(t_0,t_1)$ se obtiene recorriendo $i=1,\dots,N-1$ en orden y aplicando dos reglas:
+se \emph{salta} el tramo si $a_{i+1}\le t_0$ (ya está detrás) y se \emph{termina} el recorrido en el primer tramo con
+$a_i\ge t_1$ (ya está después del destino).
+\end{definicion}
+
+El peso $w_i$ es la fracción de la duración programada del tramo $i$ que queda entre $t_0$ y $t_1$: vale 1 en los
+tramos completos y una fracción en el tramo donde está el autobús. Equivale a suponer que, \emph{dentro de un tramo},
+el autobús avanza al ritmo del horario; entre tramos, en cambio, el ritmo es el aprendido. Se probó una curva no lineal
+dentro del tramo y no mejoró (sección «\nameref{sec:descartadas}»).
+
+Varias propiedades de la definición son importantes para replicarla exactamente:
+
+\begin{observacion}[Se recorre por horas, no por índices]
+Las reglas de salto y de fin se evalúan sobre las horas $a_i$, no sobre los índices de parada. Si dos paradas
+consecutivas $p_j$ y $p_{j+1}$ tienen la misma hora programada, el destino $t_1=a_{j+1}=a_j$ termina el recorrido en el
+tramo $j$ (porque $a_j\ge t_1$), de modo que ambas paradas reciben la misma llegada estimada.
+\end{observacion}
+
+\begin{observacion}[Tramos de duración nula]
+Un tramo con $a_{i+1}=a_i$ (frecuente en el GTFS, donde dos paradas próximas comparten minuto) se incluye con peso 1,
+y aporta su tiempo aprendido completo, solo si $t_0<a_i$ y $a_i<t_1$. Por eso el horario corregido de la capa 3
+(sección «\nameref{sec:capa3}») empieza en $t_0=d_1-1$ y no en $d_1$: así se incluyen los tramos de duración nula del
+principio del viaje. Por la misma razón, $E$ no es exactamente aditiva: si $t_0<t_m<t_1$ y hay un tramo de duración
+nula con $a_i=t_m$, $E(t_0,t_1)$ lo cuenta y $E(t_0,t_m)+E(t_m,t_1)$ no.
+\end{observacion}
+
+\begin{observacion}[La espera en la parada]
+La duración de un tramo, $h_i=a_{i+1}-a_i$, incluye la espera programada en $p_i$, mientras que $\Tpos$ se interpola
+entre $d_i$ y $a_{i+1}$ (sección «\nameref{sec:trazado}»). Si $d_i>a_i$, un autobús que acaba de salir de $p_i$
+($\Tpos=d_i$) recibe $w_i=(a_{i+1}-d_i)/h_i<1$ y no cuenta la parte del tiempo aprendido que corresponde a esa
+espera. En la base de Bizkaibus todas las paradas tienen $d_i=a_i+2$~s, así que el efecto es de unos segundos; los
+vectores de prueba, con $a_i=d_i$, no lo ejercitan.
+\end{observacion}
+
+\begin{observacion}[Franja única]
+Todo el camino se evalúa con una sola franja $b$, la del instante de la observación, aunque el autobús vaya a cruzar a
+otra franja antes de llegar. Calcular la franja de cada tramo a la hora prevista de paso por él se probó y no mejoró
+(sección «\nameref{sec:descartadas}»).
+\end{observacion}
+
+\begin{ejemplo}
+\label{ej:tiempo-esperado}
+En el viaje sintético del ejemplo~\ref{ej:posicion}, con franja \texttt{laborable.punta\_manana} y $k=0{,}9$, los
+tramos aprendidos son $S0{>}S1$ (110~s en esa franja) y $S1{>}S2$ (140~s), y las proporciones del cubo~2 y del cubo~4
+en esa franja son $0{,}811$ y $0{,}668$. Desde $t_0=\Tpos=28\,950$ (a mitad del tramo $S1{>}S2$):
+\begin{itemize}
+  \item hasta $S2$ ($t_1=29\,010$): $w=(29\,010-28\,950)/120=0{,}5$ en $S1{>}S2$, luego $E=0{,}5\cdot140=70$~s;
+  \item hasta $S3$ ($t_1=29\,310$): se añade $S2{>}S3$, no aprendido, de 1\,500~m (cubo 4) y 300~s programados:
+        $0{,}668\cdot300=200{,}4$~s, luego $E=270{,}4$~s;
+  \item hasta $S4$ ($t_1=29\,430$): se añade $S3{>}S4$, de 700~m (cubo 2) y 120~s: $0{,}811\cdot120=97{,}32$~s, luego
+        $E=367{,}72$~s.
+\end{itemize}
+Sin distancias (viaje sin trazado), los dos últimos tramos caen al factor de ritmo: $0{,}9\cdot300=270$ y
+$0{,}9\cdot120=108$~s, y $E$ vale $70$, $340$ y $448$~s.
+\end{ejemplo}
+
+\section{La Cascada Completa}
+\label{sec:cascada}
+
+La Tabla~\ref{tab:cascada} resume qué nivel del modelo se usa en cada caso. Todos los niveles devuelven un tiempo en
+segundos para un tramo; el tiempo esperado de un camino es la suma ponderada de la
+ecuación~\eqref{eq:tiempo-esperado}, y cada tramo del camino puede salir de un nivel distinto.
+
+\begin{table}[ht]
+\centering
+\caption{Cascada de Estimación del Tiempo de un Tramo}\label{tab:cascada}
+\begin{tabularx}{\textwidth}{@{}c>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Nivel & Se usa si & Valor & Aprende de\\
+\midrule
+1 & El tramo tiene valor en la franja & $\tau_{\kappa,b}$, contraído hacia el tramo & Pasos reales de $\ge2$ pistas en la franja\\
+2 & El tramo tiene valor a cualquier hora (y muestras de $\ge2$ franjas) & $\tau_{\kappa,\texttt{all}}$ & Pasos reales de $\ge2$ pistas\\
+3 & Se conoce la longitud y hay proporción para su cubo & $\clamp(\hat r,0{,}3,1{,}5)\cdot h$, con $\hat r=r_{c,b}$ o, si no, $r_{c,\texttt{all}}$ & $\ge20$ proporciones del cubo en el grupo\\
+4 & Siempre & $k\cdot h$, con $k\in[0{,}6;\,1{,}2]$ & $\ge8$ pistas (franja) o $\ge25$ y 5 vehículos (línea)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+El diseño en cascada responde a un compromiso entre sesgo y varianza: cada nivel es menos específico que el anterior
+(más sesgo) pero se apoya en más datos (menos varianza). El nivel que se usa es siempre el más específico que tiene
+datos suficientes, y los umbrales de «suficiente» se han fijado por validación cruzada (capítulos «\nameref{cap:aprendizaje}»
+y «\nameref{cap:evaluacion}»). Con los datos de octubre de 2026, la tabla tiene 2\,454 tramos aprendidos, el 86\,\% de las
+predicciones tiene todos los tramos de su camino en los niveles 1 o 2, y, como los seis cubos tienen proporción a cualquier hora, el nivel 4 solo actúa en la práctica
+en viajes sin distancias a lo largo del trazado.

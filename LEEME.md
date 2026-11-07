@@ -25,7 +25,7 @@ Comunes a las tres:
 
 | Carpeta | Contenido |
 |---|---|
-| [`referencia/`](referencia/) | `referencia.py`, el método escrito solo a partir de la memoria; `vectores.json`, 323 casos de prueba sacados del motor de producción; `comprobar.py`, que compara uno con otro; `evaluar.py`, el evaluador público |
+| [`referencia/`](referencia/) | `referencia.py`, el método escrito solo a partir de la memoria; `vectores.json`, 407 comprobaciones sacadas del motor de producción; `comprobar.py`, que compara uno con otro; `evaluar.py`, el evaluador público |
 | [`datos/`](datos/) | Las tablas aprendidas (tiempos por tramo, factores de ritmo y correcciones por viaje), los datos de evaluación de las tablas de los artículos y la ficha de los datos |
 
 ## Para empezar
@@ -36,7 +36,7 @@ Python 3.9 o posterior, solo la biblioteca estándar.
 python3 referencia/comprobar.py
 ```
 
-Escribe `323 de 323 comprobaciones coinciden con el código de producción` si la implementación de referencia da
+Escribe `407 de 407 comprobaciones coinciden con el código de producción` si la implementación de referencia da
 exactamente lo mismo que el motor de producción.
 
 Para evaluar con capturas del feed en directo (ficheros SIRI Vehicle Monitoring `vm_*.xml`) y la base del horario

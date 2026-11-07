@@ -1,0 +1,119 @@
+\chapter{Conclusiones y Líneas Futuras}
+\label{cap:conclusiones}
+
+\section{Resumen}
+
+Esta memoria ha descrito un método para predecir la llegada de autobuses a sus paradas en una red cuyo operador
+publica la posición de sus vehículos pero ningún retraso, y cuyo horario intermedio es una interpolación a velocidad
+constante. El método se resume en cuatro pasos:
+
+\begin{enumerate}
+  \item \textbf{Situar} el GPS sobre el trazado oficial, en una ventana alrededor de la próxima parada que declara el
+        feed y con una regla de desempate para los recorridos que vuelven sobre sí mismos, y traducir esa posición a
+        la hora a la que el horario pone allí al autobús.
+  \item \textbf{Sumar} el tiempo real que cuesta recorrer lo que falta, tramo a tramo, con tiempos aprendidos por
+        franja, contraídos hacia el tiempo del tramo a cualquier hora, y con una cascada de respaldo por longitud y por
+        factor de ritmo.
+  \item \textbf{Elegir} en cada predicción la mejor fuente fiable entre el GPS, la última parada registrada y el
+        horario corregido, con reglas explícitas para abstenerse y sin afirmar nunca un retraso que no se puede
+        sostener.
+  \item \textbf{Aprender y medir} cada día con el propio feed, y cambiar los parámetros solo si el error baja en
+        recorridos que no se usaron para aprenderlos; las reglas nuevas, solo si mejoran en días no vistos al aprender.
+\end{enumerate}
+
+\section{Resultados}
+
+En 2,21~millones de llegadas a menos de veinte minutos, de 17 días, la llegada mostrada cae dentro de $\pm2$~minutos
+en el 96\,\% de los casos cuando el autobús está a menos de tres minutos y en el 67\,\% entre diez y veinte minutos,
+frente al 24\,\% y el 25\,\% del horario publicado, con intervalos de confianza de uno a tres puntos. En una muestra
+de 14~minutos con GPS, la llegada no tiene sesgo y acierta el 94\,\% a menos de tres minutos. Sin GPS, con solo la
+parada registrada, el acierto es el mismo a menos de tres minutos (94\,\%) y baja seis puntos entre diez y veinte
+(del 73 al 67\,\%). Sin ningún dato del
+vehículo, el horario corregido duplica o triplica el acierto del horario publicado, y la corrección por viaje baja su
+error medio de 210 a 158~s; con el percentil 40 de los desvíos en lugar de la media, la hora sin autobús acierta
+entre 2 y 4 puntos más a $\pm2$~minutos en días no vistos al aprender. Cuando todo el camino tiene tiempos
+aprendidos, el 93\,\% de las llegadas a menos de diez minutos cae dentro de $\pm2$~minutos, el techo que permite
+para ellas la resolución de este feed. Con el mismo protocolo por días, un filtro de Kalman sobre el ritmo del propio autobús y
+una red neuronal reducen el error de las sumas de tramos un 4\,\% y entre un 6 y un 7\,\%.
+
+\section{Lecciones}
+
+\subsection{Lo Único Vivo Es la Posición} Antes de modelar nada hubo que comprobar qué datos eran fiables. El retraso
+declarado no existía y el horario intermedio era una interpolación. Todo el diseño parte de usar la posición y
+diferencias de horario, que hacen irrelevante el retraso acumulado (proposición~\ref{prop:diferencias}).
+
+\subsection{Revisar los Datos de Entrada} Durante semanas, 670 de los 6\,130 viajes (el 11\,\%, en 25 líneas) no se
+pudieron situar con el GPS porque el horario oficial dibujaba sus trazados al revés, y esos viajes tampoco aprendían.
+No era un fallo del método, sino de los datos, y solo se vio al revisar uno a uno los autobuses que no salían en
+directo. Corregir los trazados en la construcción y situar al autobús que espera en la cabecera subió los autobuses
+situados del 73{,}8 al 97{,}4\,\%, más que cualquier mejora del modelo.
+
+\subsection{Medir Antes de Adoptar} Muchas ideas razonables empeoraron la medida: corregir con la velocidad del
+último minuto,
+mezclar lo aprendido con el horario, calcular la franja de cada tramo a la hora prevista, tratar los festivos como fin
+de semana en los tiempos por tramo, suponer que el autobús de la cabecera sale a su hora, arrastrar el retraso del
+viaje anterior o seguir al autobús que desaparece del feed. Tratar los festivos como fin de semana sí mejora la capa 3
+corregida, donde la primera versión los empeoraba: cada caso se midió por separado. La regla de adoptar solo lo que mejora la medida, por días y de punta a punta, ha sido más útil que
+cualquier intuición sobre el tráfico.
+
+\subsection{Abstenerse Es Parte de la Precisión} Mostrar «estimado» o «solo horario» cuando no hay datos, ocultar un
+retraso no creíble y desconfiar de dos fuentes que se contradicen no aumentan los aciertos medidos, pero evitan los
+errores que más daño hacen a la confianza del usuario.
+
+\subsection{Lo Sencillo y Auditable Compite} Medianas por tramo, una contracción con una sola constante, una cascada
+de cuatro niveles: cada parámetro tiene un significado físico y se puede comprobar a mano. Frente a una red neuronal
+entrenada con lo mismo y con lo que pasa cada día, se pierde entre un 6 y un 7\,\% de error medio; a cambio, cualquier
+cifra que muestre la aplicación se puede explicar.
+
+\section{Líneas Futuras}
+
+\begin{itemize}
+  \item \textbf{El ritmo del propio autobús.} El filtro de Kalman sobre la desviación del propio autobús mejora las
+        sumas de tramos un 4\,\% con dos parámetros (sección «\nameref{sec:comparacion}»). El paso siguiente es medirlo
+        sobre la llegada completa, con la regla de adopción de la sección «\nameref{sec:eval-contraccion}».
+  \item \textbf{Capas a lo largo de los días.} La captura continua guarda desde el 31 de octubre de 2026 los errores de
+        cada bloque por capa, horizonte, franja y tipo de día. Con semanas de datos, las Tablas~\ref{tab:capas}
+        y~\ref{tab:cobertura} se podrán repetir con intervalos de confianza estrechos.
+  \item \textbf{Temporada y tipo de día.} Con meses de muestras se podrá medir si conviene separar el verano y las
+        vacaciones escolares, o el sábado del domingo, en la corrección por viaje y en los tiempos por tramo.
+  \item \textbf{Fechas especiales.} Los tiempos aprendidos distinguen laborable y fin de semana, pero no los días de
+        fiestas, eventos o Navidad. Marcar esas fechas para que no cuenten al aprender evitaría que contaminen los días
+        normales; aprenderlas aparte exige capturas del año anterior.
+  \item \textbf{Viajes sin autobús.} Distinguir en la aplicación el viaje que ya debería haber salido y no tiene
+        autobús en el feed (en torno al 4\,\% de los que deberían estar en marcha), en lugar de darlo como estimado.
+        Antes de su hora, la ficha ya dice que aún no tiene autobús asignado.
+  \item \textbf{De madrugada.} De 23:58 a 05:00 el feed de Bizkaibus no se actualiza y los nocturnos salen sin directo
+        (sección «\nameref{sec:mas-de-24h}»). Si el operador lo mantiene de noche, el emparejador de ayer los situará sin
+        cambios; para medir esas llegadas y aprender de ellas, la captura tendría que separar también los viajes de ayer.
+  \item \textbf{La secuencia de cada vehículo.} En una cabecera, el autobús que empieza un viaje suele ser uno que
+        acaba de terminar otro, y su retraso pasa al siguiente. La clave del feed no lo dice (solo el 11\,\% de los
+        viajes seguidos de una clave los hace el mismo autobús), pero las capturas guardan qué vehículo hace cada viaje
+        cada día. Si esa secuencia se repite de un día a otro, se podría seguir al autobús en su viaje anterior y
+        estimar la salida real; hay que medir antes si se repite.
+  \item \textbf{Revisión externa.} Que otras personas repliquen el método con la implementación de referencia y lo
+        apliquen a otra red.
+  \item \textbf{Intervalos de predicción.} Las muestras permiten estimar, además de la mediana de cada tramo, su
+        dispersión. Sumando varianzas por tramo se podría mostrar un intervalo («llega en 6--8 minutos») con una
+        cobertura medida.
+  \item \textbf{Más capacidad técnica.} Un servidor propio y una base de datos con años de historia quitarían los
+        topes de la sección «\nameref{sec:infraestructura}»: aprender festivos, fiestas y temporadas con el año
+        anterior, cruzar meteorología y eventos, recalibrar cada hora y servir modelos más capaces. Hay que medir
+        cuánto mejora cada paso.
+  \item \textbf{Más fuentes de datos.} Pasar del 93\,\% en las llegadas a menos de diez minutos con todo el camino
+        aprendido exige información que este feed no tiene: posiciones
+        más frecuentes, apertura de puertas o conteo de viajeros.
+  \item \textbf{Incidencias.} Los cortes y desvíos publicados por el operador no entran hoy en el cálculo hasta que se
+        notan en la posición. Incorporarlos exige medir antes cómo afectan.
+  \item \textbf{Planificación de viajes.} Las llegadas estimadas pueden alimentar un buscador de rutas con transbordos
+        (por ejemplo, con el algoritmo RAPTOR), de modo que el viaje propuesto use las horas reales y no las
+        publicadas.
+  \item \textbf{Más redes.} Aplicar el método a otras ciudades y comprobar cuánto de lo medido aquí se mantiene.
+\end{itemize}
+
+\section{Reproducibilidad}
+
+Para que cualquiera pueda reproducir el método, esta memoria incluye todas las constantes
+(Apéndice~\ref{ap:constantes}), el pseudocódigo (Apéndice~\ref{ap:algoritmos}), los formatos de datos
+(Apéndice~\ref{ap:formatos}), vectores de prueba generados con el código de producción (Apéndice~\ref{ap:vectores}) y
+una implementación de referencia independiente que los reproduce exactamente (Apéndice~\ref{ap:referencia}). Una
+implementación nueva, en cualquier lenguaje, puede darse por correcta cuando reproduce todos los vectores al segundo.

@@ -13,7 +13,7 @@ English.
 | [`memoria.pdf`](memoria.pdf) | The report, ready to read and print |
 | `memoria.tex`, `capitulos/` | LaTeX sources: one file per chapter and appendix |
 | `bibliografia.bib` | References (APA 7 with `biblatex-apa`) |
-| `pruebas/revisar.py` | Checks the report: compilation, references, that the reference implementation reproduces the 323 vectors, and Spanish typography |
+| `pruebas/revisar.py` | Checks the report: compilation, references, that the reference implementation reproduces the 407 checks of the test vectors, and Spanish typography |
 
 Build from this folder with `latexmk -pdf memoria.tex` (pdflatex and biber; `biblatex-apa` is in TeX Live), or build
 and check everything with `python3 pruebas/revisar.py`.

@@ -56,6 +56,53 @@ for c in cv['consultas']:
     igual('corrección ' + c['clave'] + ' ' + c['fecha'], c['segundos'], R.trip_offset(cv['tabla'], c['clave'], c['linea'], c['fecha'], c['salida'], c['indice'], c['paradas']))
 igual('calibración de la corrección por viaje', V['calibracion_viaje']['resultado'], R.fit_trip_offsets(V['calibracion_viaje']['desvios']))
 
+# Viajes que pasan de medianoche
+dv = V['dia_del_viaje']
+for c in dv['casos']:
+    igual('día del viaje: salida %d a las %d' % (c['salida'], c['ahora']), c['dias_atras'], R.days_ago({'departureSeconds': c['salida']}, c['ahora']))
+igual('buses de viajes de ayer', dv['de_ayer'], R.vehicles_of_day(dv['feed'], dv['ahora'], 1))
+igual('buses de viajes de hoy', dv['de_hoy'], R.vehicles_of_day(dv['feed'], dv['ahora'], 0))
+
+# Buses que faltan en una lectura del feed
+br = V['buses_retenidos']
+igual('buses retenidos 180 s', br['resultado'], R.with_held(br['feed'], br['anterior'], br['ahora']))
+
+# Emparejado de cada bus con su viaje
+em = V['emparejado']
+for c in em['casos']:
+    entrada = R.lookup({'9999|101': c['buses']}, em['alias'], '9999', '101', c['salida'], c['viaje'])
+    igual('emparejado: ' + c['caso'], c['bus'], None if entrada is None else entrada['vehicleRef'])
+
+# Lectura del feed SIRI
+igual('lectura del feed SIRI', V['lectura_feed']['resultado'], R.parse_siri(V['lectura_feed']['xml'], V['lectura_feed']['hoy']))
+
+# Registro de pasos
+rp = V['registro_pasos']
+igual('registro de pasos: campos', rp['campos'], R.passage_fields(rp['feed']))
+igual('registro de pasos: campos por parada', rp['campos_paradas'], R.passage_stop_fields(rp['feed']))
+igual('registro de pasos: lectura', rp['lectura']['resultado'], R.merge_passages(rp['lectura']['viaje_de_cada_campo'], rp['lectura']['valores']))
+historial = {ref: {str(k): v for k, v in stops.items()} for ref, stops in R.stops_from_hash(rp['historial']['hash']).items()}
+igual('registro de pasos: historial', rp['historial']['resultado'], historial)
+
+# Retraso que se muestra
+rm = V['retraso_mostrado']
+for c in rm['minutos']:
+    igual('minutos mostrados de %s s' % c['segundos'], c['minutos'], R.display_delay_minutes(c['segundos']))
+
+# Elección nocturna del percentil de la corrección por viaje
+ep = V['eleccion_percentil']
+entreno = [r for r in ep['desvios'] if r['date'] < ep['primer_dia_de_prueba']]
+prueba = [r for r in ep['desvios'] if r['date'] >= ep['primer_dia_de_prueba']]
+for c in ep['por_percentil']:
+    errores = R.trip_offset_errors(prueba, R.fit_trip_offsets(entreno, c['percentil']))
+    igual('percentil %.2f: error medio' % c['percentil'], float(c['error_medio_s']), errores[1])
+    igual('percentil %.2f: a ±2 min' % c['percentil'], float(c['a_2_min']), errores[3])
+elegido, errores = R.choose_trip_offset_rank(entreno, prueba, ep['candidatos'])
+igual('percentil elegido', ep['elegido'], elegido)
+igual('error medio sin corregir', float(ep['sin_corregir']['error_medio_s']), errores[0])
+igual('a ±2 min sin corregir', float(ep['sin_corregir']['a_2_min']), errores[2])
+igual('la tabla nueva se escribe solo si baja el error medio', ep['se_escribe'], errores[1] < errores[0])
+
 # Escenarios del emparejador
 vj = V['viaje']
 segments_base = {'segments': vj['tramos_aprendidos'], 'lengthRatios': vj['proporciones']}
@@ -97,6 +144,23 @@ for e in V['escenarios']:
         igual(e['escenario'] + ' · ' + p['parada'] + ' estado', p['estado'], out['status'])
         igual(e['escenario'] + ' · ' + p['parada'] + ' llegada', p['llegada_estimada'], out['eta'])
         igual(e['escenario'] + ' · ' + p['parada'] + ' retraso', p['retraso_s'], out['delay'])
+
+# Escenarios con el registro de pasos: sin bus en el feed
+journey_base = {'stops': [{'seq': i + 1, 'id': p['id'], 'arr': p['llegada'], 'dep': p['salida'], 'lat': p['lat'], 'lon': p['lon'],
+                           'dist': p['dist_m']} for i, p in enumerate(vj['paradas'])],
+                'shape': [[p['lat'], p['lon'], p['dist_m']] for p in vj['paradas']], 'line': '9999'}
+for e in V['escenarios_pasos']:
+    for i, p in enumerate(e['paradas']):
+        out = R.Matcher(journey_base, None, e['ahora'], vj['fecha'], segments_base, pace_k, None, False, e['paso_registrado']).enrich(p['hora_publicada'], i + 1)
+        igual(e['escenario'] + ' · ' + p['parada'] + ' estado', p['estado'], out['status'])
+        igual(e['escenario'] + ' · ' + p['parada'] + ' llegada', p['llegada_estimada'], out['eta'])
+        igual(e['escenario'] + ' · ' + p['parada'] + ' retraso', p['retraso_s'], out['delay'])
+
+# Retraso que se muestra de cada bus
+for c in rm['buses']:
+    M = R.Matcher(journey_base, c['entrada'], c['ahora'], vj['fecha'], segments_base, pace_k)
+    igual(c['caso'] + ' · retraso actual', c['retraso_actual_s'], M.current_delay())
+    igual(c['caso'] + ' · retraso mostrado', c['retraso_mostrado_s'], M.display_delay())
 
 print(f'{total - fallos} de {total} comprobaciones coinciden con el código de producción')
 if fallos:

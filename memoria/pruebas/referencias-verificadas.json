@@ -1,0 +1,219 @@
+{
+  "_nota": "Cada referencia de bibliografia.bib, con dónde se comprobó (título, autores, revista, volumen, páginas, año y DOI) y cuándo. La batería de pruebas falla si una referencia citada no está aquí.",
+  "gtfs": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://gtfs.org/documentation/schedule/reference/",
+    "notas": "Especificación mantenida por MobilityData; timepoint=0 significa horas aproximadas. Página viva: se cita sin fecha (s.f.) y con la fecha de consulta, como pide APA."
+  },
+  "gtfsrt": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://gtfs.org/documentation/realtime/reference/",
+    "notas": "Página viva: se cita sin fecha (s.f.) y con la fecha de consulta."
+  },
+  "siri": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://iteh.eu/catalog/standards/cen/25167cb0-42d9-4dd8-abf6-15c7c49f0402/en-15531-3-2022",
+    "notas": "EN 15531-3:2022 sustituye a EN 15531-3:2015; la parte 3 define Vehicle Monitoring."
+  },
+  "nap": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://nap.transportes.gob.es",
+    "notas": "Origen del GTFS de Bizkaibus que usa la aplicación."
+  },
+  "kalman1960": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://www.citedrive.com/en/discovery/a-new-approach-to-linear-filtering-and-prediction-problems",
+    "doi": "10.1115/1.3662552"
+  },
+  "jamesstein1961": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://projecteuclid.org/download/pdf_1/euclid.bsmsp/1200512173",
+    "notas": "Proc. Fourth Berkeley Symp., vol. 1, pp. 361-379, University of California Press. Se cita como capítulo de un libro en varios volúmenes (APA 7).",
+    "acceso": "https://projecteuclid.org/euclid.bsmsp/1200512173"
+  },
+  "efronmorris1975": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://www.medicine.mcgill.ca/epidemiology/hanley/bios602/MultilevelData/EfronMorrisJASA1975.pdf",
+    "doi": "10.1080/01621459.1975.10479864"
+  },
+  "huber1964": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://projecteuclid.org/euclid.aoms/1177703732",
+    "doi": "10.1214/aoms/1177703732"
+  },
+  "gelman2013": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://scholars.duke.edu/individual/pub1353731",
+    "notas": "3.ª ed., CRC Press, 2013 (algunos catálogos dan 2014).",
+    "acceso": "https://sites.stat.columbia.edu/gelman/book/"
+  },
+  "hastie2009": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://find.library.upatras.gr/Record/978-0-387-84858-7/TOC",
+    "notas": "2.ª ed., Springer, 2009. DOI del libro en Springer (rd.springer.com/content/pdf/10.1007/978-0-387-84858-7.pdf).",
+    "doi": "10.1007/978-0-387-84858-7"
+  },
+  "hyndman2021": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://otexts.com/fpp3/",
+    "notas": "Sección de validación cruzada con origen móvil."
+  },
+  "hyndmankoehler2006": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://bridges.monash.edu/articles/journal_contribution/Another_look_at_measures_of_forecast_accuracy/5091436",
+    "doi": "10.1016/j.ijforecast.2006.03.001",
+    "notas": "Se cita solo la distinción entre medidas dependientes e independientes de la escala."
+  },
+  "quddus2007": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://dspace.lboro.ac.uk/2134/5302",
+    "doi": "10.1016/j.trc.2007.05.002"
+  },
+  "chien2002": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://ascelibrary.com/doi/10.1061/%28ASCE%290733-947X%282002%29128%3A5%28429%29",
+    "doi": "10.1061/(ASCE)0733-947X(2002)128:5(429)"
+  },
+  "shalaby2004": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://digitalcommons.usf.edu/jpt/vol7/iss1/3",
+    "doi": "10.5038/2375-0901.7.1.3",
+    "notas": "Dos filtros de Kalman (tiempos de marcha y de parada) con datos AVL y APC."
+  },
+  "jeong2005": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://www.sciencegate.app/document/10.1177/0361198105192700123",
+    "notas": "TRR 1927, pp. 195-204. Sustituye a una ponencia de 2004 que no se pudo verificar. Las redes neuronales superaron al modelo histórico y a la regresión.",
+    "doi": "10.1177/0361198105192700123"
+  },
+  "snyder1987": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://libcat.library.tamu.edu/Record/in00000012941",
+    "notas": "Washington, U.S. Geological Survey, 1987; Professional Paper 1395.",
+    "acceso": "https://pubs.er.usgs.gov/publication/pp1395"
+  },
+  "kohavi1995": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://mlanthology.org/ijcai/1995/kohavi1995ijcai-study",
+    "notas": "Páginas 1137-1145 (corregidas; antes figuraba 1143). Actas publicadas como libro por Morgan Kaufmann, volumen 2.",
+    "acceso": "https://mlanthology.org/ijcai/1995/kohavi1995ijcai-study"
+  },
+  "tukey1977": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://search.worldcat.org/oclc/3058187",
+    "notas": "Addison-Wesley, Reading (Massachusetts), 1977.",
+    "acceso": "https://search.worldcat.org/oclc/3058187"
+  },
+  "mishalani2006": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://digitalcommons.usf.edu/jpt/vol9/iss2/5",
+    "doi": "10.5038/2375-0901.9.2.5"
+  },
+  "watkins2011": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://ideas.repec.org/a/eee/transa/v45y2011i8p839-848.html",
+    "notas": "Se citan solo sus conclusiones cualitativas, no sus porcentajes.",
+    "doi": "10.1016/j.tra.2011.06.010"
+  },
+  "brakewood2019": {
+    "comprobado": "2026-10-31",
+    "fuente": "https://ideas.repec.org/a/taf/transr/v39y2019i3p327-356.html",
+    "doi": "10.1080/01441647.2018.1472147"
+  },
+  "kumar2025review": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1109/TITS.2025.3545695",
+    "doi": "10.1109/TITS.2025.3545695",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Reviews bus arrival-time prediction end to end: data collection, naive, physics-based and data-driven models, pattern identification, route discretisation, multi-step prediction, and the metrics and evaluation strategies transit agencies use."
+  },
+  "singh2022review": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1002/widm.1457",
+    "doi": "10.1002/widm.1457",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Systematic review of AI-based bus arrival-time prediction models (ANN, SVM, deep learning, hybrids) with research gaps."
+  },
+  "lin1999experimental": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.3141/1666-12",
+    "doi": "10.3141/1666-12",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Rural service with long headways (Blacksburg, VA): four GPS-based arrival algorithms that use more or less extra information (scheduled arrival time, delay correlation, dwell at time-check stops), compared on precision, robustness and stability."
+  },
+  "gal2017journey": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1016/j.is.2015.12.001",
+    "doi": "10.1016/j.is.2015.12.001",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Splits bus journeys into segments between stops and predicts them with a queueing-theory \"snapshot\" predictor plus machine-learning predictors (Dublin data); the snapshot works well but suffers from outliers."
+  },
+  "mazloumi2010variability": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1061/(ASCE)TE.1943-5436.0000126",
+    "doi": "10.1061/(ASCE)TE.1943-5436.0000126",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Uses GPS data from a Melbourne route to study day-to-day travel-time variability by departure-time window and time of day: normal distributions in narrow windows and at peak, lognormal off-peak; factors include departure delay against the schedule."
+  },
+  "cathey2003prescription": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1016/S0968-090X(03)00023-8",
+    "doi": "10.1016/S0968-090X(03)00023-8",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Tracker–Filter–Predictor framework for transit arrival/departure prediction from AVL data; the filter is a Kalman filter estimating the vehicle's position and speed (Seattle, Portland)."
+  },
+  "vanajakshi2009kalman": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1049/iet-its:20080013",
+    "doi": "10.1049/iet-its:20080013",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Kalman-filter algorithm predicting bus travel times from GPS data of urban buses in Chennai under heterogeneous traffic."
+  },
+  "pang2019rnn": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1109/TITS.2018.2873747",
+    "doi": "10.1109/TITS.2018.2873747",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. LSTM recurrent network that \"corrects\" the prediction for a station using several already-passed stations, fusing heterogeneous inputs by one-hot coding."
+  },
+  "petersen2019convlstm": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1016/j.eswa.2018.11.028",
+    "doi": "10.1016/j.eswa.2018.11.028",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Convolutional LSTM that predicts link travel times for all links of a route and several steps ahead at once; outperforms the model deployed in Copenhagen."
+  },
+  "ma2022multiattention": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1016/j.eswa.2022.117057",
+    "doi": "10.1016/j.eswa.2022.117057",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Spatio-temporal graph attention network (bus network as a graph) for city-wide bus travel-time estimation when data are scarce."
+  },
+  "jeong2024battransformer": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.3390/app14209488",
+    "doi": "10.3390/app14209488",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Transformer encoder (linear projection, learnable position encoding) for bus arrival time, trained on public-portal data from Gangnam-gu, Seoul; lower RMSE/MAPE than the other models tested."
+  },
+  "manibardo2022deep": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1109/TITS.2021.3083957",
+    "doi": "10.1109/TITS.2021.3083957",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Critical review plus benchmark of deep learning for short-term road-traffic forecasting; deep learning is not the best technique in every case."
+  },
+  "wessel2017retrospective": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1016/j.jtrangeo.2017.04.012",
+    "doi": "10.1016/j.jtrangeo.2017.04.012",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Builds a \"retrospective\" GTFS timetable from the agency GTFS and a real-time vehicle-location feed (Toronto TTC, NextBus API) and compares scheduled with observed service."
+  },
+  "cats2016realtime": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1080/15472450.2015.1011638",
+    "doi": "10.1080/15472450.2015.1011638",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Empirical evaluation of a commonly deployed real-time arrival prediction scheme on Stockholm trunk bus lines, with accuracy and reliability metrics from passenger and operator viewpoints; the scheme systematically underestimates remaining waiting time."
+  },
+  "garciamaurino2024improving": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1080/19427867.2023.2245994",
+    "doi": "10.1080/19427867.2023.2245994",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. Machine-learning scheme that predicts and corrects the systematic errors of agency ETAs using only historical ETA records from public-transport APIs (Madrid and Paris), without the operator's cooperation."
+  },
+  "woodard2017predicting": {
+    "comprobado": "2026-11-07",
+    "fuente": "https://api.crossref.org/works/10.1016/j.trc.2016.10.011",
+    "doi": "10.1016/j.trc.2016.10.011",
+    "notas": "Registro de Crossref leído y DOI resuelto en doi.org. TRIP model of travel-time distributions from phone GPS data: a trip-level latent effect (the whole trip faster or slower on every link) plus link-level congestion states; links with too few traversals fall back to parameters pooled by road category (Seattle, compared with Bing Maps)."
+  }
+}

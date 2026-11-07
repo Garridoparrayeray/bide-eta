@@ -25,7 +25,7 @@ Shared by the three:
 
 | Folder | Contents |
 |---|---|
-| [`referencia/`](referencia/) | `referencia.py`, a reimplementation of the method written only from the technical report; `vectores.json`, 323 test vectors produced by the production engine; `comprobar.py`, which checks one against the other; `evaluar.py`, the public evaluator |
+| [`referencia/`](referencia/) | `referencia.py`, a reimplementation of the method written only from the technical report; `vectores.json`, test vectors with 407 checks produced by the production engine; `comprobar.py`, which checks one against the other; `evaluar.py`, the public evaluator |
 | [`datos/`](datos/) | The learned tables (segment times, pace factors, per-trip corrections), the evaluation data behind the tables of the papers, and the data sheet |
 
 ## Quick start
@@ -36,7 +36,7 @@ Python 3.9 or later, standard library only.
 python3 referencia/comprobar.py
 ```
 
-It prints `323 de 323 comprobaciones coinciden con el código de producción` when the reference implementation
+It prints `407 de 407 comprobaciones coinciden con el código de producción` when the reference implementation
 reproduces the production engine exactly.
 
 To evaluate on captures of the live feed (SIRI Vehicle Monitoring files `vm_*.xml`) with a timetable database built

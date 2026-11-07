@@ -1,0 +1,362 @@
+\chapter{Vectores de Prueba}
+\label{ap:vectores}
+
+Los vectores de prueba son entradas concretas con la salida \emph{exacta} del código de producción. Los genera
+\texttt{vectores.php}, un programa que va con el código privado: carga el motor tal como está (las clases del
+emparejador, los factores y los tiempos por tramo, y las funciones de calibración del script de aprendizaje, sin ejecutar su programa principal) y
+escribe \texttt{referencia/vectores.json}. Una implementación en cualquier lenguaje puede darse por correcta cuando
+reproduce todos los vectores; \texttt{referencia/comprobar.py} lo hace para la implementación de referencia del
+Apéndice~\ref{ap:referencia}.
+
+Los valores reales se dan con todos sus decimales para comprobar también los cálculos en coma flotante; los
+resultados que el método redondea deben coincidir exactamente.
+
+\section{Funciones Básicas}
+
+\begin{table}[ht]
+\centering
+\caption{Mediana Baja y Percentiles}\label{tab:v-percentil}
+\begin{tabular}{@{}llr@{}}
+\toprule
+Valores & $p$ & Resultado\\
+\midrule
+5, 1, 4, 2, 3 & 0,5 & 3\\
+1, 2, 3, 4 & 0,5 & 2 \quad(no 2,5: mediana baja)\\
+10, 20, \dots, 100 & 0,9 & 90\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Franja de una Fecha y un Instante}\label{tab:v-franja}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+Fecha & Día & Segundos & Franja\\
+\midrule
+2026-10-28 & miércoles & 28\,950 (8:02:30) & \texttt{laborable.punta\_manana}\\
+2026-10-28 & miércoles & 21\,599 (5:59:59) & \texttt{laborable.madrugada}\\
+2026-10-28 & miércoles & 21\,600 (6:00:00) & \texttt{laborable.punta\_manana}\\
+2026-10-31 & sábado & 75\,600 (21:00:00) & \texttt{fin\_semana.noche}\\
+2026-10-28 & miércoles & 90\,000 (25:00:00) & \texttt{laborable.madrugada}\\
+2026-11-01 & domingo & 46\,800 (13:00:00) & \texttt{fin\_semana.mediodia}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Factor de Ritmo}\label{tab:v-k}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Línea & Segundos & $k$ & Por qué\\
+\midrule
+3414 & 28\,950 & 1,2 & Factor de línea 1,35, acotado\\
+9999 & 28\,950 & 0,9 & Sin factor de línea: el global de la franja\\
+9999 & 79\,200 & 0,6 & Global 0,4 de la noche, acotado\\
+9999 & 50\,400 & 1,0 & Sin factor para el mediodía\\
+03414 & 28\,950 & 1,2 & Se lee como la 3414\\
+\bottomrule
+\end{tabular}
+\nota{Con $k_{\texttt{laborable.punta\_manana}}=0{,}9$, $k_{\texttt{laborable.noche}}=0{,}4$ y $k_{3414,\texttt{laborable.punta\_manana}}=1{,}35$, el miércoles 2026-10-28.}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Proyección Sobre un Segmento de Prueba}\label{tab:v-proyeccion}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}rrr@{}}
+\toprule
+Punto $(\varphi,\lambda)$ & $f$ & $d_\perp$ (m) & $\|B-A\|$ (m)\\
+\midrule
+$(43{,}2601;\,-2{,}925)$ & 0,5000000000000222 & 11,132000000369544 & 810,6880955946056\\
+$(43{,}2605;\,-2{,}935)$ & 0 & 409,14505231598264 & 810,6827696075283\\
+Segmento degenerado $A=B$, punto en $A$ & 0 & 0 & 0\\
+\bottomrule
+\end{tabular}
+\nota{Segmento de $A=(43{,}26;\,-2{,}93)$ a $B=(43{,}26;\,-2{,}92)$.}
+\end{table}
+
+\noindent La longitud del segmento cambia ligeramente entre las dos primeras filas porque el factor
+$\cos\varphi$ se toma en la latitud del autobús, no en la del segmento.
+
+\begin{table}[ht]
+\centering
+\caption{Cubos de Longitud}\label{tab:v-cubo}
+\begin{tabular}{@{}rr@{\qquad}rr@{\qquad}rr@{}}
+\toprule
+Metros & Cubo & Metros & Cubo & Metros & Cubo\\
+\midrule
+0 & 0 & 999,9 & 2 & 2\,999,9 & 4\\
+299,9 & 0 & 1\,000 & 3 & 3\,000 & 5\\
+300 & 1 & 1\,499,9 & 3 & 12\,000 & 5\\
+& & 1\,500 & 4 & &\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Respaldo por Longitud}\label{tab:v-respaldo}
+\begin{tabular}{@{}rrlr>{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+\toprule
+$h$ (s) & $L$ (m) & Franja & Resultado (s) & Por qué\\
+\midrule
+120 & 800 & \texttt{laborable.punta\_manana} & 97,32000000000001 & $0{,}811\cdot120$\\
+120 & 800 & \texttt{fin\_semana.noche} & 92,28 & $0{,}769\cdot120$ (\texttt{all})\\
+300 & 2\,000 & \texttt{laborable.manana} & 450 & $2{,}0$ acotado a $1{,}5$\\
+300 & 5\,000 & \texttt{laborable.manana} & 90 & $0{,}1$ acotado a $0{,}3$\\
+300 & 100 & \texttt{laborable.manana} & nulo & Cubo 0 sin proporción\\
+300 & desconocida & \texttt{laborable.manana} & nulo & Sin longitud\\
+\bottomrule
+\end{tabular}
+\nota{Con las proporciones $r_{2,\texttt{all}}=0{,}769$, $r_{2,\texttt{laborable.punta\_manana}}=0{,}811$, $r_{4,\texttt{all}}=2{,}0$ y $r_{5,\texttt{all}}=0{,}1$.}
+\end{table}
+
+\section{Calibración}
+
+\subsection{Tiempos por Tramo} Con las quince muestras siguientes (pista, franja, tramo, tiempo real), la calibración
+da exactamente
+\texttt{A>B}: $\{\texttt{n}:8,\ \texttt{all}:61,\ \texttt{laborable.punta\_manana}:69,\ \texttt{laborable.mediodia}:60\}$,
+\texttt{C>D}: $\{\texttt{n}:3,\ \texttt{laborable.noche}:200\}$ y
+\texttt{D>E}: $\{\texttt{n}:2,\ \texttt{laborable.manana}:60\}$; el tramo \texttt{B>C}, con una sola pista, no se
+guarda.
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{\qquad}llll@{}}
+\toprule
+Pista & Franja & Tramo & $y$ & Pista & Franja & Tramo & $y$\\
+\midrule
+b1 & punta\_manana & A>B & 90 & m5 & mediodia & A>B & 61\\
+b2 & punta\_manana & A>B & 100 & b1 & punta\_manana & B>C & 75\\
+m0 & mediodia & A>B & 60 & c0 & noche & C>D & 200\\
+m1 & mediodia & A>B & 58 & c1 & noche & C>D & 210\\
+m2 & mediodia & A>B & 62 & c2 & noche & C>D & 190\\
+m3 & mediodia & A>B & 64 & d1 & manana & D>E & 50\\
+m4 & mediodia & A>B & 59 & d1 & manana & D>E & 70\\
+ & & & & d2 & manana & D>E & 60\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent El cálculo de \texttt{A>B} está en el ejemplo~\ref{ej:contraccion}. En \texttt{D>E}, la pista d1 tiene dos
+muestras y cuenta la última (70); la mediana baja de $\{70,60\}$ es 60.
+
+\subsection{Factor de Ritmo} Con una muestra por pista, de $H=600$~s y $Y=600\,\rho_j$:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Proporciones por pista $\rho_j$ & $k$\\
+\midrule
+0,80, 0,82, 0,84, 0,86, 0,88, 0,90, 0,92, 0,94 & 0,938\\
+cuarenta veces 0,85 & 0,88\\
+1,6, 1,7, \dots, 2,5 & 1,2\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Paso Real} Con la pista $(28\,900,\,28\,880)$, $(28\,960,\,28\,940)$, $(29\,020,\,29\,030)$: para
+$a=28\,950$, $P=28\,966{,}666666666668$; para $a=28\,800$, nulo.
+
+\subsection{Aclarado} De 100 muestras de una pista se conservan las de índices 0, 3, 6, 10, 13, 16, 20, 23, 26, 30,
+33, 36, 40, 43, 46, 50, 53, 56, 60, 63, 66, 70, 73, 76, 80, 83, 86, 90, 93 y 96.
+
+\section{Corrección por Viaje}
+
+\subsection{Consulta} La tabla de los vectores tiene el viaje \texttt{9999|S0|S4|28800|5} con $[20,40,60]$ en
+\texttt{laborable} y $[-30,0,30]$ en \texttt{fin\_semana}; la línea \texttt{L2}, con 15~s en
+\texttt{laborable.punta\_manana}; y por franja, 25~s en \texttt{laborable.punta\_manana} y $-10$~s en
+\texttt{fin\_semana.noche}. Los tercios~\eqref{eq:tercio} de las posiciones 0 a 4 de un recorrido de cinco paradas son
+0, 0, 1, 1 y 2; los de las posiciones 1 y 2 de tres, 1 y 2; la posición 9 de cinco da 2, y un recorrido sin paradas,
+0. En un festivo, la capa 3 calcula con el domingo de esa semana: el lunes 12 de octubre y el sábado 17 dan el 18; el
+domingo 1 de noviembre, el mismo día; y el martes 8 de diciembre, el 13.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lllrl@{}}
+\toprule
+Viaje & Fecha & Salida, posición & Resultado (s) & Por qué\\
+\midrule
+\texttt{9999|S0|S4|28800|5} & 2026-10-28 & 28\,800, 4 de 5 & 60 & Tercer tercio, laborable\\
+\texttt{9999|S0|S4|28800|5} & 2026-10-28 & 28\,800, 2 de 5 & 40 & Segundo tercio\\
+\texttt{9999|S0|S4|28800|5} & 2026-10-31 & 28\,800, 1 de 5 & $-30$ & Sábado: fin de semana\\
+\texttt{L2|A|B|28800|3} & 2026-10-28 & 28\,800, 1 de 3 & 15 & Línea en su franja\\
+\texttt{L2|A|B|72000|3} & 2026-10-31 & 72\,000, 1 de 3 & $-10$ & La línea no tiene esa franja\\
+\texttt{L3|A|B|28800|3} & 2026-10-28 & 28\,800, 1 de 3 & 25 & Sin línea: la franja\\
+\texttt{L3|A|B|50400|3} & 2026-10-28 & 50\,400, 1 de 3 & 0 & Nada para esa franja\\
+\texttt{09999|S0|S4|28800|5} & 2026-10-28 & 28\,800, 4 de 5 & 60 & Se lee como la 9999\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Calibración} Con los nueve desvíos siguientes (fecha, $D'$, viaje, posición y desvío en segundos), la
+calibración~\eqref{eq:correccion-tablas} da para el viaje \texttt{L1|A|D|28800|4} en laborable $[127,150,420]$; para
+\texttt{L1|A|D|32400|4}, $[-60,-60,-60]$ en laborable y $[30,30,40]$ en fin de semana; y para
+\texttt{L2|X|Y|61200|6}, $[300,300,300]$. Las líneas quedan en \texttt{L1}: $\{$\texttt{laborable.punta\_manana}: 140,
+\texttt{laborable.manana}: $-60$, \texttt{fin\_semana.manana}: 30$\}$ y \texttt{L2}:
+$\{$\texttt{laborable.punta\_tarde}: 300$\}$, con los mismos valores por franja.
+
+\begin{center}
+\small
+\begin{tabular}{@{}llllr@{}}
+\toprule
+Fecha & $D'$ & Viaje & Posición & Desvío\\
+\midrule
+2026-10-26 & 2026-10-26 & \texttt{L1|A|D|28800|4} & 1, 2 y 3 de 4 & 100, 160 y 220\\
+2026-10-27 & 2026-10-27 & \texttt{L1|A|D|28800|4} & 1 y 3 de 4 & 140 y 2\,000\\
+2026-10-26 & 2026-10-26 & \texttt{L1|A|D|32400|4} & 2 de 4 & $-60$\\
+2026-10-31 & 2026-10-31 & \texttt{L1|A|D|32400|4} & 1 de 4 & 30\\
+2026-10-12 & 2026-10-18 & \texttt{L1|A|D|32400|4} & 3 de 4 & 50\\
+2026-10-26 & 2026-10-26 & \texttt{L2|X|Y|61200|6} & 5 de 6 & 300\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Para \texttt{L1} en \texttt{laborable.punta\_manana}, el desvío de 2\,000~s se recorta a 900. Ordenados,
+$100,140,160,220,900$, el percentil 40 es el de la posición $\lfloor0{,}4\cdot4\rfloor=1$: $g=140$, y la línea, con el
+peso 20 de la franja, también vale 140. El primer tercio del viaje (posición 1 de 4) tiene un desvío cada día, 100 y
+140: $\redondeo\big((100+140+140)/3\big)=127$. El tercer tercio, con 220 y 900, da $\redondeo(1\,260/3)=420$. El
+festivo del 12 de octubre cuenta como fin de semana: con el 31 de octubre, la franja \texttt{fin\_semana.manana} tiene
+30 y 50, y su percentil 40 es 30; el primer tercio da $(30+30)/2=30$, el segundo toma el valor de la línea y el tercero
+da $(50+30)/2=40$.
+
+\section{El Emparejador Completo}
+
+El viaje sintético tiene cinco paradas, \texttt{S0} a \texttt{S4}, en línea recta hacia el este sobre el paralelo
+$43{,}26^\circ$ desde la longitud $-2{,}93^\circ$, a 0, 400, 1\,000, 2\,500 y 3\,200~m (longitudes
+$-2{,}93$, $-2{,}925065928003549$, $-2{,}917664820008872$, $-2{,}8991620500221806$ y $-2{,}890527424028391$), con
+llegada igual a salida en cada parada: $28\,800$, $28\,890$, $29\,010$, $29\,310$ y $29\,430$~s. El trazado, cuando se
+usa, son las cinco paradas con sus distancias. La fecha es el miércoles 2026-10-28, la línea \texttt{9999} y el
+vehículo \texttt{V1}. Los parámetros son:
+
+\begin{itemize}
+  \item tramos aprendidos: \texttt{S0>S1} $\{\texttt{n}:10,\ \texttt{all}:100,\ \texttt{laborable.punta\_manana}:110\}$
+        y \texttt{S1>S2} $\{\texttt{n}:6,\ \texttt{all}:150,\ \texttt{laborable.punta\_manana}:140\}$;
+  \item proporciones: cubo 2, $\{\texttt{all}:0{,}769,\ \texttt{laborable.punta\_manana}:0{,}811\}$; cubo 4,
+        $\{\texttt{all}:0{,}64,\ \texttt{laborable.punta\_manana}:0{,}668\}$;
+  \item factor global $k_{\texttt{laborable.punta\_manana}}=0{,}9$, sin factores de línea.
+\end{itemize}
+
+\noindent En el escenario de «horario muy lento», las horas de \texttt{S3} y \texttt{S4} pasan a $30\,810$ y
+$30\,930$, y la tabla de tramos se sustituye por \texttt{S0>S1}, \texttt{S1>S2}, \texttt{S2>S3} y \texttt{S3>S4} con 110,
+140, 240 y 100~s en \texttt{laborable.punta\_manana} (y \texttt{n}$=9$).
+
+Las entradas del feed de cada escenario son:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+\toprule
+Escenario & Entrada\\
+\midrule
+1 y 2 & $\varphi=43{,}2601$, $\lambda=-2{,}9213653740062107$ (700~m), $\tgps=t_{\mathrm{rec}}=28\,950$, $n=3$\\
+3 & $\varphi=43{,}260538986704994$ (60~m al norte), mismo $\lambda$ y horas, $n=3$\\
+4 & sin posición, $t_{\mathrm{rec}}=28\,950$, $n=3$\\
+5 & $\varphi=43{,}2601$, $\lambda=-2{,}895461496024842$ (2\,800~m), $\tgps=t_{\mathrm{rec}}=29\,400$, $n=3$\\
+6, 7, 8, 10 y 11 & ninguna\\
+9 & como el 1, con $\tgps=t_{\mathrm{rec}}=28\,300$\\
+12 & $\varphi=43{,}2601$ (11~m al norte de \texttt{S0}), $\lambda=-2{,}93$, $\tgps=t_{\mathrm{rec}}=28\,200$, $n=2$, $\tnow=28\,210$\\
+13 & $\varphi=43{,}26538986704995$ (600~m al norte), mismo $\lambda$ y horas, $n=2$\\
+14 y 16 & como el 1, con $\tnow=29\,100$ y $29\,320$\\
+15 & $\varphi=43{,}2601$, $\lambda=-2{,}917048061009316$ (1\,050~m, 50~m pasada \texttt{S2}), $\tgps=t_{\mathrm{rec}}=29\,020$, $n=3$, $\tnow=29\,040$\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent Los escenarios 10 y 11 usan la tabla de corrección de la sección anterior; el 11, además, con la fecha
+marcada como festivo (un calendario de solo domingo que circula ese día por excepción). Los resultados están en la
+Tabla~\ref{tab:escenarios}. Las posiciones calculadas son $\Tpos=28\,950$ con
+$d_\perp=11{,}132000000369544$~m en los escenarios 1 (método «trazado») y 2 (método «tramo recto»); en el 12,
+$\Tpos=\tgps=28\,800$ con la misma distancia y el método «cabecera»; en el 14 y el 16, la del 1; en el 15,
+$\Tpos=29\,020$ con el método «trazado»; no hay posición en los demás.
+
+\section{Del Feed a la Pantalla}
+
+Las reglas de esta sección rodean al emparejador: cómo se lee el feed, a qué viaje del horario se asigna cada bus, qué
+pasa con un bus que falta en una lectura o con un viaje que pasa de medianoche, qué se guarda de cada paso, qué retraso
+se muestra y cómo se elige cada noche el percentil de la corrección por viaje. Sus vectores salen del mismo motor y
+\texttt{comprobar.py} los comprueba igual que los anteriores.
+
+\subsection{Lectura del Feed} Un fragmento SIRI con cuatro actividades, leído con fecha 2026-10-28. La referencia
+\texttt{trp\_A0651\_737\_ABC1\_28500} da la línea \texttt{651} (sin el cero), el viaje \texttt{737} y la salida
+$28\,500$; su \texttt{Delay} \texttt{PT2M30S} son 150~s; la hora de la posición, \texttt{07:02:30Z}, es
+$\tgps=28\,950$ en Madrid, y la de la lectura, $t_{\mathrm{rec}}=28\,960$. La segunda actividad no trae posición, su
+orden sale de \texttt{VisitNumber} y su \texttt{Delay} \texttt{-PT45S} son $-45$~s. La tercera se registró el día
+anterior: entra en el feed, pero sin horas ni posición. La cuarta tiene una referencia de otro formato y no entra.
+
+\subsection{Emparejado} Con la referencia exacta \texttt{trp\_A9999\_101\_X\_28800} del viaje \texttt{J} en la tabla de
+alias:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X l l@{}}
+\toprule
+Buses de la línea \texttt{9999}, viaje \texttt{101} & Viaje pedido & Bus elegido\\
+\midrule
+Uno con la referencia exacta y otro con otra referencia y la misma salida & \texttt{J} & el exacto\\
+Sin referencia exacta, salida a 120~s & \texttt{J} & ese\\
+Sin referencia exacta, salida a 180~s justos & \texttt{J} & ese\\
+Sin referencia exacta, salida a 200~s & \texttt{J} & ninguno\\
+Dos sin referencia exacta, a 150 y a 60~s & \texttt{J} & el de 60~s\\
+Solo el de la referencia exacta de \texttt{J} & \texttt{K} & ninguno (no se reutiliza)\\
+El de \texttt{J} y otro sin referencia exacta & \texttt{K} & el otro\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Buses que Faltan} Con $\tnow=29\,010$, de la lectura anterior se conservan, marcados como retenidos, el
+bus visto hace 110~s y el que solo tiene hora de lectura de hace 180~s justos. No se conservan: el de hace 190~s ni el
+de hace 210~s; el de un viaje que en la lectura nueva lleva otro bus; el que aparece en la lectura nueva en otro viaje;
+el que no tiene hora; el de hora posterior a ahora; ni el que no tiene identificador de vehículo.
+
+\subsection{Viajes que Pasan de Medianoche} A las 00:30 ($\tnow=1\,800$), el viaje que salió a las 23:30
+($84\,600$) y el de las 24:10 del horario de ayer ($87\,000$) son de ayer; uno que sale a las 12:30 ($45\,000$, justo
+12~h por delante) es de hoy, y uno a $45\,001$, de ayer. Para los de ayer, sus horas pasan a contarse desde la
+medianoche de ayer: un dato de las 00:28:20 ($1\,700$) pasa a $88\,100$. Un bus sin hora de hoy no cuenta en ningún día.
+
+\subsection{Registro de Pasos} De cada referencia se guarda «orden:hora», con la hora de la lectura o, sin ella, la de
+la posición: \texttt{3:29000} y \texttt{2:28900}. No se guardan las entradas sin orden, sin referencia o sin hora. Al
+leer, por viaje del horario queda el orden mayor de sus referencias (\texttt{3:29000} y \texttt{5:29100} dan orden 5 a
+las $29\,100$); los valores nulos o mal formados se ignoran. Con ese paso, un viaje sin bus en el feed tiene pasadas las
+paradas de orden menor:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrlll@{}}
+\toprule
+Paso registrado & $\tnow$ & \texttt{S0}, \texttt{S1}, \texttt{S2} & \texttt{S3} & \texttt{S4}\\
+\midrule
+orden 4 a las $29\,300$ & $29\,400$ & pasadas, a las $29\,300$ & horario & capa 3: $29\,408$\\
+orden 2 a las $29\,000$ & $28\,990$ & \texttt{S0} pasada a las $28\,990$ (ahora) & capa 3: $29\,310$ & capa 3: $29\,408$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent En el segundo caso, \texttt{S1} queda en el horario ($28\,890$) y \texttt{S2} con la capa 3 ($29\,110$).
+
+\subsection{El Retraso Mostrado} Los minutos son los segundos entre 60 redondeados con mitades hacia fuera del cero:
+29~s dan 0; 30, 1; 89, 1; 90, 2; $-30$, $-1$; $2\,700$, 45; y un retraso de más de $2\,700$~s no se muestra. Del bus
+del escenario 1, con GPS, se muestra el retraso que llevará en su próxima parada, 10~s, aunque su retraso en la
+posición sea 0; sin GPS (escenario 4), el de la parada registrada, 10~s; y con un dato de más de 10~min y sin hora de
+lectura, 0.
+
+\subsection{Elección del Percentil} Con un viaje de la línea \texttt{L1} y cinco desvíos en cada uno de cuatro días,
+se aprende con los tres primeros y se prueba en el último:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Percentil & 0,30 & 0,35 & 0,40 & 0,45 & 0,50\\
+\midrule
+Error medio (s) & 144,4 & 144,4 & 147,4 & 149,2 & 151,2\\
+A $\pm2$~min (\%) & 20 & 20 & 40 & 60 & 60\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Se elige 0,45: el que más acierta a $\pm2$~min y, en el empate con 0,50, el de menos error medio, aunque 0,30
+tenga el menor. Sin corregir, el error medio es 126~s y el acierto, 60\,\%: la tabla nueva no bajaría el error medio y
+no se escribe.

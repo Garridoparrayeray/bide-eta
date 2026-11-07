@@ -1,0 +1,176 @@
+\chapter{Formatos de Datos}
+\label{ap:formatos}
+
+\section{Base de Datos del Horario}
+
+Una base SQLite por red, de solo lectura, reconstruida cada día desde el GTFS. Las tablas y columnas que usa el
+motor son estas (los tipos son los de SQLite):
+
+\begin{lstlisting}[language=SQL,numbers=none]
+CREATE TABLE stops (id TEXT PRIMARY KEY, name TEXT NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL, ...);
+CREATE TABLE lines (id TEXT PRIMARY KEY, code TEXT NOT NULL, name TEXT NOT NULL, ...);
+CREATE TABLE journey_patterns (id TEXT PRIMARY KEY, line_id TEXT NOT NULL, headsign TEXT);
+CREATE TABLE journey_pattern_stops (journey_pattern_id TEXT NOT NULL, seq_order INTEGER NOT NULL,
+                                    stop_id TEXT NOT NULL);
+CREATE TABLE service_journeys (id TEXT PRIMARY KEY, line_id TEXT NOT NULL,
+                               journey_pattern_id TEXT NOT NULL, trip_number TEXT,
+                               calendar_id TEXT NOT NULL, first_departure_seconds INTEGER,
+                               shape_id TEXT);
+CREATE TABLE passing_times (service_journey_id TEXT NOT NULL, seq_order INTEGER NOT NULL,
+                            stop_id TEXT NOT NULL, arrival_seconds INTEGER,
+                            departure_seconds INTEGER, dist_m REAL);
+CREATE TABLE shapes (id TEXT PRIMARY KEY, points TEXT NOT NULL);   -- JSON [[lat, lon, dist], ...]
+CREATE TABLE trip_aliases (trip_id TEXT PRIMARY KEY, service_journey_id TEXT NOT NULL);
+\end{lstlisting}
+
+\noindent Para Bizkaibus, en octubre de 2026: 100 líneas, 2\,346 paradas, 483 recorridos, 6\,097 viajes fusionados
+(23\,332 \texttt{trip\_id} originales en \texttt{trip\_aliases}), 138\,513 horas de paso y 440 trazados. Una fila de
+\texttt{passing\_times}:
+
+\begin{lstlisting}[numbers=none]
+('trp_A0651_737_OP43FIN_30900_O43FI0651_065151_3', 2, '1529', 32430, 32432, 13223.0)
+\end{lstlisting}
+
+\noindent La consulta que usa el motor para un viaje devuelve sus paradas en orden de \texttt{seq\_order}, con
+llegada, salida, \texttt{dist\_m} y las coordenadas de la parada; la de un trazado devuelve la lista de puntos.
+
+\section{Tiempos por Tramo: \texttt{segment-times.json}}
+
+\begin{lstlisting}[numbers=none]
+{
+  "generated": "2026-10-31 11:31",
+  "samples": 195786,
+  "segments": {
+    "1003>706": { "n": 43, "all": 118, "laborable.mediodia": 118, "laborable.punta_tarde": 126, ... },
+    ...
+  },
+  "lengthRatios": [
+    { "all": 0.987, "laborable.punta_manana": 1.016, ... },
+    { "all": 0.907, ... },
+    ...
+  ]
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{segments}: un objeto por tramo, con clave «\texttt{desde>hasta}» (identificadores de parada) y valores
+        enteros en segundos por franja y \texttt{all}, más \texttt{n}, el número de pistas (informativo).
+  \item \texttt{lengthRatios}: proporción por cubo de longitud ($0$ a $5$) y franja. \textbf{Atención}: el
+        serializador JSON de PHP escribe un objeto con claves enteras consecutivas desde 0 como una \emph{lista}. Si
+        están todos los cubos, \texttt{lengthRatios} es una lista de seis objetos (el índice es el cubo); si falta
+        alguno, es un objeto con claves \texttt{"0"}, \texttt{"1"}, \dots{} Un lector debe aceptar las dos formas.
+  \item Una proporción con valor exacto, como $1$, puede aparecer como entero.
+\end{itemize}
+
+\section{Factores de Ritmo: \texttt{pace-factors.json}}
+
+\begin{lstlisting}[numbers=none]
+{
+  "generated": "2026-10-31 11:10",
+  "captures": 0,
+  "samples": 356001,
+  "global": { "laborable.manana": 0.885, "laborable.punta_tarde": 0.928, ... },
+  "lines":  { "3411": { "laborable.manana": 1.03, ... }, ... },
+  "meta":   { "global": { "laborable.manana": 2260, ... }, "lines": { ... } }
+}
+\end{lstlisting}
+
+\noindent \texttt{global} y \texttt{lines} contienen los factores ya acotados y redondeados a tres decimales;
+\texttt{meta} guarda el número de pistas con que se calculó cada uno. Las claves de línea son el código numérico de la
+línea como texto. \texttt{captures} vale 0 cuando se calibra desde el fichero acumulado de muestras, que es lo
+habitual, y el número de capturas cuando se calibra directamente desde una carpeta de capturas.
+
+\section{Corrección por Viaje: \texttt{trip-offsets.json}}
+
+\begin{lstlisting}[numbers=none]
+{
+  "generated": "2026-11-07 11:53",
+  "samples": 531799,
+  "rank": 0.35,
+  "trips": {
+    "2151|1|3382|26102|18": { "laborable": [-39, -87, -32] },
+    ...
+  },
+  "lines":  { "651": { "laborable.manana": -6, "fin_semana.punta_manana": -36, ... }, ... },
+  "global": { "laborable.manana": 8, "fin_semana.noche": -44, ... }
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{trips}: un objeto por viaje con la clave «línea\texttt{|}primera parada\texttt{|}última
+        parada\texttt{|}salida\texttt{|}número de paradas», con la salida en segundos desde medianoche. Por tipo de día
+        (\texttt{laborable}, \texttt{fin\_semana}) guarda tres enteros en segundos: la corrección del primer, del
+        segundo y del tercer tercio del recorrido.
+  \item \texttt{lines} y \texttt{global}: la corrección de cada línea en cada franja y la de cada franja, en segundos
+        enteros. La franja es la de la salida de cabecera, y las claves de línea son su código como texto.
+  \item \texttt{samples} es el número de pasos con que se calculó y \texttt{rank}, el percentil de los desvíos que
+        eligió la recalibración esa noche (sección «\nameref{sec:correccion-percentil}»). Un festivo entre semana se
+        consulta como fin de semana.
+\end{itemize}
+
+\section{Muestras Acumuladas (JSON Lines)}
+
+Un objeto JSON por línea. Una muestra de tramo:
+
+\begin{lstlisting}[numbers=none]
+{"track":"2026-10-06|1112|trp_A3411_805_OP9FIN_45000_O9FI3411_341101_7","line":"3411",
+ "date":"2026-10-06","at":47066,"band":"laborable.mediodia","from":"1479","to":"1480",
+ "scheduled":101,"actual":115.2}
+\end{lstlisting}
+
+\noindent Una muestra de ritmo:
+
+\begin{lstlisting}[numbers=none]
+{"track":"2026-10-02|1101|trp_A3411_804_OP9FIN_43200_O9FI3411_341104_6","vehicle":"1101",
+ "line":"3411","date":"2026-10-02","at":45895,"band":"laborable.manana",
+ "scheduledRemaining":217,"actualRemaining":409.8,"actual":46304.8}
+\end{lstlisting}
+
+\noindent Al leer, se ignoran las líneas que no son JSON válido o a las que les falta algún campo obligatorio:
+\texttt{track}, \texttt{at}, \texttt{band}, \texttt{from}, \texttt{to}, \texttt{scheduled} y \texttt{actual} en las de
+tramo; \texttt{track}, \texttt{band}, \texttt{scheduledRemaining} y \texttt{actualRemaining} en las de ritmo. La
+recalibración usa además \texttt{date} (retención y tope por tipo de día), \texttt{line} (factores por línea),
+\texttt{vehicle} (mínimo de vehículos por línea) y, en las de ritmo, \texttt{at} y \texttt{actual} (validación); las
+muestras que escribe la captura los traen siempre.
+
+\section{Registro de Pasos}
+
+Un almacén clave-valor con dos tablas hash por red y día:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+Clave & Campo & Valor\\
+\midrule
+\texttt{bide:<red>:pass:<fecha>} & referencia $\rho$ & \texttt{"<orden>:<segundos>"}; caduca 36~h después de ese día\\
+\texttt{bide:<red>:stops:<fecha>} & \texttt{"<}$\rho$\texttt{>\#<orden>"} & \texttt{"<segundos>"}; caduca 3 días después de ese día\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent La primera guarda el último orden visto de cada viaje y es la que usa la predicción
+(sección «\nameref{sec:registro-pasos}»); la segunda guarda la hora en que se vio cada orden y sirve para el historial de una
+línea. Se escriben cada minuto. La \texttt{<fecha>} es la del día del viaje: pasada la medianoche, un autobús de un
+viaje de ayer se apunta en las tablas de ayer, con los segundos en las horas de su horario (más de $86\,400$; sección
+«\nameref{sec:mas-de-24h}»).
+
+\section{El Feed SIRI-VM}
+
+Fragmento mínimo de una actividad con los elementos que se leen (Tabla~\ref{tab:feed}):
+
+\begin{lstlisting}[language=XML,numbers=none]
+<VehicleActivity>
+  <RecordedAtTime>2026-10-28T15:12:30+01:00</RecordedAtTime>
+  <MonitoredVehicleJourney>
+    <VehicleJourneyRef>trp_A3414_808_OP9LSEPT_54000_...</VehicleJourneyRef>
+    <VehicleRef>1112</VehicleRef>
+    <VehicleLocation><Longitude>-2.9214</Longitude><Latitude>43.2601</Latitude></VehicleLocation>
+    <LocationRecordedAtTime>2026-10-28T15:12:30+01:00</LocationRecordedAtTime>
+    <MonitoredCall><StopPointRef>1480</StopPointRef><Order>3</Order></MonitoredCall>
+  </MonitoredVehicleJourney>
+</VehicleActivity>
+\end{lstlisting}
+
+\noindent Los retrasos (\texttt{Delay}) siguen el patrón \texttt{\^{}(-?)PT(?:(\textbackslash d+)H)?(?:(\textbackslash
+d+)M)?(?:(\textbackslash d+)S)?\$}; cualquier otro valor se lee como cero.

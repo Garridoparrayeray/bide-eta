@@ -71,8 +71,8 @@ timetable corrected trip by trip. It recalibrates itself every day and only adop
 measured on held-out days. On 9.1 million predictions over 23 days checked against the actual passage, the displayed
 arrival is within $\pm2$~minutes in 92--96\% of cases when the bus is less than three minutes away and in 67\% at
 ten to twenty minutes, against 23--25\% for the published timetable. Without any live data, the corrected timetable
-alone doubles the accuracy of the published one. A reference implementation in Python, 323 test vectors produced by
-the production engine, a public evaluator that reproduces the production evaluation exactly, and the learned tables
+alone doubles the accuracy of the published one. A reference implementation in Python, test vectors with 407 checks produced
+by the production engine, a public evaluator that reproduces the production evaluation exactly, and the learned tables
 and evaluation data are openly available.
 \end{abstract}
 
@@ -125,8 +125,8 @@ evaluation. The contributions are:
         the error on held-out days.
   \item A three-layer prediction with explicit abstention rules, which decides for every stop whether the vehicle
         position, the last registered stop or the corrected timetable gives the best available estimate, and says so.
-  \item An open, verifiable package: a reference implementation written only from the specification, 323 test
-        vectors produced by the production engine, an evaluator that reproduces the production histograms bin by
+  \item An open, verifiable package: a reference implementation written only from the specification, test
+        vectors with 407 checks produced by the production engine, an evaluator that reproduces the production histograms bin by
         bin, and the learned tables and evaluation data (Section~\ref{sec:reuse}).
 \end{enumerate}
 
@@ -339,10 +339,12 @@ All the material needed to verify the results and to reuse the method is in the 
 \begin{itemize}
   \item \texttt{referencia/referencia.py} implements the method in Python using only the standard library. It was
         written from the specification, not from the production code.
-  \item \texttt{referencia/vectores.json} contains 323 test vectors: concrete inputs and the exact output of the
-        production engine, covering the projection, the three layers, the segment model, the pace factor, the
-        per-trip correction and their calibration. \texttt{comprobar.py} runs the reference implementation on all of
-        them; it reproduces the 323 outputs.
+  \item \texttt{referencia/vectores.json} contains test vectors with 407 checks: concrete inputs and the exact output
+        of the production engine, covering the reading of the feed, the matching of each vehicle to its trip, vehicles
+        missing from one download, trips past midnight, the projection, the three layers, the segment model, the pace
+        factor, the per-trip correction, the passage log, the delay shown, the calibration and the nightly choice of
+        the percentile. \texttt{comprobar.py} runs the reference implementation on all of them; it reproduces the 407
+        outputs.
   \item \texttt{referencia/evaluar.py} replays captures of the live feed and writes the same 15-second histograms as
         the production evaluation. On 40 minutes of the live feed of 7 November 2026 (92,686 predictions), its
         histograms are identical bin by bin to those of the production evaluator in the three modes.

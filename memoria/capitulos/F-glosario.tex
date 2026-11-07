@@ -1,0 +1,50 @@
+\chapter{Glosario}
+\label{ap:glosario}
+
+\begin{description}
+  \item[Alias de viaje.] Correspondencia entre un \texttt{trip\_id} original del GTFS y el viaje fusionado que lo
+        contiene (sección «\nameref{sec:alias}»).
+  \item[Cabecera.] Primera parada de un viaje; su hora de salida es $d_1$.
+  \item[Capa.] Cada una de las tres fuentes de la predicción: GPS, parada registrada y horario corregido
+        (capítulo «\nameref{cap:prediccion}»).
+  \item[Captura.] Conjunto de versiones del feed descargadas durante un bloque de captura (hasta una hora)
+        (sección «\nameref{sec:captura}»).
+  \item[Contracción.] Media ponderada entre una estimación propia y un valor común, con un peso que crece con los datos
+        propios (secciones «\nameref{sec:marco-contraccion}» y «\nameref{sec:contraccion-tramo}»).
+  \item[Corrección por viaje.] Lo que suele apartarse cada viaje del horario corregido, por tipo de día y tercio del
+        recorrido (sección «\nameref{sec:correccion-viaje}»).
+  \item[Cubo de longitud.] Intervalo de longitudes de tramo para el respaldo por longitud
+        (ecuación~\eqref{eq:cubo}).
+  \item[Día del viaje.] Día de servicio al que pertenece un viaje del horario. Sus horas se cuentan desde su medianoche
+        y pueden pasar de las 24:00 (sección «\nameref{sec:mas-de-24h}»).
+  \item[Desfase.] Diferencia $\Delta(s)=R(s)-T(s)$ entre la hora real y la programada en un punto del recorrido.
+  \item[Feed.] Fuente de datos en tiempo real publicada por el operador; aquí, SIRI Vehicle Monitoring.
+  \item[Festivo entre semana.] Día en que el horario hace circular por excepción los calendarios de solo domingo; en la
+        capa 3 cuenta como fin de semana.
+  \item[Franja.] Combinación de tipo de día y periodo del día (definición~\ref{def:franja}).
+  \item[GTFS.] \emph{General Transit Feed Specification}, formato abierto de horarios de transporte público.
+  \item[Horario corregido.] Horario recalculado desde la cabecera con los tiempos aprendidos (capa 3).
+  \item[Horizonte.] Tiempo que falta para la llegada en el momento de la predicción.
+  \item[Interpolación del horario.] Cálculo de las horas de las paradas intermedias repartiendo el tiempo entre puntos
+        de control a velocidad constante (\texttt{timepoint=0}).
+  \item[Mediana baja.] Elemento central de una lista ordenada; con un número par de elementos, el menor de los dos
+        centrales.
+  \item[Muestra de ritmo.] Par (tiempo programado, tiempo real) que faltaba para llegar a una parada desde una
+        posición (sección «\nameref{sec:muestras-ritmo}»).
+  \item[Muestra de tramo.] Tiempo real que tardó un autobús en ir de una parada a la siguiente
+        (sección «\nameref{sec:muestras-tramo}»).
+  \item[Pasillo.] Distancia máxima al recorrido para aceptar una posición GPS.
+  \item[Paso real.] Instante, reconstruido, en que un autobús pasó por una parada (definición~\ref{def:paso-real}).
+  \item[Pista.] Recorrido de un vehículo en un viaje en una fecha; unidad de independencia de las muestras.
+  \item[Pliegue.] Mitad de las pistas en la validación cruzada.
+  \item[Proporción por longitud.] Mediana de tiempo real entre tiempo programado de los tramos de un cubo de longitud.
+  \item[Registro.] Último dato del feed sobre la próxima parada de un autobús y su hora, usado por la capa 2.
+  \item[Registro de pasos.] Almacén que guarda el último orden de parada visto de cada viaje, por día del viaje
+        (sección «\nameref{sec:registro-pasos}»).
+  \item[SIRI-VM.] \emph{Service Interface for Real Time Information, Vehicle Monitoring}: norma europea para publicar la
+        actividad de los vehículos.
+  \item[Tramo.] Par de paradas consecutivas de un viaje.
+  \item[Trazado.] Polilínea geográfica que sigue el recorrido de un viaje (\texttt{shapes.txt}).
+  \item[$\Tpos$.] Hora a la que el horario pone al autobús en el punto del recorrido donde está.
+  \item[Ventana.] Conjunto de tramos alrededor de la próxima parada donde se busca la proyección del GPS.
+\end{description}

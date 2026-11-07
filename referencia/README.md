@@ -3,7 +3,7 @@
 | File | What it does |
 |---|---|
 | `referencia.py` | The method, written only from the technical report (not from the production code): projection on the route, the three prediction layers, segment times, pace factors, per-trip correction and their calibration |
-| `vectores.json` | 323 test vectors: concrete inputs and the exact output of the production engine |
+| `vectores.json` | Test vectors with 407 checks: concrete inputs and the exact output of the production engine |
 | `comprobar.py` | Runs `referencia.py` on every vector and reports how many match |
 | `evaluar.py` | Public evaluator: predicts every stop from the next one to eight ahead in each snapshot of the live feed, takes the actual passage from the change of next stop, and writes 15-second error histograms (`histograma-v1`) by layer, status, horizon and time band |
 | `desvio-horario.py` | Figures of section 1.1 of the report: line frequency and the gap between the actual passage and the published time |
