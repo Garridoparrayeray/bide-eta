@@ -59,7 +59,12 @@ veinte minutos, frente al 24 % y el 25 % del horario publicado.
 
 ## Para TFG, TFM e investigación
 
-Todo se puede usar y modificar citando la fuente. Cómo citarlo y la licencia, en el [README en inglés](README.md#how-to-cite).
+Todo se puede usar y modificar citando la fuente. El método se cita por la memoria técnica, que tiene su propio DOI:
+
+> Garrido, Y. (2026). *Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados*
+> (Versión 2.1) [Informe técnico]. Zenodo. https://doi.org/10.5281/zenodo.24041572
+
+Cómo citar el código y los datos, y la licencia, en el [README en inglés](README.md#how-to-cite).
 Autor: Yeray Garrido, [ORCID 0009-0008-0459-0294](https://orcid.org/0009-0008-0459-0294).
 
 ## Licencia

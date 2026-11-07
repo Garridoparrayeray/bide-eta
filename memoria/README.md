@@ -21,7 +21,7 @@ and check everything with `python3 pruebas/revisar.py`.
 How to cite:
 
 > Garrido, Y. (2026). *Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados*
-> [Informe técnico]. https://github.com/Garridoparrayeray/bide-eta/tree/main/memoria
+> (Versión 2.1) [Informe técnico]. Zenodo. https://doi.org/10.5281/zenodo.24041572
 
 ---
 

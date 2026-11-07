@@ -23,3 +23,19 @@ keywords:
   - robust estimation
   - shrinkage
   - temporal validation
+preferred-citation:
+  type: report
+  title: "Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados"
+  authors:
+    - family-names: Garrido
+      given-names: Yeray
+      orcid: "https://orcid.org/0009-0008-0459-0294"
+  year: 2026
+  month: 11
+  version: "2.1"
+  publisher:
+    name: Zenodo
+  doi: "10.5281/zenodo.24041572"
+  languages:
+    - es
+  url: "https://doi.org/10.5281/zenodo.24041572"

@@ -59,7 +59,26 @@ minutes, against 24% and 25% for the published timetable.
 
 ## How to cite
 
-Use the "Cite this repository" button (from [`CITATION.cff`](CITATION.cff)) or:
+The method is described in the technical report (in Spanish), which has its own DOI:
+
+> Garrido, Y. (2026). *Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados*
+> (Version 2.1) [Technical report]. Zenodo. https://doi.org/10.5281/zenodo.24041572
+
+```bibtex
+@techreport{garrido_memoria_2026,
+  author      = {Garrido, Yeray},
+  title       = {Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados},
+  institution = {Zenodo},
+  type        = {Technical report},
+  year        = {2026},
+  version     = {2.1},
+  doi         = {10.5281/zenodo.24041572},
+  language    = {spanish}
+}
+```
+
+To cite the code and data of this repository, use the "Cite this repository" button (from
+[`CITATION.cff`](CITATION.cff)) or:
 
 ```bibtex
 @software{garrido_bide_eta_2026,
