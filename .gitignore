@@ -1,13 +1,19 @@
 __pycache__/
 *.pyc
-articulo/*.aux
-articulo/*.bbl
-articulo/*.bcf
-articulo/*.blg
-articulo/*.fdb_latexmk
-articulo/*.fls
-articulo/*.log
-articulo/*.run.xml
-articulo/*.out
-articulo/articulo.pdf
-articulo/*.spl
+# Ficheros auxiliares de LaTeX
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.run.xml
+*.out
+*.spl
+*.toc
+*.lof
+*.lot
+*.lol
+# El PDF de los artículos se genera; el de la memoria sí se sube (es la versión publicada)
+articulo-*/articulo.pdf

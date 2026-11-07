@@ -11,17 +11,22 @@ franja horaria con medianas contraídas hacia la mediana de todo el día, y pred
 abstenerse: la posición proyectada sobre el recorrido, la última parada registrada por el feed y el horario corregido
 viaje a viaje.
 
-> Estado: en preparación. El artículo se está escribiendo; las cifras de abajo son las de la memoria técnica (octubre
-> de 2026) y se actualizarán con la evaluación pública.
+## Publicaciones
 
-## Qué hay aquí
+El trabajo se publica en tres partes, cada una en su carpeta:
+
+| | Carpeta | Qué es | Estado |
+|---|---|---|---|
+| 1 | [`memoria/`](memoria/) | **Memoria técnica** (en castellano, APA 7): el método completo, las mediciones que hay detrás de cada constante, la evaluación entera y la implementación de referencia. Fuentes LaTeX y PDF. | Se publica primero |
+| 2 | [`articulo-metodo/`](articulo-metodo/) | **Artículo 1** (en inglés): el método reproducible, su evaluación en 23 días y la comparación con otros métodos. | Borrador |
+| 3 | [`articulo-comparacion/`](articulo-comparacion/) | **Artículo 2** (en inglés): el método frente a los tiempos de espera que muestra el propio Bizkaibus, en los mismos autobuses y paradas. La captura de una semana está en [`captura/`](articulo-comparacion/captura/). | Capturando datos |
+
+Comunes a las tres:
 
 | Carpeta | Contenido |
 |---|---|
 | [`referencia/`](referencia/) | `referencia.py`, el método escrito solo a partir de la memoria; `vectores.json`, 323 casos de prueba sacados del motor de producción; `comprobar.py`, que compara uno con otro; `evaluar.py`, el evaluador público |
-| [`datos/`](datos/) | Las tablas aprendidas (tiempos por tramo, factores de ritmo y correcciones por viaje) y la ficha de los datos |
-
-Próximamente: el artículo (`articulo/`), la memoria técnica (`memoria/`) y los archivos mensuales del feed en directo.
+| [`datos/`](datos/) | Las tablas aprendidas (tiempos por tramo, factores de ritmo y correcciones por viaje), los datos de evaluación de las tablas de los artículos y la ficha de los datos |
 
 ## Para empezar
 
