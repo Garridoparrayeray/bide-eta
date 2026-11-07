@@ -112,7 +112,9 @@ This paper describes the method that the Bizkaibus+ app\footnote{\url{https://ww
 independent and has no relation with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the service.}
 uses to predict arrivals under these conditions. Its purpose is to make the method reusable: every rule is given with
 its formula and constants, the evaluation protocol is specified so that it can be repeated on other data, and the
-reference implementation, test vectors, evaluator and data are public. The contributions are:
+reference implementation, test vectors, evaluator and data are public. A longer technical report in Spanish
+\parencite{garrido2026memoria} gives the measurements behind each constant, the history of each rule and the full
+evaluation. The contributions are:
 
 \begin{enumerate}
   \item A representation of the vehicle state in \emph{timetable time}: the GPS position is projected on the route
@@ -344,6 +346,8 @@ All the material needed to verify the results and to reuse the method is in the 
   \item \texttt{referencia/evaluar.py} replays captures of the live feed and writes the same 15-second histograms as
         the production evaluation. On 40 minutes of the live feed of 7 November 2026 (92,686 predictions), its
         histograms are identical bin by bin to those of the production evaluator in the three modes.
+  \item \texttt{memoria/} holds the technical report \parencite{garrido2026memoria}, which describes the same method
+        in more detail.
   \item \texttt{datos/} holds the learned tables (segment times, pace factors and per-trip corrections) and the
         evaluation data behind every table of this paper; \texttt{articulo/resultados.py} recomputes them.
 \end{itemize}
@@ -376,7 +380,8 @@ other networks and compared with new ones on equal terms. A comparison with the 
 shows is under way with the same tools.
 
 \section*{Data and code availability}
-The reference implementation, test vectors, evaluator, learned tables and evaluation data are available at
+The technical report, reference implementation, test vectors, evaluator, learned tables and evaluation data are
+available at
 \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for text and data). The
 timetable and the live feed are open data of their publishers. The production engine of the app is not public.
 
