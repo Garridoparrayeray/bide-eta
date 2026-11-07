@@ -1,0 +1,57 @@
+name: Captura para la comparación
+
+# Guarda el feed SIRI de Bizkaibus cada 20 s y los tiempos de espera oficiales de las paradas de
+# comparacion/paradas.json cada minuto, en tres tandas al día (de 06:00 a 23:00 en Madrid), y lo sube a la release
+# del mes (comparacion-AAAA-MM) con el horario GTFS del día. Ver comparacion/README.md.
+on:
+  schedule:
+    - cron: '0 5 * * *'
+    - cron: '40 10 * * *'
+    - cron: '20 16 * * *'
+  workflow_dispatch:
+    inputs:
+      minutos:
+        description: 'Minutos de captura'
+        default: '335'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: captura-comparacion
+  cancel-in-progress: false
+
+jobs:
+  capturar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Capturar
+        run: python3 comparacion/capturar.py --minutos "${{ github.event.inputs.minutos || '335' }}" --salida bloque
+
+      - name: Subir a la release del mes
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -d bloque ] || exit 0
+          INICIO=$(ls bloque | grep '^vm_' | head -1 | sed 's/^vm_//; s/\.xml$//')
+          MES=$(TZ=Europe/Madrid date +%Y-%m)
+          RELEASE="comparacion-$MES"
+          tar -cJf "captura-$INICIO.tar.xz" -C bloque .
+          gh release view "$RELEASE" >/dev/null 2>&1 || gh release create "$RELEASE" --prerelease \
+            --title "Captura para la comparación ($MES)" \
+            --notes "Feed SIRI de Bizkaibus cada 20 s y tiempos de espera oficiales cada minuto. Formato y uso en comparacion/README.md. No es una versión."
+          gh release upload "$RELEASE" "captura-$INICIO.tar.xz" --clobber
+          # El horario del día, una vez al día: con él se reconstruye la base del horario de esas capturas.
+          DIA=$(TZ=Europe/Madrid date +%Y%m%d)
+          if ! gh release view "$RELEASE" --json assets --jq '.assets[].name' | grep -q "^gtfs-$DIA.zip$"; then
+            curl -sSfL -o "gtfs-$DIA.zip" https://ctb-gtfs.s3.eu-south-2.amazonaws.com/bizkaibus.zip
+            gh release upload "$RELEASE" "gtfs-$DIA.zip"
+          fi
+          echo "Subido captura-$INICIO.tar.xz ($(du -h captura-$INICIO.tar.xz | cut -f1)) a $RELEASE" >> "$GITHUB_STEP_SUMMARY"
