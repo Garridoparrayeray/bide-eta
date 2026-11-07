@@ -1,21 +1,29 @@
 name: Captura para la comparación
 
 # Guarda el feed SIRI de Bizkaibus cada 20 s y los tiempos de espera oficiales de las paradas de
-# articulo-comparacion/captura/paradas.json cada minuto, en tres tandas al día (de 06:00 a 23:00 en Madrid), y lo sube a la release
-# del mes (comparacion-AAAA-MM) con el horario GTFS del día. Ver articulo-comparacion/captura/README.md.
+# articulo-comparacion/captura/paradas.json cada minuto, de 06:00 a 23:00 en Madrid, y lo sube a la release del mes
+# (comparacion-AAAA-MM) con el horario GTFS del día. Ver articulo-comparacion/captura/README.md.
+#
+# Como en la captura de Bide+, cada tanda dura hasta las 23:00 (como mucho 335 minutos, por el límite de seis horas de
+# GitHub) y al terminar lanza la siguiente. GitHub retrasa o se salta muchas ejecuciones programadas, así que el cron
+# horario queda de respaldo: si ya hay una captura en marcha, la nueva espera su turno (concurrency); si llegan varias
+# mientras tanto, solo espera la última y GitHub cancela las demás. Una tanda que empieza a menos de 10 minutos de las
+# 23:00 no captura.
 on:
   schedule:
-    - cron: '0 5 * * *'
-    - cron: '40 10 * * *'
-    - cron: '20 16 * * *'
+    - cron: '25 5-21 * * *'
   workflow_dispatch:
     inputs:
       minutos:
-        description: 'Minutos de captura'
-        default: '335'
+        description: 'Minutos de captura (vacío: hasta las 23:00 de Madrid, como mucho 335)'
+        default: ''
+      encadenar:
+        description: 'Lanzar la siguiente tanda al terminar'
+        default: 'true'
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: captura-comparacion
@@ -31,8 +39,21 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Duración
+        id: duracion
+        env:
+          MINUTOS: ${{ github.event.inputs.minutos }}
+        run: |
+          FIN=$(TZ=Europe/Madrid date -d '23:00' +%s)
+          M=$(( (FIN - $(date +%s)) / 60 ))
+          [ "$M" -gt 335 ] && M=335
+          [ -n "$MINUTOS" ] && M=$MINUTOS
+          echo "minutos=$M" >> "$GITHUB_OUTPUT"
+          echo "Captura de $M minutos" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Capturar
-        run: python3 articulo-comparacion/captura/capturar.py --minutos "${{ github.event.inputs.minutos || '335' }}" --salida bloque
+        if: steps.duracion.outputs.minutos >= 10
+        run: python3 articulo-comparacion/captura/capturar.py --minutos "${{ steps.duracion.outputs.minutos }}" --salida bloque
 
       - name: Subir a la release del mes
         if: always()
@@ -55,3 +76,20 @@ jobs:
             gh release upload "$RELEASE" "gtfs-$DIA.zip"
           fi
           echo "Subido captura-$INICIO.tar.xz ($(du -h captura-$INICIO.tar.xz | cut -f1)) a $RELEASE" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Lanzar la siguiente tanda
+        if: always() && github.event.inputs.encadenar != 'false' && steps.duracion.outputs.minutos >= 10
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          QUEDAN=$(( ($(TZ=Europe/Madrid date -d '23:00' +%s) - $(date +%s)) / 60 ))
+          if [ "$QUEDAN" -lt 10 ]; then
+            echo "Fin del día: la siguiente la arranca el cron de mañana" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Espera su turno (concurrency) y arranca en cuanto acabe esta.
+          if gh workflow run comparacion.yml --ref "$GITHUB_REF_NAME"; then
+            echo "Siguiente tanda lanzada" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::No se ha podido lanzar la siguiente tanda; queda el cron horario"
+          fi
