@@ -33,13 +33,15 @@ and the bus's distance in metres. `estado` is `OK`, `NOINFO` (no buses announced
 
 The method's predictions are **not** captured from the Bide+ API: they are recomputed afterwards with
 `referencia/referencia.py` on the same feed snapshots, which reproduces the production engine exactly. The only
-difference with the live app is that the reference implementation does not read the log of buses already passed.
+difference with the live app is that the replay does not use the log of buses already passed, which only
+affects trips that have left the feed.
 
 ## When and where
 
-The workflow [`.github/workflows/comparacion.yml`](../.github/workflows/comparacion.yml) runs three times a day
-(06:00–23:00 Madrid time) on GitHub Actions and uploads each block to the release `comparacion-AAAA-MM` of this
-repository as `captura-<start>.tar.xz`. GitHub sometimes delays or skips scheduled runs, so a few hours may be missing.
+The workflow [`.github/workflows/comparacion.yml`](../../.github/workflows/comparacion.yml) captures continuously from
+06:00 to 23:00 Madrid time on GitHub Actions: each run lasts until 23:00 (at most 335 minutes) and launches the next
+one when it ends, with an hourly schedule as a backup in case GitHub delays or skips a run, as in the capture of the
+Bide+ app. Each block is uploaded to the release `comparacion-AAAA-MM` of this repository as `captura-<start>.tar.xz`.
 The feed repeats old data from 23:58 to 05:00, so night hours are not captured.
 
 To run it on your own computer (Python 3.9+, no other dependency, works on Windows):
@@ -71,8 +73,9 @@ una está en `paradas.json`. El servicio oficial pide el código de parada con c
 Las predicciones del método **no** se piden a la API de Bide+: se recalculan después con `referencia/referencia.py`
 sobre las mismas capturas del feed, que da exactamente lo mismo que el motor de producción.
 
-**Cuándo y dónde.** Tres tandas al día (de 06:00 a 23:00) en GitHub Actions, cada una subida a la release
-`comparacion-AAAA-MM`. Para hacerlo en tu ordenador: `python3 articulo-comparacion/captura/capturar.py --minutos 60 --salida mi-captura`.
+**Cuándo y dónde.** Sin parar de 06:00 a 23:00 en GitHub Actions: cada tanda dura hasta las 23:00 (como mucho 335
+minutos) y al terminar lanza la siguiente, con un cron horario de respaldo por si GitHub se salta alguna, como en la
+captura de Bide+. Cada bloque se sube a la release `comparacion-AAAA-MM`. Para hacerlo en tu ordenador: `python3 articulo-comparacion/captura/capturar.py --minutos 60 --salida mi-captura`.
 
 **Carga y atribución.** Una petición por parada y minuto al servicio oficial, una detrás de otra, identificándose con
 este repositorio. Los datos son de quien los publica (Diputación Foral de Bizkaia / Bizkaibus) y se guardan para
