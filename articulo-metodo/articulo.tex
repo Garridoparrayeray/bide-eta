@@ -39,7 +39,7 @@
 \def\ps@pprintTitle{%
   \let\@oddhead\@empty
   \let\@evenhead\@empty
-  \def\@oddfoot{\footnotesize\itshape Preprint, version 0.1 \hfill \today}%
+  \def\@oddfoot{\footnotesize\itshape Preprint, version 1.0 \hfill 7 November 2026}%
   \let\@evenfoot\@oddfoot}
 \makeatother
 
@@ -366,8 +366,8 @@ All the material needed to verify the results and to reuse the method is in the 
 
 \noindent Three conventions must be preserved when porting the method to another language: times are seconds since
 midnight of the service day and may exceed 86,400; halves are rounded away from zero; and medians and other
-percentiles are taken without interpolation, as the element $\lfloor p(n-1)\rfloor$ of the sorted values (the low
-median for $p=0.5$).
+percentiles are taken without interpolation, as the element $\lfloor\alpha(|x|-1)\rfloor$ of the $|x|$ sorted
+values (the low median for $\alpha=0.5$).
 
 % =====================================================================================================================
 \section{Discussion and limitations}

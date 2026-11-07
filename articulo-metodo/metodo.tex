@@ -4,37 +4,54 @@
 \subsection{Notation and conventions}
 \label{sec:notation}
 
-A trip $J$ visits stops $p_1,\dots,p_N$ with published arrival and departure times $a_i\le d_i$ and, when the trip has
-a shape, distances $s_i$ along it (\texttt{shape\_dist\_traveled}). Times are seconds since midnight of the trip's
-service day $D$ in the local time zone and, as in GTFS, may exceed 86,400 (26:10 is 94,200~s). A segment is a pair of
-consecutive stops $\kappa=(p_i,p_{i+1})$; it is identified by its two stop identifiers, so that all lines running it
-share what is learned about it. Each entry of the live feed gives a trip reference, a vehicle, the order $n$ of the next
-stop, and optionally a GPS position with its time $\tgps$ and the time of the record $t_{\mathrm{rec}}$; $t_{\mathrm{now}}$
-is the current time. A \emph{time band} $\band(D,t)$ combines the day type (weekday or weekend, by day of the week) with
-one of six periods starting at 0, 6, 9, 13, 16 and 20~h. Three conventions are needed to reproduce every number:
-$\operatorname{rnd}$ rounds halves away from zero; $\med$ is the low median and, in general, the percentile
-$Q_p(x)=x_{(\lfloor p(n-1)\rfloor)}$ of the sorted values, without interpolation; and $\clamp(x,a,b)=\max(a,\min(b,x))$.
-Line numbers are written as in the timetable, without leading zeros: the feed writes \texttt{A0651} for line
-\texttt{651}. Appendix~\ref{app:constants} lists every constant.
+A trip $J$ of line $\ell$ visits stops $p_1,\dots,p_N$. Stop $p_i$ has order $i$, coordinates, published arrival and
+departure times $a_i\le d_i$ and, when the trip has a shape, a distance $s_i$ along it (\texttt{shape\_dist\_traveled}).
+Times are seconds since midnight (Europe/Madrid) of the trip's service day $D$ and, as in GTFS, may exceed 86,400
+(26:10 is 94,200~s). Segment $i$ of $J$ is the pair of consecutive stops $\kappa_i=(p_i,p_{i+1})$; a segment $\kappa$
+is identified by its two stop identifiers, so that all lines running it share what is learned about it. Its scheduled
+duration is $h_i=a_{i+1}-a_i$ and, when both distances are known, its length is $L_i=s_{i+1}-s_i$.
+
+Each entry $e$ of the live feed carries a trip reference, a GTFS \texttt{trip\_id} that also encodes the line, the
+trip number and the departure $d^{\mathrm{feed}}$ of the trip in seconds (\texttt{trp\_A0651\_737\_ABC1\_28500} gives
+line 651, trip number 737 and $d^{\mathrm{feed}}=28{,}500$; entries whose reference does not have this form are
+ignored); a vehicle identifier; and, when present, the order $n$ of the next stop (\texttt{Order}, or
+\texttt{VisitNumber}), a GPS position with its time $\tgps$ (\texttt{LocationRecordedAtTime}, or
+\texttt{RecordedAtTime} if absent) and the time $t_{\mathrm{rec}}$ of the record (\texttt{RecordedAtTime}). Feed
+times are converted to local time; a time whose date is not the current day is discarded, and so is a position whose
+time is discarded. $t_{\mathrm{now}}$ is the current time.
+
+A \emph{time band} $\band(D,t)$ is one of twelve: the day type of $D$ (weekend on Saturday and Sunday, weekday
+otherwise) combined with one of six periods of the hour $\lfloor t/3600\rfloor\bmod24$, starting at 0, 6, 9, 13, 16
+and 20~h; 26:10 on a Friday thus falls in the Friday band that starts at 0~h. Four conventions are needed to
+reproduce every number. $\operatorname{rnd}$ rounds halves away from zero, and
+$\operatorname{rnd}_3(x)=\operatorname{rnd}(1000x)/1000$. $Q_\alpha(x)=x_{(\lfloor\alpha(|x|-1)\rfloor)}$ is the
+percentile $\alpha$ of the sorted values $x_{(0)}\le\dots\le x_{(|x|-1)}$, without interpolation, and
+$\med=Q_{0.5}$ is the low median. $\clamp(x,x_{\min},x_{\max})=\max(x_{\min},\min(x_{\max},x))$. Line numbers are
+written as in the timetable, without leading zeros, also in the keys of the learned tables: the feed writes
+\texttt{A0651} for line \texttt{651}. Appendix~\ref{app:constants} lists every constant.
 
 \subsection{Matching and localisation}
 \label{sec:localisation}
 
-\paragraph{Matching} The feed reference is a GTFS \texttt{trip\_id}. Calendar variants of the same trip are merged when
-the timetable database is built, and a table of aliases maps every original \texttt{trip\_id} to its merged trip, so
-matching is a lookup; on the live feed all vehicles were matched this way. As a fallback, an entry with the same line and
-trip number is accepted if its departure from the terminal differs by at most 180~s.
+\paragraph{Matching} Calendar variants of the same trip are merged when the timetable database is built, and a table
+of aliases maps every original \texttt{trip\_id} to its merged trip. A trip $J$ is matched to the first feed entry
+whose reference is an alias of $J$; on the live feed every vehicle was matched this way. Only if there is none is the
+fallback used: among the entries with the line and trip number of $J$ whose reference is not an alias of another trip
+(an entry matched exactly is never reused), the one whose $d^{\mathrm{feed}}$ is closest to $d_1$ is taken, provided
+$|d^{\mathrm{feed}}-d_1|\le180$~s (the first one on a tie). Otherwise the trip has no feed entry.
 
-\paragraph{Projection} All localisation rests on projecting the GPS position on a straight segment $AB$ in a local
-equirectangular plane centred on the vehicle, with $x=(\lambda_Q-\lambda)\cos\varphi\cdot111{,}320$ and
-$y=(\varphi_Q-\varphi)\cdot111{,}320$ metres. With $\mathbf a$ and $\mathbf b$ the planar coordinates of $A$ and $B$ and
-$\mathbf u=\mathbf b-\mathbf a$,
+\paragraph{Projection} All localisation rests on projecting the GPS position onto a straight segment $AB$ in a local
+equirectangular plane centred on the vehicle. With $(\varphi,\lambda)$ the latitude and longitude of the vehicle in
+degrees, a point of latitude $\varphi'$ and longitude $\lambda'$ has planar coordinates
+$\big((\lambda'-\lambda)\cos\varphi\cdot111{,}320,\ (\varphi'-\varphi)\cdot111{,}320\big)$ in metres. With $\mathbf a$
+and $\mathbf b$ the planar coordinates of $A$ and $B$ and $\mathbf u=\mathbf b-\mathbf a$,
 \begin{equation}
 f=\clamp\!\Big(-\frac{\mathbf a\cdot\mathbf u}{\|\mathbf u\|^2},0,1\Big),\qquad d_\perp=\|\mathbf a+f\mathbf u\|,
 \label{eq:projection}
 \end{equation}
-with $f=0$ if $A=B$: $f$ is the fraction of the segment up to the point closest to the vehicle and $d_\perp$ the
-distance to it.
+with $f=0$ if $A=B$: $f$ is the fraction of the segment from $A$ to the point closest to the vehicle, $d_\perp$ the
+distance to that point and $\|\mathbf u\|$ the length of the segment. The distance from the vehicle to a stop is
+computed in the same way, with the cosine of the stop's latitude.
 
 \paragraph{Search window} The declared next stop bounds where the vehicle can be. The search covers segments $i_{\min}$
 to $i_{\max}$ with
@@ -42,44 +59,58 @@ to $i_{\max}$ with
 i_{\min}=\max(1,n-3),\qquad i_{\max}=\min(N-1,n+2),
 \label{eq:window}
 \end{equation}
-that is, stops $p_{n-3}$ to $p_{n+3}$: looking back tolerates a feed that updates the next stop late, and looking
-ahead one that updates it early.
+that is, stops $p_{n-3}$ to $p_{n+3}$ where the trip has them. Looking back covers a feed that changes the next stop
+too early, while the bus is still before $p_{n-1}$; looking ahead covers one that changes it late, when the bus is
+already past $p_n$.
 
-\paragraph{With a shape} Every pair of consecutive shape points inside the window gives a candidate position along the
-route, $s^\ast=\sigma_A+f(\sigma_B-\sigma_A)$. Candidates up to 100~m beyond the next stop are \emph{expected}, the rest
-\emph{beyond}; each group keeps its candidate closest to the vehicle. The expected one wins unless the beyond one is at
-least 20~m closer, which resolves routes that pass twice along the same street in favour of the declared next stop.
-The position is valid if $d_\perp\le50$~m. With $s^\ast$ clamped to the window and $i$ the first segment of the window
-with $s^\ast\le s_{i+1}$, the scheduled time at the vehicle's position is
+\paragraph{With a shape} This method is used when the trip has a shape and every stop of the window has a distance.
+Every pair of consecutive shape points $A,B$, with distances $s_A$ and $s_B$ along the shape, such that
+$s_B\ge s_{i_{\min}}$ and $s_A\le s_{i_{\max}+1}$ gives a candidate position along the route,
+$s^\ast=s_A+f(s_B-s_A)$. Candidates with $s^\ast\le s_n+100$~m are \emph{expected}, the rest \emph{beyond}; each group
+keeps its candidate with the smallest $d_\perp$ (the first one on a tie). The expected candidate wins unless there is
+none or the beyond one is more than 20~m closer, which resolves routes that pass twice along the same street in
+favour of the declared next stop. The position is valid if the chosen candidate has $d_\perp\le50$~m. Then $s^\ast$
+is clamped to $[s_{i_{\min}},s_{i_{\max}+1}]$, $i$ is the first segment of the window with $s^\ast\le s_{i+1}$, and
+the scheduled time at the vehicle's position is
 \begin{equation}
 \Tpos=\operatorname{rnd}\big(d_i+f_i(a_{i+1}-d_i)\big),\qquad f_i=\clamp\Big(\frac{s^\ast-s_i}{s_{i+1}-s_i},0,1\Big),
 \label{eq:tpos}
 \end{equation}
-interpolated from the departure at $p_i$, since within a segment the vehicle is moving.
+with $f_i=0$ if $s_{i+1}=s_i$. The time is interpolated from the departure at $p_i$, not the arrival, since within a
+segment the vehicle is moving.
 
-\paragraph{Without a shape} The vehicle is projected on the straight lines between consecutive stops of the window and
-the closest one is kept, with a corridor of $\max(150~\text{m},\,0.15\,L_i)$ that widens with the segment length $L_i$.
-Because the timetable database measures stop distances on the shape when a network does not publish them, this case
-only remains for trips with no shape at all.
+\paragraph{Without a shape} Otherwise the vehicle is projected onto the straight segments $p_ip_{i+1}$ of the window
+and the closest one is kept (the first one on a tie). The position is valid if
+$d_\perp\le\max(150~\text{m},\,0.15\,\|\mathbf u\|)$, a corridor that widens with the straight-line length
+$\|\mathbf u\|$ of that segment, and then $\Tpos=\operatorname{rnd}\big(d_i+f(a_{i+1}-d_i)\big)$, with $f$ from
+Eq.~\eqref{eq:projection}. Because the timetable database measures stop distances on the shape when a network does
+not publish them, this case only remains for trips with no shape at all.
 
-\paragraph{Conditions} A position exists only if the entry has coordinates, $\tgps$ and $n$; the data are at most
-600~s old; the trip has started or is about to ($\tgps\ge d_1-60$~s); $n$ is a stop of the trip; the projection is
-valid; and the GPS does not contradict the registered stop (Section~\ref{sec:layers}). A vehicle waiting for its
-departure at the first stop (within 150~m and at most one hour before) is placed there with $\Tpos=\min(a_1,d_1)$ and
-$\tgps$ replaced by $d_1$.
+\paragraph{Conditions} A position requires the entry to have coordinates, $\tgps$ and $n$, the data to be recent
+($t_{\mathrm{now}}-\tgps\le600$~s) and the trip to have at least two stops. If the trip has started or is about to
+($\tgps\ge d_1-60$~s), it also requires $n$ to be the order of a stop of the trip, the projection to be valid and the
+GPS not to contradict the registered stop (the cross-check of Section~\ref{sec:layers}). If $\tgps<d_1-60$~s, the
+only possible position is at the first stop: a vehicle within 150~m of $p_1$ and with $d_1-\tgps\le3{,}600$~s is
+placed there, with $\Tpos=\min(a_1,d_1)$ and $\tgps$ replaced by $d_1$, because it has not travelled at all and will
+leave at its time at the earliest. A position at the first stop never gives a passage and is not learned from.
 
 \paragraph{Shapes that do not match their stops} The method depends on the shape and the stop distances agreeing. In
 the Bizkaibus timetable of 3 November 2026, 55 of the 440 shapes used by trips were drawn from the last stop to the
 first (670 of 6,130 merged trips, on 25 lines), and in 1,417 trips some stop was more than 200~m from the point its
-distance indicated. The timetable database therefore reverses a shape when, in most of its trips, the first stop is
-closer to the last shape point and the last stop to the first one, and re-measures the stop distances by projecting
-each stop on the shape from the previous one. After the correction, 26 trips kept a stop more than 200~m away.
+distance indicated. The timetable database therefore reverses a shape (it reverses the order of the points and
+replaces each distance $s$ by $s_{\max}-s$) when, in most of its trips, the distance from the first stop to the last
+shape point plus that from the last stop to the first point is smaller than the distance from the first stop to the
+first point plus that from the last stop to the last point. If a shape was reversed, or some stop of a trip is more
+than 100~m from the point its distance indicates, all the stop distances of the trip are measured again by projecting
+each stop onto the shape from the previous one, searching at most three times the straight-line distance between the
+two stops plus 500~m; where the shape passes twice near a stop, the first pass wins unless the second is 30~m closer.
+After the correction, 26 trips kept a stop more than 200~m away.
 
 \subsection{Why timetable differences}
 \label{sec:differences}
 
-Let $T(s)$ be the time the timetable places the vehicle at the point $s$ of the route, $R(s)$ the real time and
-$\Delta(s)=R(s)-T(s)$ the offset. The vehicle was seen at $s_p$ at $\tgps=R(s_p)$ and the stop of interest is at
+Let $T(s)$ be the time at which the timetable places the vehicle at the point $s$ of the route, $R(s)$ the real time
+and $\Delta(s)=R(s)-T(s)$ the offset. The vehicle was seen at $s_p$ at $\tgps=R(s_p)$, and the stop of interest is at
 $s_d>s_p$.
 
 \begin{proposition}
@@ -94,88 +125,104 @@ Since $\tgps=T(s_p)+\Delta(s_p)$, $R(s_d)-\tgps-T(s_d)+T(s_p)=\Delta(s_d)-\Delta
 $R(s_d)-\tgps-\hat E=\big(R(s_d)-R(s_p)\big)-\hat E$.
 \end{proof}
 
-\noindent Three consequences shape the method. The delay accumulated before $s_p$ does not matter: a bus twenty
+\noindent Three consequences guide the method. The delay accumulated before $s_p$ does not matter: a bus twenty
 minutes late makes the published time wrong by twenty minutes and the difference estimate by almost nothing. The
-\emph{shape} of the timetable does matter: with interpolated intermediate times, $T(s_d)-T(s_p)$ can be twice the real
-time on a highway, so it is replaced by a learned estimate of the real travel time. And the error grows with the number
-of segments between the vehicle and the stop, as each adds its own variation.
+\emph{profile} of the timetable does matter: with interpolated intermediate times, $T(s_d)-T(s_p)$ can be twice the
+real time on a highway, so it is replaced by a learned estimate of the real travel time. And the error grows with the
+number of segments between the vehicle and the stop, as each adds its own variation.
 
 \subsection{Segment travel times}
 \label{sec:segments}
 
-\paragraph{Samples} The learning step (Section~\ref{sec:learning}) reconstructs the real passage of each vehicle at each
-stop. Two consecutive passages $P_i<P_{i+1}$ of the same \emph{track} (one vehicle on one trip on one date) give a
-segment sample $y=P_{i+1}-P_i$ in the band of the moment the vehicle entered the segment. For a segment $\kappa$ and a
-group $g$ (a band, or the group $\mathtt{all}$ of every band), each track contributes a single value, so that a bus
-seen many times does not weigh more than one seen once; $Y_{\kappa,g}$ is the list of values and $n_{\kappa,g}$ the
-number of tracks.
+\paragraph{Samples} Let $P_i$ be the real passage of a vehicle at stop $p_i$, reconstructed from its GPS positions as
+described in Section~\ref{sec:learning}. Two consecutive passages $P_i<P_{i+1}$ of the same \emph{track} (one vehicle
+on one trip on one date) give a segment sample: the real travel time $P_{i+1}-P_i$, rounded to 0.1~s, in the band
+$\band(D,\lfloor P_i\rfloor)$ of the moment the vehicle entered the segment. For a segment $\kappa$ and a group $g$ (a
+band, or the group $\mathtt{all}$ of every band), each track contributes a single value (its last sample in file
+order), so that a bus seen many times does not weigh more than one seen once; $Y_{\kappa,g}$ is the list of these
+values and $n_{\kappa,g}$ the number of tracks.
 
-\paragraph{Shrunk medians} With $m_\kappa=\med(Y_{\kappa,\mathtt{all}})$ and, for every band with at least two tracks,
-$m_{\kappa,b}=\med(Y_{\kappa,b})$, the learned time is
+\paragraph{Shrunk medians} A segment is considered only if $n_{\kappa,\mathtt{all}}\ge2$. With
+$m_\kappa=\med(Y_{\kappa,\mathtt{all}})$ and, for every band $b$ with $n_{\kappa,b}\ge2$,
+$m_{\kappa,b}=\med(Y_{\kappa,b})$, the learned time in band $b$ is
 \begin{equation}
 \tau_{\kappa,b}=\operatorname{rnd}\!\left(\frac{n_{\kappa,b}\,m_{\kappa,b}+n_0\,m_\kappa}{n_{\kappa,b}+n_0}\right),\qquad n_0=5.
 \label{eq:shrinkage}
 \end{equation}
 The any-time value $\tau_{\kappa,\mathtt{all}}=\operatorname{rnd}(m_\kappa)$ is stored only if the segment has samples
-in at least two bands; otherwise it would be one band's value applied to bands with no measurement. A segment is
-\emph{learned} in band $b$ if $\tau_{\kappa,b}$ exists or, failing that, $\tau_{\kappa,\mathtt{all}}$.
-Equation~\eqref{eq:shrinkage} has the form of the posterior mean of a hierarchical normal model
-\parencite{gelman2013,efronmorris1975}, with $n_0$ in the role of the ratio of within-band to between-band variance;
-the method uses medians for robustness \parencite{huber1964} and fixes $n_0$ by validation.
+in at least two bands; otherwise it would be one band's value applied to bands with no measurement. The learned time
+of $\kappa$ in band $b$ is $\tau(\kappa,b)=\tau_{\kappa,b}$ if it is stored, otherwise $\tau_{\kappa,\mathtt{all}}$
+if it is stored; $\kappa$ is \emph{learned} in $b$ if $\tau(\kappa,b)$ is defined. Equation~\eqref{eq:shrinkage} has
+the form of the posterior mean of a hierarchical normal model \parencite{gelman2013,efronmorris1975}, with $n_0$ in
+the role of the ratio of within-band to between-band variance; the method uses medians for robustness
+\parencite{huber1964} and fixes $n_0$ by validation.
 
 \begin{proposition}
 \label{prop:shrinkage}
-Let $\hat\theta_b$ be an unbiased estimator of $\theta_b$ with variance $\sigma^2/n$ and $\mu$ a fixed value with
-$\theta_b-\mu=\beta$. The shrunk estimator $\tilde\theta_b=w\hat\theta_b+(1-w)\mu$, $w=n/(n+n_0)$, has mean squared
-error $w^2\sigma^2/n+(1-w)^2\beta^2$, smaller than that of $\hat\theta_b$ whenever
-$\beta^2<\sigma^2(2n+n_0)/(n\,n_0)$; the gain is larger the smaller $n$ is.
+Let $\hat\eta_b$ be an unbiased estimator of $\eta_b$ with variance $\sigma^2/n_b$, and $\mu$ a fixed value with
+$\eta_b-\mu=\beta$. The shrunk estimator $\tilde\eta_b=\omega\hat\eta_b+(1-\omega)\mu$, with
+$\omega=n_b/(n_b+n_0)$, has mean squared error $\omega^2\sigma^2/n_b+(1-\omega)^2\beta^2$, which is smaller than that
+of $\hat\eta_b$ whenever $\beta^2<\sigma^2(2n_b+n_0)/(n_b\,n_0)$. The bound grows as $n_b$ decreases.
 \end{proposition}
 \begin{proof}
-$\tilde\theta_b-\theta_b=w(\hat\theta_b-\theta_b)-(1-w)\beta$, a zero-mean term with variance $w^2\sigma^2/n$ plus a
-constant. The inequality is $(1-w)^2\beta^2<(1-w^2)\sigma^2/n$, i.e.\ $\beta^2<\frac{1+w}{1-w}\frac{\sigma^2}{n}$, and
-$\frac{1+w}{1-w}=\frac{2n+n_0}{n_0}$.
+$\tilde\eta_b-\eta_b=\omega(\hat\eta_b-\eta_b)-(1-\omega)\beta$, a zero-mean term with variance
+$\omega^2\sigma^2/n_b$ plus a constant. The inequality is $(1-\omega)^2\beta^2<(1-\omega^2)\sigma^2/n_b$, i.e.\
+$\beta^2<\frac{1+\omega}{1-\omega}\frac{\sigma^2}{n_b}$, and $\frac{1+\omega}{1-\omega}=\frac{2n_b+n_0}{n_0}$.
 \end{proof}
 
 \noindent Shrinkage therefore helps bands with few tracks and barely changes bands with many, while too large an $n_0$
-erases real differences between bands; Section~\ref{sec:evaluation} shows both effects.
+erases real differences between bands; Section~\ref{sec:evaluation} shows both effects. The proposition assumes an
+unbiased estimator and a fixed $\mu$, whereas the method uses low medians and estimates $\mu$ ($m_\kappa$) from data
+that include the band's own tracks: it is a heuristic justification, and the value of $n_0$ is decided by
+measurement.
 
 \paragraph{Length fallback} A segment without a learned time is estimated from its length, because the error of an
 interpolated timetable depends mostly on it: short urban segments take about the scheduled time and long interurban
-ones much less. Segments are grouped in six length buckets (cuts at 300, 600, 1,000, 1,500 and 3,000~m), and for each
-bucket $c$ and group the ratio $r_{c,g}$ is the low median of all observed ratios real/scheduled, rounded to three
-decimals and stored if there are at least 20. For an unlearned segment of scheduled duration $h$ and length $L$,
-$\tau^{\mathrm L}=\clamp(r,0.3,1.5)\cdot h$, with $r$ the ratio of its band or, failing that, of the group
-$\mathtt{all}$. On 31 October 2026 the overall ratio fell monotonically from 0.987 below 300~m to 0.534 above 3~km.
+ones much less. A length $L$ falls in bucket $c(L)$, the number of the cuts 300, 600, 1,000, 1,500 and 3,000~m that
+do not exceed $L$ (six buckets). Every segment sample with scheduled duration $h_i>0$ and known length (at
+calibration, the low median of $s_{i+1}-s_i$ over the timetable trips that run the segment) gives a ratio of real to
+scheduled time. For each bucket $c$ and group $g$, $r_{c,g}$ is $\operatorname{rnd}_3$ of the low median of all these
+ratios (not one per track), and is stored if there are at least 20. For an unlearned segment $i$ of the trip,
+$\tau^{\mathrm L}(h_i,L_i,b)=\clamp(r,0.3,1.5)\cdot h_i$, with $r=r_{c(L_i),b}$ if it is stored, otherwise
+$r_{c(L_i),\mathtt{all}}$; $\tau^{\mathrm L}$ is undefined if $L_i$ is unknown or not positive, or if neither ratio
+exists. On 31 October 2026 the ratio of the group $\mathtt{all}$ fell monotonically from 0.987 below 300~m to 0.534
+at 3~km or more.
 
 \paragraph{Pace factor} The last resort, and the only model when a network starts with no learned segments, is a pace
-factor $k$ by band and, with enough data, by line and band, clamped to $[0.6,1.2]$. Each track contributes the ratio
-$\rho_j=\sum Y/\sum H$ of its real remaining times $Y$ to the scheduled ones $H\ge120$~s, and
+factor by band and, with enough data, by line and band: $k(\ell,D,t)=\clamp(\hat k,0.6,1.2)$, where
+$\hat k=k_{\ell,b}$ if it exists, otherwise $k_b$ if it exists, otherwise 1, and $b=\band(D,t)$. A \emph{pace sample}
+(Section~\ref{sec:learning}) records, for a vehicle with a position and a later stop of its trip, the scheduled
+remaining time $H$ and the real remaining time $Z$. Each track contributes the ratio $\rho=\sum Z/\sum H$ over its pace
+samples and, for a set of $n_\rho$ tracks (those of a band, or of a line in a band),
 \begin{equation}
-k=\operatorname{rnd}_3\Big(\clamp\big(1+(\tilde\rho-1)\tfrac{m}{m+10},\,0.6,\,1.2\big)\Big),\qquad \tilde\rho=\med_j\rho_j,
+k=\operatorname{rnd}_3\Big(\clamp\big(1+(\tilde\rho-1)\tfrac{n_\rho}{n_\rho+10},\,0.6,\,1.2\big)\Big),
 \label{eq:pace}
 \end{equation}
-with $m$ the number of tracks: a shrinkage towards the timetable as it is. A band needs eight tracks, a line 25 tracks
-and five different vehicles in the band.
+with $\tilde\rho$ the low median of their ratios: a shrinkage towards the timetable as it is. $k_b$ needs eight
+tracks, and $k_{\ell,b}$ 25 tracks and five different vehicles in the band.
 
-\paragraph{Expected time} For segment $i$ of $J$ with scheduled duration $h_i=a_{i+1}-a_i$, the segment time is the
-first defined value of the cascade $\tau_i\in\{\tau(\kappa_i,b),\ \tau^{\mathrm L}(h_i,L_i,b),\ k\,h_i\}$. The
-expected real time between two scheduled instants $t_0<t_1$ of the trip is
+\paragraph{Expected time} For segment $i$ of $J$, with band $b$ and pace factor $k$, the segment time $\tau_i$ is the
+first defined value of the cascade $\tau(\kappa_i,b)$, $\tau^{\mathrm L}(h_i,L_i,b)$, $k\,h_i$. The expected real time
+between two scheduled instants $t_0\le t_1$ of the trip is
 \begin{gather}
 E(J,t_0,t_1,b,k)=\sum_{i\in I(t_0,t_1)}\max(0,w_i)\,\tau_i,\label{eq:expected}\\
 w_i=\frac{\min(a_{i+1},t_1)-\max(a_i,t_0)}{a_{i+1}-a_i},\nonumber
 \end{gather}
 with $w_i=1$ when $a_{i+1}=a_i$. $I(t_0,t_1)$ walks the segments in order, skipping those with $a_{i+1}\le t_0$ and
 stopping at the first with $a_i\ge t_1$. Within a segment the vehicle advances at the timetable's pace; between
-segments, at the learned one. If no segment table exists, $E=k\,(t_1-t_0)$. The whole path uses the band of the moment
-of the observation.
+segments, at the learned one. If no segment table exists, $E=k\,(t_1-t_0)$. The whole path uses a single band $b$ and
+pace factor $k$: in layers 1 and 2, those of the observation time; in layer 3, those of the midpoint between $d_1$ and
+the published time of the target stop (Section~\ref{sec:layers}).
 
 \subsection{Three-layer prediction}
 \label{sec:layers}
 
-The prediction for a \emph{row}, one departure of trip $J$ at a target stop of order $q$ and published time
+The prediction for a \emph{row}, one departure of trip $J$ from a target stop of order $q$ and published time
 $a_{\mathrm{dest}}$, uses the most reliable source available and says which one it used. Each layer abstains under
-explicit conditions, and when none can support an estimate the published time is shown as such. Table~\ref{tab:states}
-lists the possible states.
+explicit conditions, and when none can support an estimate the published time is shown as such. A row has a state
+(Table~\ref{tab:states}), an estimated arrival $\ETA$ and a delay $\delta$ in seconds. Only rows computed from a
+position (layer 1) assert a delay; the others carry $\delta=0$. A delay of \emph{none} means that no delay is
+asserted.
 
 \begin{table}[t]
 \centering
@@ -186,30 +233,36 @@ lists the possible states.
 \toprule
 State & Meaning \\
 \midrule
-\texttt{live} & Layer 1: the GPS places the vehicle on the route; a delay can be asserted. \\
+\texttt{live} & Layer 1: the GPS places the vehicle on the route, or at its first stop before departure; a delay can be
+asserted. \\
 \texttt{estimated} & Layer 2 or 3: an estimate without live tracking; no delay is asserted. \\
 \texttt{departed} & The vehicle has already passed the stop. \\
-\texttt{likely\_departed} & No vehicle data, and the corrected timetable says it passed more than ten minutes ago;
-or, with GPS, the predicted arrival passed more than three minutes ago without the feed confirming the passage. \\
+\texttt{likely\_departed} & No usable vehicle data, and the corrected timetable places the passage more than ten
+minutes ago and at least ten minutes before the published time; or, with a position, the computed arrival passed more
+than three minutes ago without the feed or the GPS confirming the passage. \\
 \texttt{scheduled} & No layer can support an estimate: the published time, labelled as such. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\paragraph{Layer 1: GPS position} With a position, and $b$ and $k$ taken at $\tgps$,
+\paragraph{Layer 1: GPS position} With a position, $b=\band(D,\tgps)$, $k=k(\ell,D,\tgps)$ and, if
+$a_{\mathrm{dest}}\ge\Tpos$,
 \begin{equation}
 \ETA=\operatorname{rnd}\big(\tgps+E(J,\Tpos,a_{\mathrm{dest}},b,k)\big),\qquad \delta=\ETA-a_{\mathrm{dest}}.
 \label{eq:layer1}
 \end{equation}
-The prediction starts from $\tgps$, not from $t_{\mathrm{now}}$: the feed arrives about a minute after the position was
-taken, and adding the remaining time to $t_{\mathrm{now}}$ would shift every arrival by that lag. A vehicle waiting at
-its first stop does not leave exactly on time; its arrival is the layer-3 one, and its state is \texttt{live} because
-the vehicle is known to be there.
+If $a_{\mathrm{dest}}<\Tpos$, the timetable places the stop behind the vehicle: unless the row is \texttt{departed}
+(see \emph{Passed stops} below), $\ETA=\tgps-(\Tpos-a_{\mathrm{dest}})$ and $\delta=\tgps-\Tpos$. The prediction
+starts from $\tgps$, not from $t_{\mathrm{now}}$: the feed arrives about a minute after the position was taken, and
+adding the remaining time to $t_{\mathrm{now}}$ would shift every arrival by that lag. A vehicle waiting at its first
+stop is treated after layer 3.
 
 \paragraph{Layer 2: registered stop} Many entries carry the next stop and the time of the record but no usable
-position. The feed then says that the vehicle has left $p_{n-1}$ and is heading to $p_n$, at the reference time $\tref$
-($\tgps$ if it exists, otherwise $t_{\mathrm{rec}}$). If $n\ge2$, $\tref$ is at most 600~s old and not before the
-departure, and the segment is short ($a_n-a_{n-1}\le1{,}200$~s), the vehicle is assumed to be half-way:
+position. The feed then says that the vehicle has left $p_{n-1}$ and is heading to $p_n$, at the reference time
+$\tref$ ($\tgps$ if it exists, otherwise $t_{\mathrm{rec}}$). The entry has a \emph{registered stop} if $n\ge2$, the
+trip has stops of orders $n-1$ and $n$, $t_{\mathrm{now}}-\tref\le600$~s, $\tref\ge d_1-60$~s, and the segment is
+short ($a_n-a_{n-1}\le1{,}200$~s). The vehicle is then assumed to be half-way along it: with $b=\band(D,\tref)$ and
+$k=k(\ell,D,\tref)$, for a target stop with $q\ge n$,
 \begin{equation}
 \theta=\operatorname{rnd}\big(\tfrac12E(J,a_{n-1},a_n,b,k)\big),\qquad
 \ETA=\operatorname{rnd}\big(\tref+\theta+E(J,a_n,a_{\mathrm{dest}},b,k)\big),
@@ -218,75 +271,130 @@ departure, and the segment is short ($a_n-a_{n-1}\le1{,}200$~s), the vehicle is 
 with the last term zero if $a_{\mathrm{dest}}\le a_n$. Half is the expected remaining fraction if the observation
 instant is independent of the position; shares from 0.35 to 0.65 were tested and 0.5 was best. On longer segments the
 uncertainty of ``half-way'' is too large and the layer abstains. Layer-2 predictions are shown as \texttt{estimated},
-without a delay.
+without a delay; an arrival more than 120~s in the past is no longer credible, and the row goes to layer 3.
 
-\paragraph{Cross-check} When an entry has both a position and a registration, both estimates of its offset should
-agree. With $\delta_{\mathrm{pos}}=\tgps-\Tpos$ and $\delta_{\mathrm{reg}}=\tref+\theta-a_n$, if the segment is at most
-360~s long and $|\delta_{\mathrm{pos}}-\delta_{\mathrm{reg}}|>360$~s, one of them is wrong and there is no way to know
-which: the vehicle loses both and its rows go to layer 3. The position, with this check, is evaluated before any use of
-the registration.
+\paragraph{Cross-check} When an entry has both a position and a registered stop, their estimates of the offset should
+agree. With $\delta_{\mathrm{pos}}=\tgps-\Tpos$ and $\delta_{\mathrm{reg}}=\tref+\theta-a_n$, if
+$a_n-a_{n-1}\le360$~s and $|\delta_{\mathrm{pos}}-\delta_{\mathrm{reg}}|>360$~s, one of them is wrong and there is no
+way to know which: the entry loses both, and the rows of its trip go to layer 3. The position, with this check, is
+evaluated before any use of the registered stop.
 
 \paragraph{Layer 3: corrected timetable} With no reliable vehicle data, the best estimate is a vehicle that leaves the
-terminal a little after its time and runs every segment in its learned time:
+first stop a little after its time and runs every segment in its learned time. Let $D'$ be the service day $D$, except
+on a weekday holiday (a weekday on which the timetable runs, by exception, a Sunday-only calendar), when $D'$ is the
+Sunday of that week; a holiday thus uses weekend bands, pace factors and per-trip corrections. If a segment table
+exists and $a_{\mathrm{dest}}>d_1$, with $b=\band(D',t_{\mathrm{mid}})$ and $k=k(\ell,D',t_{\mathrm{mid}})$ taken at
+the midpoint $t_{\mathrm{mid}}=\lfloor(d_1+a_{\mathrm{dest}})/2\rfloor$, the corrected timetable is
 \begin{equation}
-C=d_1+60+\operatorname{rnd}\big(E(J,d_1-1,a_{\mathrm{dest}},b,k)\big)+\operatorname{rnd}(\Delta_v),
+C=d_1+60+\operatorname{rnd}\big(E(J,d_1-1,a_{\mathrm{dest}},b,k)\big)+\operatorname{rnd}(\gamma_v),
 \label{eq:layer3}
 \end{equation}
-with $b$ and $k$ taken at the mid-point $\lfloor(d_1+a_{\mathrm{dest}})/2\rfloor$ and a weekday holiday treated as a
-weekend day. The 60~s reflect that buses leave the terminal slightly late, and starting at $d_1-1$ includes segments of
-zero scheduled duration at the start of the trip. If $C\ge t_{\mathrm{now}}$ the row is \texttt{estimated} with arrival
-$C$. If $C<t_{\mathrm{now}}-600$, $a_{\mathrm{dest}}-C\ge600$ and at least 80\% of the scheduled duration of the path
-runs over learned segments, the corrected timetable says with confidence that the bus passed more than ten minutes ago
-while its published time has not yet come: the row is shown as \texttt{likely\_departed}, at the end of the list.
-Otherwise it is \texttt{scheduled}.
+where $\gamma_v$ is the per-trip correction defined below (0 without a correction table). The 60~s reflect that buses
+leave the first stop slightly late, and starting at $d_1-1$ includes segments of zero scheduled duration at the start
+of the trip. If $C\ge t_{\mathrm{now}}$, the row is \texttt{estimated} with $\ETA=C$. If $C<t_{\mathrm{now}}-600$~s,
+$a_{\mathrm{dest}}-C\ge600$~s and the segments of $I(d_1-1,a_{\mathrm{dest}})$ learned in band $b$ make up at least
+80\% of the total scheduled duration of that path, the corrected timetable says with confidence that the bus passed
+more than ten minutes ago, and at least ten minutes before its published time: the row is \texttt{likely\_departed},
+shown with $\ETA=a_{\mathrm{dest}}$ at the end of the list. Otherwise, and whenever there is no segment table or
+$a_{\mathrm{dest}}\le d_1$, the row is \texttt{scheduled}, with $\ETA=a_{\mathrm{dest}}$.
 
-\paragraph{Per-trip correction} Without $\Delta_v$, the corrected timetable arrived on average 131~s before the bus:
+\paragraph{Per-trip correction} Without $\gamma_v$, the corrected timetable arrived on average 131~s before the bus:
 the sum of segment medians underestimates the run, because segment times are right-skewed, and some trips leave late
-or lose time at the same place almost every day. A trip is recognised by $v=(\ell,p_1,p_N,d_1,N)$, which does not
-change when the operator republishes the same trips with new identifiers. The correction is looked up from the finest
-to the most general level: the trip, its day type and the third $\min(2,\lfloor 3i/N\rfloor)$ of the route where the
-target stop lies ($i=0$ at the terminal); otherwise the line in the band of the departure; otherwise the band; otherwise
-zero. With $e$ the clipped ($\pm900$~s) deviations of the real passages from $C$ without correction, the tables are
+or lose time at the same place almost every day. A trip is recognised by the key $v=(\ell,p_1,p_N,d_1,N)$ (line, first
+and last stop, departure and number of stops), which does not change when the operator republishes the same trips with
+new identifiers. Let $\chi$ be the day type of $D'$, $z=\min(2,\lfloor3(q-1)/N\rfloor)$ the third of the route in
+which the target stop lies, and $b_1=\band(D',d_1)$ the band of the departure. The correction is looked up from the
+finest to the most general level: $\gamma_v=\gamma_{v,\chi,z}$ if the table has values for trip $v$ and day type
+$\chi$; otherwise $\gamma_{\ell,b_1}$; otherwise $\gamma_{b_1}$; otherwise 0. The tables are fitted on the deviations
+$\varepsilon$ of the real passages from the corrected timetable without correction ($C$ with $\gamma_v=0$, on the $D'$
+of each day), each clipped to $\pm900$~s; the real passages are those of the segment samples, omitting the first stop,
+stops repeated within a trip and passages more than 45~minutes from their published time. Then
 \begin{gather}
-g(b)=Q_{p}(e_b),\qquad l(\ell,b)=\frac{n_{\ell,b}\,Q_{p}(e_{\ell,b})+20\,g(b)}{n_{\ell,b}+20},\nonumber\\
-\Delta(v,\theta,p)=\frac{\sum_{\text{days}}Q_{p}(e_{\text{day}})+l(\ell,b)}{n_{\text{days}}+1}.
+\gamma_b=Q_\alpha(\varepsilon_b),\qquad
+\gamma_{\ell,b}=\frac{n_{\ell,b}\,Q_\alpha(\varepsilon_{\ell,b})+20\,\gamma_b}{n_{\ell,b}+20},\nonumber\\
+\gamma_{v,\chi,z}=\frac{\sum_{\text{days}}Q_\alpha(\varepsilon_{v,\chi,z,\text{day}})+\gamma_{\ell,b}}{n_{\text{days}}+1},
 \label{eq:trip-offsets}
 \end{gather}
-A lower percentile than the mean is used because deviations have a long tail of delays, and a correction that makes
-the shown time slightly later than the passage makes passengers miss the bus; the percentile $p$ is chosen every night
-between 0.30 and 0.50 (0.40 in the reference implementation).
+where $\varepsilon_b$ are the deviations of trips departing in band $b$, $\varepsilon_{\ell,b}$ those of line $\ell$ in
+band $b$ and $n_{\ell,b}$ their number, and $\varepsilon_{v,\chi,z,\text{day}}$ those of trip $v$ in third $z$ on one
+of the $n_{\text{days}}$ days with data. In the last formula $\gamma_{\ell,b}$ is that of the trip's line and departure
+band, and a third with no deviations takes $\gamma_{\ell,b}$. Stored values are rounded to whole seconds; the values
+combined inside the formulas are not. A percentile is used instead of the mean because deviations have a long tail of
+delays, which pulls the mean above the typical value, and a shown time slightly later than the passage makes
+passengers miss the bus. The percentile starts at $\alpha=0.40$, the value in the reference implementation, and is
+chosen every night among 0.30, 0.35, 0.40, 0.45 and 0.50 (Section~\ref{sec:learning}). The correction enters only
+through $C$: layers 1 and 2 start from where the vehicle is and already reflect what happens to it that day.
 
-\paragraph{Passages, arrivals and implausible delays} A row is \texttt{departed} when the vehicle has already passed
-the stop: with a position, if $a_{\mathrm{dest}}<\Tpos$ and either the feed has left the stop behind ($q<n$) or the GPS
-is more than 150~m from it; without one, if the registration says $q<n$. With a position, a predicted arrival already
-in the past is shown as ``now'' until the passage is confirmed, and as \texttt{likely\_departed} after 180~s, instead
-of the vehicle disappearing from the list before arriving. A delay above 45~minutes almost always reveals a wrong match
-(real delays reach about 37~minutes): the delay is not asserted, but the arrival, which rests on the real position, is
-kept. Algorithm~\ref{alg:row} gives the complete decision in the order it is applied.
+\paragraph{Waiting at the first stop} A vehicle placed at its first stop before departure
+(Section~\ref{sec:localisation}) does not leave exactly on time, so its
+arrival is that of layer 3: if a segment table exists and $a_{\mathrm{dest}}>d_1$, $\ETA=\max(C,t_{\mathrm{now}})$ and
+$\delta=\ETA-a_{\mathrm{dest}}$; otherwise the layer-1 formulas apply with $\tgps=d_1$. Its state is \texttt{live},
+because the vehicle is known to be there.
 
-\begin{algorithm}[t]
+\paragraph{Passed stops} A row is \texttt{departed}, with $\ETA=\min(t_{\mathrm{pass}},t_{\mathrm{now}})$ and
+$\delta=0$, when the vehicle has already passed the stop at $t_{\mathrm{pass}}$. With a position, if
+$a_{\mathrm{dest}}<\Tpos$ and either the feed has left the stop behind ($q<n$) or the GPS is more than 150~m from the
+stop (a stop without coordinates counts as farther), $t_{\mathrm{pass}}=\tgps-(\Tpos-a_{\mathrm{dest}})$; otherwise,
+if $q<n$, $t_{\mathrm{pass}}=\tgps$. Without a position, if the registered stop has $q<n$,
+$t_{\mathrm{pass}}=\tref-\max(0,a_{n-1}-a_{\mathrm{dest}})$. A position at the first stop never gives a passage, even
+when the feed already declares the second stop as next ($n=2$) while the vehicle waits.
+
+\paragraph{Arriving without a confirmed passage} With a position, a computed arrival already in the past is shown as
+$\ETA=t_{\mathrm{now}}$ (``now''), with $\delta$ raised to at least $t_{\mathrm{now}}-a_{\mathrm{dest}}$, until the
+feed or the GPS confirms the passage. Once the computed arrival is more than 180~s in the past, the row becomes
+\texttt{likely\_departed}, still with $\ETA=t_{\mathrm{now}}$, instead of the vehicle disappearing from the list before
+arriving.
+
+\paragraph{Implausible delays} An offset of more than 45~minutes either way ($|\delta|>2{,}700$~s) almost always
+reveals a wrong match rather than a real delay (real delays reach about 37~minutes): $\delta$ becomes none, so no
+delay is asserted, but the arrival is kept, because it still comes from the vehicle's own data.
+
+\paragraph{Passage log} A trip that has ended, or has dropped out of the feed, has no entry, and its rows would go to
+layer 3 as if the bus had not left. Every minute, therefore, an external process stores for each trip reference in the
+feed the last next-stop order $n_{\mathrm{log}}$ and its time $t_{\mathrm{log}}$ ($t_{\mathrm{rec}}$, or $\tgps$ if
+there is none), under the service day of the trip. The log is consulted only for a trip with no exactly matched feed
+entry: of the records of all its references (a merged trip may have several), the one with the highest
+$n_{\mathrm{log}}$ is kept, and a row with $q<n_{\mathrm{log}}$ is \texttt{departed}, with
+$\ETA=\min(t_{\mathrm{log}},t_{\mathrm{now}})$. This check precedes layer 3.
+
+\paragraph{Delay shown} In the list of a stop, only a row computed from a position (\texttt{live}, or
+\texttt{likely\_departed} while arriving) asserts a delay: $\operatorname{rnd}(\delta/60)$ minutes, or none when
+$\delta$ is none. The card of a vehicle shows the delay at its next stop: with a position, the $\delta$ of
+Eq.~\eqref{eq:layer1} (or of the rule for a vehicle waiting at its first stop) for $p_n$ with published time $a_n$, as
+$\operatorname{rnd}(\delta/60)$ minutes, or nothing if $|\delta|>2{,}700$~s. Without a position, the engine still
+computes $\delta_{\mathrm{reg}}$ (0 without a registered stop) but does not assert it: the card, like the list, is
+shown as estimated and without a delay.
+
+Algorithm~\ref{alg:row} gives the complete decision for a row in the order in which it is applied.
+
+\begin{algorithm}[p]
 \caption{State and arrival of a row.}
 \label{alg:row}
 \small
 \begin{algorithmic}[1]
-\Require row $(J,q,a_{\mathrm{dest}})$, feed entry $e$ (or none), $t_{\mathrm{now}}$
-\State $P\gets$ position of $e$ on $J$, with the cross-check \Comment{Section~\ref{sec:localisation}}
-\State $G\gets$ registration of $e$ on $J$
-\If{no $e$ \textbf{or} (no $P$ \textbf{and} no $G$)} \Return \Call{NoData}{$J,q,a_{\mathrm{dest}}$} \EndIf
-\If{passed the stop at $t_{\mathrm{pass}}$} \Return $(\texttt{departed},\min(t_{\mathrm{pass}},t_{\mathrm{now}}))$ \EndIf
-\If{no $P$ \textbf{and} no layer-2 arrival for $q$} \Return \Call{NoData}{$J,q,a_{\mathrm{dest}}$} \EndIf
-\If{$P$ exists} $(\ETA,\delta)\gets$ layer 1, Eq.~\eqref{eq:layer1}; $\pi\gets$ true
-\Else\ $\ETA\gets$ layer 2, Eq.~\eqref{eq:layer2}; $\pi\gets$ false
+\Require row $(J,q,a_{\mathrm{dest}})$, feed entry $e$ matched to $J$ (or none), $t_{\mathrm{now}}$
+\Ensure (state, $\ETA$, $\delta$)
+\State \textit{pos} $\gets$ position of $e$ on $J$, after the cross-check \Comment{Sections~\ref{sec:localisation}, \ref{sec:layers}}
+\State \textit{reg} $\gets$ registered stop of $e$ on $J$
+\If{no $e$ \textbf{or} (no \textit{pos} \textbf{and} no \textit{reg})} \Return \Call{NoData}{$J,q,a_{\mathrm{dest}}$} \EndIf
+\If{passed the stop at $t_{\mathrm{pass}}$} \Return $(\texttt{departed},\min(t_{\mathrm{pass}},t_{\mathrm{now}}),0)$ \EndIf
+\If{no \textit{pos} \textbf{and} no layer-2 arrival for $q$} \Return \Call{NoData}{$J,q,a_{\mathrm{dest}}$} \EndIf
+\If{\textit{pos} exists} $(\ETA,\delta)\gets$ layer 1 (or waiting at the first stop); $\pi\gets$ true
+\Else\ $\ETA\gets$ layer 2, Eq.~\eqref{eq:layer2}; $\delta\gets\ETA-a_{\mathrm{dest}}$; $\pi\gets$ false
 \EndIf
 \If{$|\delta|>2{,}700$~s} $\delta\gets$ none \Comment{implausible delay: keep the arrival}\EndIf
 \If{\textbf{not} $\pi$} \If{$\ETA<t_{\mathrm{now}}-120$} \Return \Call{NoData}{$J,q,a_{\mathrm{dest}}$} \EndIf
-\State \Return $(\texttt{estimated},\ETA)$ \EndIf
+\State \Return $(\texttt{estimated},\ETA,0)$ \EndIf
 \If{$\ETA<t_{\mathrm{now}}$} \Comment{arriving, passage not confirmed}
+\If{$\delta$ is not none} $\delta\gets\max(\delta,t_{\mathrm{now}}-a_{\mathrm{dest}})$ \EndIf
 \If{$t_{\mathrm{now}}-\ETA>180$} \Return $(\texttt{likely\_departed},t_{\mathrm{now}},\delta)$ \EndIf
 \State \Return $(\texttt{live},t_{\mathrm{now}},\delta)$
 \EndIf
 \State \Return $(\texttt{live},\ETA,\delta)$
 \Function{NoData}{$J,q,a_{\mathrm{dest}}$}
+\If{$J$ has no exactly matched entry \textbf{and} the passage log gives $q<n_{\mathrm{log}}$}
+\State \Return $(\texttt{departed},\min(t_{\mathrm{log}},t_{\mathrm{now}}),0)$
+\EndIf
 \State \Return layer 3, Eq.~\eqref{eq:layer3}: \texttt{estimated}, \texttt{likely\_departed} or \texttt{scheduled}
 \EndFunction
 \end{algorithmic}
@@ -295,47 +403,72 @@ kept. Algorithm~\ref{alg:row} gives the complete decision in the order it is app
 \subsection{Learning and daily recalibration}
 \label{sec:learning}
 
-\paragraph{Capture} The feed is downloaded every 20~s and every distinct version is stored, in one-hour blocks.
-For each snapshot and vehicle with a position, the pair $(\tgps,\Tpos)$ is appended to the vehicle's track on its trip.
-Only valid GPS positions are learned from; layer-2 and layer-3 estimates never are.
+\paragraph{Capture} The feed is downloaded every 20~s and every distinct version (by its \texttt{RecordedAtTime}) is
+stored, in one-hour blocks. Each snapshot is processed with $t_{\mathrm{now}}$ equal to its time and its date as the
+service day, with the current day's matcher only, so the part of a trip after midnight is not learned. For each
+snapshot and vehicle with a position, the point $(\tgps,\Tpos)$ is appended to the vehicle's track on its trip. Only
+valid GPS positions are learned from: layer-2 and layer-3 estimates never are, nor are positions at the first stop,
+which describe no movement.
 
-\paragraph{Real passage} The feed has no passage events. The passage at a stop with published time $a$ is reconstructed
-from the track, using the timetable as a distance scale. Let $\theta_k$ be the $\Tpos$ and $t_k$ the $\tgps$ of the
-$k$-th point of the track. For the first pair of consecutive points with $\theta_{k-1}\le a\le\theta_k$,
-$\theta_k>\theta_{k-1}$ and $t_k-t_{k-1}\le300$~s,
+\paragraph{Real passage} The feed has no passage events. The passage at a stop with published time $a$ is
+reconstructed from the track, using the timetable as a distance scale. Let $t_{\mathrm{gps},j}$ and
+$T_{\mathrm{pos},j}$ be the $\tgps$ and $\Tpos$ of the $j$-th point of the track. For the first pair of consecutive
+points with $T_{\mathrm{pos},j-1}\le a\le T_{\mathrm{pos},j}$, $T_{\mathrm{pos},j}>T_{\mathrm{pos},j-1}$ and
+$t_{\mathrm{gps},j}-t_{\mathrm{gps},j-1}\le300$~s,
 \begin{equation}
-P(a)=t_{k-1}+\frac{a-\theta_{k-1}}{\theta_k-\theta_{k-1}}\,(t_k-t_{k-1}),
+P(a)=t_{\mathrm{gps},j-1}+\frac{a-T_{\mathrm{pos},j-1}}{T_{\mathrm{pos},j}-T_{\mathrm{pos},j-1}}\,
+\big(t_{\mathrm{gps},j}-t_{\mathrm{gps},j-1}\big);
 \label{eq:passage}
 \end{equation}
-Pace samples, used for $k$, are kept only if the observation window
-extends at least ten minutes after the published time, so that slow buses are not censored, and at most 30 per track,
-so that a bus seen for a long time does not weigh more than others.
+if there is no such pair, the passage is unknown. The real passage at stop $p_i$ is $P_i=P(a_i)$.
+
+\paragraph{Pace samples} In every snapshot, each vehicle with a position predicts every stop of its trip with
+$a_{\mathrm{dest}}>\Tpos$. Once the tracks are complete, the prediction becomes a pace sample, in the band of $\tgps$,
+with $H=a_{\mathrm{dest}}-\Tpos$ and $Z=P(a_{\mathrm{dest}})-\tgps$, if $P(a_{\mathrm{dest}})$ is known, $H\ge120$~s,
+$Z>0$, and the observation window (the run of snapshots with no gap of more than 300~s) extends at least ten minutes
+after $a_{\mathrm{dest}}$, so that slow buses are not censored. A track with $M>30$ samples keeps those at positions
+$\lfloor iM/30\rfloor$, $i=0,\dots,29$, so that a bus seen for a long time does not weigh more than others.
 
 \paragraph{Retention} Samples older than 120 days are discarded, each segment keeps its 300 most recent samples of each
-day type, and at most 500,000 pace samples are kept. Keeping the most recent data lets a diversion or road works enter
-what is learned within one or two days.
+day type, and at most the 500,000 most recent pace samples are kept. Keeping the most recent data lets a diversion or
+road works enter what is learned within one or two days.
 
 \paragraph{Recalibration} Every night the pace factors, then the segment times and length ratios, then the per-trip
-corrections are re-fitted from all accumulated samples, and each table is replaced only if the new one reduces the
-error on data not used to fit it. For the first two, validation is a two-fold split by track
-($\mathrm{crc32}(\text{track})\bmod 2$); for the per-trip correction, which is specific to each trip, it is by days:
-the last seven days are predicted from the previous ones. A day with anomalous data changes the model only if the
-change improves the prediction of buses not used to learn it. To decide whether a new \emph{rule} enters the method, a
-stricter day-by-day protocol is used (Section~\ref{sec:evaluation}).
+corrections are re-fitted from all accumulated samples, in this order, because each validation uses the tables just
+written. Each new table is fitted on all the data, but it is written only if versions fitted without the test data
+predict those data better than the method without the table, and only if it differs from the current one. For pace
+factors and segment times, validation is a two-fold split by track, with fold $\mathrm{crc32}(\text{track})\bmod2$
+(IEEE 802.3 CRC of the UTF-8 track key, taken as unsigned); each fold is predicted with the tables fitted on the
+other. The pace factors are written if, on the test samples with $k\ne1$, the mean of $|kH-Z|$ is below that of
+$|H-Z|$. The segment times are written if, on the test samples of segments learned in their band, the sum of
+$|\tau(\kappa_i,b)-(P_{i+1}-P_i)|$ is below that of $|k\,h_i-(P_{i+1}-P_i)|$; otherwise nothing is written. The length
+ratios are included only if, on the test samples where $\tau^{\mathrm L}$ is defined, they lower the same sum. The
+per-trip correction, which is specific to each trip, is validated by days: for each candidate $\alpha$, the tables are
+fitted on all days but the last seven and tested on those seven. The $\alpha$ with the highest share of test
+deviations (unclipped) within $\pm2$~minutes after correction wins, ties going to the lower mean absolute error and
+then to the first candidate in the list. The table fitted on all days with that $\alpha$ is written only if, on the
+test days, the winning $\alpha$ gives a lower mean absolute error than no correction. A day with anomalous data
+therefore changes the model only if the change improves the prediction of buses not used to learn it. To decide
+whether a new \emph{rule} enters the method, a stricter day-by-day protocol is used (Section~\ref{sec:evaluation}).
 
 \subsection{Practical issues}
 \label{sec:practical}
 
 \paragraph{Trips past midnight} A trip listed at 26:10 passes at 02:10 the next day, but the feed gives clock times of
-the current day and the reference of a daily trip is the same every day. An entry belongs to yesterday's trip if its
-departure from the terminal lies more than twelve hours ahead of the current time; those entries are handled by a
-separate matcher in which all times are shifted by 86,400~s and the service day is the previous one.
+the current day, and the reference of a daily trip is the same every day. An entry therefore belongs to yesterday's
+trip if its departure $d^{\mathrm{feed}}$ lies more than 43,200~s (twelve hours) ahead of $t_{\mathrm{now}}$. Those
+entries go to a separate matcher in which $\tgps$, $t_{\mathrm{rec}}$ and $t_{\mathrm{now}}$ are increased by
+86,400~s, the service day $D$ is yesterday and the passage log is yesterday's; the current day's matcher receives only
+the other entries. The computation is otherwise unchanged.
 
-\paragraph{Frozen feed} From 23:58 to 05:00 the Bizkaibus feed repeats the vehicles seen before midnight with their old
-times. Entries with no time of the current day are ignored, so night buses are shown with layer 3 or the timetable
-instead of as ghost vehicles.
+\paragraph{Frozen feed} From 23:58 to 05:00 the Bizkaibus feed repeats the vehicles seen before midnight with their
+old times. Entries with neither $\tgps$ nor $t_{\mathrm{rec}}$ of the current day are ignored, so night buses are shown
+with layer 3 or the timetable instead of as ghost vehicles.
 
-\paragraph{Missing readings} The feed sometimes omits a vehicle for one or two readings while it is still on its trip
-(about 700 times a day for a single reading). The last entry of a missing vehicle is kept for up to 180~s if the
-vehicle does not appear on another trip and its trip is not carried by another vehicle; on 2--4 November 2026 this
-raised the share of arrivals within $\pm2$~minutes for those buses from 54.5\% to 77.5\% below five minutes.
+\paragraph{Missing readings} The feed sometimes omits a vehicle for one or a few readings while it is still on its trip
+(about 700 times a day for a single reading). Each new reading is therefore completed with the last entry of every
+vehicle of the previous reading that is missing from it, if that entry has a vehicle identifier and its time
+($\tgps$, or $t_{\mathrm{rec}}$ without a position) lies between 0 and 180~s before $t_{\mathrm{now}}$, the vehicle
+does not appear on another trip, and no other vehicle carries its trip (same line and trip number) in the new reading.
+The entry is used as it is, and layer 1 starts from its $\tgps$. On 2--4 November 2026, for those buses and arrivals
+less than five minutes away, this raised the share within $\pm2$~minutes from 54.5\% to 77.5\%.
