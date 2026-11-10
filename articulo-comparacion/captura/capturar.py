@@ -109,12 +109,14 @@ def main():
 
 
 def cada(segundos, fin, tarea, *argumentos):
-    """Repite la tarea cada tantos segundos hasta el final, sin acumular retraso."""
+    """Repite la tarea cada tantos segundos hasta la hora del final. Si una vuelta tarda más (la de las paradas, con el
+    servicio oficial lento), la siguiente sale en cuanto acaba: ni se acumula retraso ni se pasa del final, que el
+    9/11 se pasó 20 min, GitHub cortó la tanda y se perdió."""
     proxima = time.time()
-    while proxima < fin:
+    while time.time() < fin:
         tarea(*argumentos)
-        proxima += segundos
-        time.sleep(max(0.0, proxima - time.time()))
+        proxima = max(proxima + segundos, time.time())
+        time.sleep(max(0.0, min(proxima, fin) - time.time()))
 
 
 if __name__ == '__main__':

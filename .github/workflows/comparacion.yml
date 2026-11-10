@@ -47,6 +47,9 @@ jobs:
           FIN=$(TZ=Europe/Madrid date -d '23:00' +%s)
           M=$(( (FIN - $(date +%s)) / 60 ))
           [ "$M" -gt 335 ] && M=335
+          # De noche no se captura (el feed repite datos viejos): una ejecución que GitHub lanza con horas de retraso, pasada
+          # la medianoche, no captura ni encadena. La del día la arranca a las 05:58 la comprobación de cada mañana.
+          [ "$(TZ=Europe/Madrid date +%H%M)" -lt 0530 ] && M=0
           [ -n "$MINUTOS" ] && M=$MINUTOS
           echo "minutos=$M" >> "$GITHUB_OUTPUT"
           echo "Captura de $M minutos" >> "$GITHUB_STEP_SUMMARY"
@@ -64,7 +67,8 @@ jobs:
           INICIO=$(ls bloque | grep '^vm_' | head -1 | sed 's/^vm_//; s/\.xml$//')
           MES=$(TZ=Europe/Madrid date +%Y-%m)
           RELEASE="comparacion-$MES"
-          tar -cJf "captura-$INICIO.tar.xz" -C bloque .
+          # Si la captura aún escribe (GitHub la cortó), tar avisa con 1: el fichero sale igual y se sube.
+          tar -cJf "captura-$INICIO.tar.xz" -C bloque . || [ $? -eq 1 ]
           gh release view "$RELEASE" >/dev/null 2>&1 || gh release create "$RELEASE" --prerelease \
             --title "Captura para la comparación ($MES)" \
             --notes "Feed SIRI de Bizkaibus cada 20 s y tiempos de espera oficiales cada minuto. Formato y uso en articulo-comparacion/captura/README.md. No es una versión."
