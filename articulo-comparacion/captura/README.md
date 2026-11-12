@@ -50,6 +50,12 @@ To run it on your own computer (Python 3.9+, no other dependency, works on Windo
 python3 articulo-comparacion/captura/capturar.py --minutos 60 --salida mi-captura
 ```
 
+## Days
+
+The week runs from Sunday 8 to Saturday 14 November 2026. [`dias.json`](dias.json) lists the days the analysis uses:
+Wednesday 11 November was a general strike (Bizkaibus ran minimum services, about 30 %), so it is captured like the
+others but analysed **separately**, not in the results of the week. Monday 9 only covers 12:42 to 23:00.
+
 ## Load and attribution
 
 The capture makes one request to the official service per stop and minute (about one per second in total), sequentially,
@@ -76,6 +82,11 @@ sobre las mismas capturas del feed, que da exactamente lo mismo que el motor de 
 **Cuándo y dónde.** Sin parar de 06:00 a 23:00 en GitHub Actions: cada tanda dura hasta las 23:00 (como mucho 335
 minutos) y al terminar lanza la siguiente, con un cron horario de respaldo por si GitHub se salta alguna, como en la
 captura de Bide+. Cada bloque se sube a la release `comparacion-AAAA-MM`. Para hacerlo en tu ordenador: `python3 articulo-comparacion/captura/capturar.py --minutos 60 --salida mi-captura`.
+
+**Días.** La semana va del domingo 8 al sábado 14 de noviembre de 2026. [`dias.json`](dias.json) dice qué días usa
+el análisis: el miércoles 11 hubo huelga general (Bizkaibus con servicios mínimos, alrededor del 30 %), así que se
+captura como los demás pero se analiza **aparte**, fuera de los resultados de la semana. El lunes 9 solo va de 12:42 a
+23:00.
 
 **Carga y atribución.** Una petición por parada y minuto al servicio oficial, una detrás de otra, identificándose con
 este repositorio. Los datos son de quien los publica (Diputación Foral de Bizkaia / Bizkaibus) y se guardan para
