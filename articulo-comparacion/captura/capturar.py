@@ -26,7 +26,7 @@ from zoneinfo import ZoneInfo
 AQUI = os.path.dirname(os.path.abspath(__file__))
 MADRID = ZoneInfo('Europe/Madrid')
 FEED = 'https://ctb-siri.s3.eu-south-2.amazonaws.com/bizkaibus-vehicle-positions.xml'
-OFICIAL = 'http://apli.bizkaia.net/APPS/DANOK/TQWS/TQ.ASMX/GetPasoParadaMobile_JSON'
+OFICIAL = 'https://apli.bizkaia.net/APPS/DANOK/TQWS/TQ.ASMX/GetPasoParadaMobile_JSON'
 AGENTE = 'bide-eta (investigación abierta; https://github.com/Garridoparrayeray/bide-eta)'
 TIEMPO_MAXIMO = 15                # s por petición
 PAUSA_ENTRE_PARADAS = 0.2         # s: las paradas se piden una detrás de otra, sin prisa

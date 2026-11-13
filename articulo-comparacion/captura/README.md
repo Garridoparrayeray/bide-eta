@@ -13,7 +13,7 @@ repository **on the same buses, stops and moments, against the same actual passa
 | Data | Source | Frequency | File |
 |---|---|---|---|
 | Live positions (SIRI Vehicle Monitoring) | `https://ctb-siri.s3.eu-south-2.amazonaws.com/bizkaibus-vehicle-positions.xml` | every 20 s | `vm_AAAAMMDD-HHMMSS.xml` |
-| Official waiting times | `http://apli.bizkaia.net/APPS/DANOK/TQWS/TQ.ASMX/GetPasoParadaMobile_JSON` (the service behind the official app) | every ~60 s, for each stop in [`paradas.json`](paradas.json) | `oficial.jsonl` |
+| Official waiting times | `https://apli.bizkaia.net/APPS/DANOK/TQWS/TQ.ASMX/GetPasoParadaMobile_JSON` (the service behind the official app) | every ~60 s, for each stop in [`paradas.json`](paradas.json) | `oficial.jsonl` |
 | Timetable of the day (GTFS) | `https://ctb-gtfs.s3.eu-south-2.amazonaws.com/bizkaibus.zip` | once a day | `gtfs-AAAAMMDD.zip` |
 
 The 60 stops are intermediate stops with many buses and lines, at least 15 minutes from the start of the trip, plus
