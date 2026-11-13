@@ -1,0 +1,14 @@
+{
+ "nota": "Días de la captura que usa el análisis del artículo 2. La semana va del domingo 8 al sábado 14 de noviembre de 2026, de 06:00 a 23:00 (hora de Madrid). Los días de «aparte» se capturan igual pero no entran en los resultados de la semana: se analizan por separado.",
+ "semana": {
+  "desde": "2026-11-08",
+  "hasta": "2026-11-14"
+ },
+ "aparte": {
+  "2026-11-11": "Huelga general: Bizkaibus con servicios mínimos (alrededor del 30 %), unos 160 autobuses en el feed frente a 240 un día normal."
+ },
+ "incompletos": {
+  "2026-11-09": "Solo de 12:42 a 23:00: la tanda de 06:47 a 12:42 se perdió porque la captura pasó de su hora y GitHub la cortó (arreglado en #5).",
+  "2026-11-12": "Sin tiempos oficiales de 17:12 a 22:49 (el feed, completo): Bizkaia dejó de servir el servicio oficial por http y la captura lo pedía así; desde el 13 se pide por https."
+ }
+}
