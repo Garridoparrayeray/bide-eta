@@ -35,8 +35,8 @@
 
 \begin{frontmatter}
 
-\title{Timetable, official real time or Bide+? A paired comparison of bus arrival predictions on the same buses, stops
-and minutes in the Bizkaibus network}
+\title{Bide+: open-data bus arrival predictions that outperform the operator's own real-time information. A paired
+one-week comparison with the timetable and the official waiting times of Bizkaibus}
 
 \author{Yeray Garrido\fnref{orcid}}
 \fntext[orcid]{Independent researcher, Bilbao, Biscay, Spain. ORCID:
@@ -54,6 +54,20 @@ SIRI \sep GTFS \sep open data \sep reproducibility
 \end{keyword}
 
 \end{frontmatter}
+
+\noindent\fbox{\begin{minipage}{0.97\textwidth}\small
+\textbf{Key results}
+\begin{itemize}\setlength\itemsep{1pt}
+  \item Bide+ predicts Bizkaibus arrivals from open data only: the operator's GPS feed and timetable.
+  \item Same bus, same stop, same minute: Bide+ is within two minutes of the actual passage in 64\% of cases, the
+        official real time in 36\% and the published timetable in 16\%.
+  \item With the bus 6 to 20 minutes away, Bide+ is right about twice as often as the operator's own service.
+  \item Bide+ is more accurate at 58 of the 60 stops, at every hour and on every day of the week.
+  \item The official real time often announces the bus later than it actually comes, so passengers miss it; Bide+ errors are small and
+        centred.
+\end{itemize}
+\end{minipage}}
+\vspace{1em}
 
 \input{cuerpo.tex}
 

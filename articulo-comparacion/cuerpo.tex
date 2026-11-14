@@ -37,6 +37,9 @@ as the timetable.
 
 The contributions are:
 \begin{enumerate}
+  \item Evidence that an arrival prediction method built only on an operator's open data, Bide+, is more accurate than
+        the operator's own real-time information and far more accurate than its timetable, on the same buses, stops and
+        minutes, with the method frozen before the test week.
   \item A paired protocol to compare a third-party predictor with an operator's real-time predictions when the
         operator publishes positions but not predictions: what to capture, how to match each announcement to a vehicle,
         how to reconstruct the actual passage, and how to avoid giving either side an advantage.
@@ -510,6 +513,26 @@ from a prediction that does not learn how fast buses actually travel on each seg
 core of the Bide+ method \parencite{garrido2026memoria,garrido2026metodo}, and the previous evaluations against the
 timetable already showed that the published intermediate times run slow on this network.
 
+\subsection{Why Bide+ is more accurate}
+
+The results match, point by point, the design choices of the method \parencite{garrido2026memoria,garrido2026metodo}:
+\begin{itemize}
+  \item \textbf{It does not inherit the timetable's drift.} Bide+ places each bus in \emph{timetable time} and predicts
+        from timetable \emph{differences}, not from absolute published times. The published times run behind the buses
+        (median $+310$~s at 10--20 minutes) and the official real time keeps part of that bias ($+124$~s), while Bide+ is
+        centred ($-24$~s). This is the property that Figure~\ref{fig:errors} shows.
+  \item \textbf{It learns how fast buses really travel.} The travel time of every segment between consecutive stops is
+        learned from passages by time band. That is why Bide+ keeps its accuracy as the horizon grows (61\% within two
+        minutes at 10--20 minutes), when the official real time falls to 27\%, and why it is ahead at every hour, including
+        the peaks.
+  \item \textbf{It degrades gracefully.} When the GPS is missing, the last stop reported by the feed and the timetable
+        corrected trip by trip take over, and the prediction says so. Only 9\% of the compared Bide+ predictions came from
+        those fallback layers, and the results include them.
+  \item \textbf{It was measured at a disadvantage.} The tables were frozen on 7 November and never updated during the
+        week, and its predictions came from feed copies up to a minute older than the official query. The live app
+        recalibrates every night, so these figures are a conservative estimate of what Bide+ passengers get.
+\end{itemize}
+
 \subsection{Third-party apps}
 
 Many passengers use general-purpose journey planners, which receive real-time data from operators. If such an app shows the
@@ -556,6 +579,7 @@ positions and timetable. Over all horizons up to 30 minutes, the published timet
 passage in 16\% of cases, the official real time in 36\% and Bide+ in 64\%. With the bus 6 to 20 minutes away, the
 official real time is within two minutes in about a third of cases and Bide+ in about two thirds, at almost every stop,
 hour and day. The official errors are mostly
-in the direction that makes passengers miss the bus. Operators that publish their vehicle positions already make possible
-predictions better than their own. Adopting a method that learns segment travel times, or opening their predictions to
-independent evaluation, would directly benefit their passengers.
+in the direction that makes passengers miss the bus. Bide+ achieves this with open data alone and a method that anyone can
+reimplement from its specification and check against its test vectors. Operators that publish their vehicle positions
+therefore already make possible predictions better than their own; adopting a method like Bide+, which learns segment
+travel times, would directly benefit their passengers.
