@@ -96,13 +96,19 @@ def main():
                round(p2([p['eo'] for p in v]), 1), round(p2([p['em'] for p in v]), 1), round(p2([p['eh'] for p in v]), 1))
               for d, v in sorted(por_dia.items())])
 
-    # 6. Cuatro autobuses al azar (semilla fija) entre los pasos con consultas desde 25 minutos antes.
+    # 6. Ejemplos: dos autobuses al azar de toda la red y uno al azar en cada sentido de San Juan (Amorebieta), paradas
+    # 3388 y 3391, de las líneas 3513, 3514 y 3515 (semilla fija), entre los pasos con consultas desde 25 minutos antes.
     pasos = collections.defaultdict(list)
     for p in semana:
         if p['e'] == 1:
             pasos[RS.clave_paso(p)].append(p)
-    candidatos = sorted(k for k, ps in pasos.items() if max(p['real'] - p['t'] for p in ps) >= 1500 and len(ps) >= 15)
-    elegidos = random.Random(2026).sample(candidatos, 4)
+    def validos(filtro):
+        return sorted(k for k, ps in pasos.items() if filtro(k, ps) and max(p['real'] - p['t'] for p in ps) >= 1500 and len(ps) >= 15)
+    rnd = random.Random(2026)
+    candidatos = validos(lambda k, ps: True)
+    elegidos = rnd.sample(candidatos, 2)
+    for parada in ('3388', '3391'):
+        elegidos.append(rnd.choice(validos(lambda k, ps, s=parada: k[3] == s and ps[0]['linea'] in ('3513', '3514', '3515'))))
     with open(os.path.join(salida, 'ejemplos.txt'), 'w', encoding='utf-8') as f:
         for i, k in enumerate(elegidos, 1):
             ps = sorted(pasos[k], key=lambda p: p['t'])
@@ -110,6 +116,11 @@ def main():
                      [(round((p['real'] - p['t']) / 60, 2), round((p['oficial'] - p['t']) / 60, 2), round((p['horario'] - p['t']) / 60, 2),
                        round((p['t'] + 60 * max(0, RS.redondeo_php((p['metodo'] - p['t']) / 60)) - p['t']) / 60, 2)) for p in ps])
             f.write('%d %s línea %s parada %s vehículo %s\n' % (i, k[0], ps[0]['linea'], k[3], k[2]))
+    # Y el resumen de San Juan (Amorebieta), líneas 3513–3515, los dos sentidos, de 3 a 30 minutos.
+    sj = [p for p in semana if p['parada'] in ('3388', '3391') and p['linea'] in ('3513', '3514', '3515') and p['real'] - p['t'] >= 180]
+    r = RS.resumen(sj)
+    with open(os.path.join(salida, 'sanjuan.txt'), 'w', encoding='utf-8') as f:
+        f.write('pares %d horario %.1f oficial %.1f bide %.1f\n' % (len(sj), 100 * r['horario']['p2'], 100 * r['oficial']['p2'], 100 * r['bide']['p2']))
     print('candidatos', len(candidatos), 'elegidos', elegidos)
 
 

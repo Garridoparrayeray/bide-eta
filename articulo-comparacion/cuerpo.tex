@@ -475,7 +475,7 @@ $k$ & Miss & Wait & Miss & Wait & Miss & Wait \\
 \end{tabular}
 \end{table}
 
-\subsection{Four buses drawn at random}
+\subsection{Four example buses}
 
 \begin{figure}[t]
 \centering
@@ -495,16 +495,16 @@ $k$ & Miss & Wait & Miss & Wait & Miss & Wait \\
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo2.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo2.dat};
 \end{axis}
-\begin{axis}[ejemplo, name=e3, at={(e1.below south west)}, anchor=north west, yshift=-6mm, title={Line 3912, stop 2713, Tue 10},
+\begin{axis}[ejemplo, name=e3, at={(e1.below south west)}, anchor=north west, yshift=-6mm, title={San Juan (Amorebieta), 3515, Tue 10},
   ylabel={Predicted wait (min)}, xlabel={Minutes before the actual passage}]
 \addplot[gris, thin, domain=0:30] {x};
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo3.dat};
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo3.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo3.dat};
 \end{axis}
-\begin{axis}[ejemplo, at={(e3.east)}, anchor=west, xshift=8mm, title={Line 3917, stop 258, Tue 10},
+\begin{axis}[ejemplo, at={(e3.east)}, anchor=west, xshift=8mm, title={San Juan, other dir., 3514, Thu 12},
   xlabel={Minutes before the actual passage},
-  legend style={font=\scriptsize, draw=none, fill=white, at={(0.02,0.98)}, anchor=north west}]
+  legend style={font=\scriptsize, draw=none, fill=white, at={(0.02,0.03)}, anchor=south west}]
 \addplot[gris, thin, domain=0:30] {x};
 \addlegendentry{Perfect}
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo4.dat};
@@ -515,13 +515,17 @@ $k$ & Miss & Wait & Miss & Wait & Miss & Wait \\
 \addlegendentry{Timetable}
 \end{axis}
 \end{tikzpicture}
-\caption{Predicted waiting time against the actual one for four buses drawn at random (fixed seed) among the passages with
-queries from at least 25 minutes before. The thin line is a perfect prediction.}
+\caption{Predicted waiting time against the actual one for four buses, among the passages with queries from at least 25
+minutes before. Top: two buses drawn at random from the whole network. Bottom: one bus drawn at random in each direction at
+San Juan (Amorebieta, stops 3388 and 3391), on lines 3513--3515, a stop pointed out by passengers. Fixed seed. The thin line
+is a perfect prediction.}
 \label{fig:examples}
 \end{figure}
 
-Figure~\ref{fig:examples} shows the minute-by-minute predictions for four passages drawn at random. They illustrate the
-pattern of the aggregate results: the timetable is offset by a roughly constant amount, the official real time is closer but
+Figure~\ref{fig:examples} shows the minute-by-minute predictions for four passages: two drawn at random from the whole
+network and one drawn at random in each direction at San Juan (Amorebieta), on lines 3513 to 3515. At that stop, over both
+directions and 2,626 pairs with the bus 3 to 30 minutes away, the timetable was within two minutes in 12\% of cases, the
+official real time in 31\% and Bide+ in 64\%. The four buses illustrate the pattern of the aggregate results: the timetable is offset by a roughly constant amount, the official real time is closer but
 tends to stay too long, and Bide+ is the closest to the actual waiting time over most of the 30 minutes.
 
 \subsection{Stops, time of day and days}
