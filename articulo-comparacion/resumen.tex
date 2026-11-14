@@ -1,12 +1,13 @@
-Bide+ is a bus arrival prediction method that uses only the open data of the operator: the GPS positions of its
-vehicles and its timetable. It is documented in a published technical report and an open reference implementation. This
-paper tests it against the strongest available baseline, the operator's own real-time information, on the interurban bus
-network of Biscay (Bizkaibus, Spain). For one week in November 2026 we recorded the official waiting times of 60 stops
-every minute and the live positions every 20 seconds, and compared three predictions for the same bus at the same stop and
-minute (the published timetable, the official real-time announcement and Bide+) against the actual passage reconstructed
-from the feed. Over 160,046 paired predictions on five normal days, Bide+ is within two minutes of the actual passage in
-64\% of cases, against 36\% for the official real time and 16\% for the timetable. With the bus 6 to 10 minutes away,
-71\% of Bide+ predictions are within two minutes against 37\% of the official ones, and 61\% against 27\% at 10 to 20
-minutes; the 95\% confidence intervals of the difference, by trip, are 33 to 36 points. Bide+ is more accurate at 58 of the
-60 stops, at every hour and on every day. The official real time mostly announces buses later than they actually come, which makes
-passengers miss them, while Bide+ errors are centred. The data, the capture program and the analysis are openly available.
+This paper compares an operator's real-time bus predictions with an independent predictor on the same buses and moments,
+for Bizkaibus, the interurban bus network of Biscay (Spain), which publishes vehicle positions and its
+timetable as open data and shows its own waiting times in an official app. For one week in November 2026, the official
+waiting times of 60 stops were recorded every minute with the position feed every 20 seconds. Each official announcement
+was matched to the bus it referred to, confirmed by the distance the service reports, and compared with the published
+timetable and with the Bide+ method, which predicts arrivals from the open data alone and was frozen before the week; all
+three were checked against the actual passage reconstructed from the feed. Over 140,158 paired predictions on five normal
+days, the timetable was within two minutes of the actual passage in 16\% of cases, the official real time in 39\% and
+Bide+ in 66\%. The official real time was slightly more accurate below three minutes; from three
+minutes on, Bide+ was more accurate, by 32 to 36 percentage points at 10--20 minutes (95\% intervals by trip), at 58 of 59
+stops and at every hour; it had more very large errors at short horizons. An ablation attributes its advantage
+to learned segment travel times. The results apply to buses whose passage could be observed and confirmed (16\% of
+announcements), use a ground truth from the same feed, and cover one week; data and code are open.

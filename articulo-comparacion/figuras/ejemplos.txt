@@ -1,0 +1,4 @@
+1 2026-11-08 línea 3911 parada 827 vehículo 3367
+2 2026-11-09 línea 3923 parada 2853 vehículo 3333
+3 2026-11-10 línea 3912 parada 2713 vehículo 3385
+4 2026-11-10 línea 3917 parada 258 vehículo 3310

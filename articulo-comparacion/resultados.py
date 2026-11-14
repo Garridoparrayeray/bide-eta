@@ -58,6 +58,16 @@ def identidad_confirmada(p, tolerancia_m=500, razon=(0.6, 2.0)):
     return abs(mo - mb) <= tolerancia_m or (mb > 0 and razon[0] <= mo / mb <= razon[1])
 
 
+VELOCIDAD_MAXIMA = 30.0   # m/s (108 km/h)
+
+
+def paso_imposible(p):
+    """El paso real exigiría ir a más de 30 m/s desde donde estaba el autobús (según el feed o el servicio oficial):
+    la reconstrucción del paso ha fallado (le pasa sobre todo cerca de las terminales de Bilbao)."""
+    d = [x for x in (p.get('metros_bus'), p.get('metros_oficial')) if x is not None]
+    return bool(d) and min(d) > VELOCIDAD_MAXIMA * max(1, (p['real'] - p['t']) + 60)
+
+
 def errores(p, desplazamiento=0, oficial_extra=0, bide='minutos'):
     t, real = p['t'], p['real'] + desplazamiento
     if bide == 'segundos':
@@ -102,6 +112,8 @@ def cargar(carpeta, variante='principal'):
         if horizonte(p) is None:
             continue
         if p['parada'] in excluidas and variante != 'con_excluidas':
+            continue
+        if paso_imposible(p) and variante != 'con_excluidas':
             continue
         if variante in ('principal', 'con_excluidas', 'estricta') and p.get('capa') != 'feed':
             continue
@@ -217,7 +229,7 @@ def main():
         d = c['dia']
         ps = [p for p in todos if p['dia'] == d and horizonte(p) is not None]
         feed = [p for p in ps if p['capa'] == 'feed']
-        sin_excl = [p for p in feed if p['parada'] not in excluidas]
+        sin_excl = [p for p in feed if p['parada'] not in excluidas and not paso_imposible(p)]
         conf = [p for p in sin_excl if identidad_confirmada(p)]
         r = (nombre_dia(d, aparte), c['consultas'], c['anuncios'], c['ruta_doble'], c['sin_paso'], len(ps),
              len(ps) - len(feed), len(feed) - len(sin_excl), len(sin_excl) - len(conf), len(conf))
@@ -236,6 +248,10 @@ def main():
             NOMBRES[f], r[f]['mediana'], 100 * r[f]['p1'], 100 * r[f]['p2'], 100 * r[f]['p3'], r[f]['sesgo'], 100 * r[f]['antes']) for f in FUENTES)))
         tex['horizonte'].append(fila(h, r))
         tex['horizonte_extra'].append('%s & %s \\\\' % (h, ' & '.join('%.0f & %+.0f' % (100 * r[f]['p1'], r[f]['sesgo']) for f in FUENTES)))
+    for _, _, h in HORIZONTES:
+        r = resumen(por_h[h])
+        cola = {f: sum(abs(errores(p)[f]) > 600 for p in por_h[h]) / len(por_h[h]) for f in FUENTES}
+        tex['colas'].append('%s & %s \\\\' % (h, ' & '.join('%.0f & %.1f' % (r[f]['mae'], 100 * cola[f]) for f in FUENTES)))
     r = resumen(semana)
     tex['horizonte'].append('\\midrule\n' + fila('All', r))
     tex['horizonte_extra'].append('\\midrule\nAll & %s \\\\' % ' & '.join('%.0f & %+.0f' % (100 * r[f]['p1'], r[f]['sesgo']) for f in FUENTES))
@@ -276,8 +292,8 @@ def main():
         ('Bide+ in seconds', semana, {'bide': 'segundos'}),
         ('Bide+ minutes truncated', semana, {'bide': 'suelo'}),
     ]
-    for nombre, var in (('Stricter identity check (300 m or 0.8--1.25)', 'estricta'), ('No identity check', 'feed'),
-                        ('No identity check, incl. Bide+ fallback layer', 'todos'), ('Including stop 3394', 'con_excluidas')):
+    for nombre, var in (('Stricter identity check', 'estricta'), ('No identity check', 'feed'),
+                        ('No identity check, with fallback', 'todos'), ('With stop 3394 and impossible passages', 'con_excluidas')):
         variantes.append((nombre, cargar(a.carpeta, var)[0], {}))
     rnd = random.Random(11)
     por_paso = collections.defaultdict(list)
