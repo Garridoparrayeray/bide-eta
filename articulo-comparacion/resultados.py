@@ -6,7 +6,7 @@ Errores = llegada anunciada menos paso real, en segundos. Para el servicio ofici
 minutos que anuncia; para el método, su llegada prevista y, en «método (minutos)», esa misma llegada redondeada a
 minutos enteros desde la hora de la consulta, como la vería el viajero. Los días de «aparte» de captura/dias.json no
 entran en la semana y se dan por separado. Los intervalos de confianza (95 %) son de bootstrap por viajes enteros: cada
-remuestreo toma viajes (día, línea y número de viaje) con reemplazo, con todos sus pares.
+remuestreo toma viajes (día, línea, número de viaje y vehículo) con reemplazo, con todos sus pares.
 """
 import argparse
 import collections
@@ -55,7 +55,7 @@ def intervalo(pares, umbral=120, semilla=7):
     por_viaje = collections.defaultdict(lambda: [0, 0, 0])
     for p in pares:
         e = errores(p)
-        c = por_viaje[(p['dia'], p['viaje'])]
+        c = por_viaje[(p['dia'], p['viaje'], p['vehiculo'])]
         c[0] += 1
         c[1] += abs(e['metodo_min']) <= umbral
         c[2] += abs(e['oficial']) <= umbral

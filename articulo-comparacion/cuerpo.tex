@@ -3,61 +3,138 @@
 \label{sec:intro}
 
 Real-time arrival information shortens the time passengers wait at stops and makes that wait less uncertain
-\parencite{watkins2011,brakewood2019}, but only if it is accurate: inaccurate predictions erode trust and can make
-passengers miss the bus they were told to expect \parencite{gooze2013benefits,rahman2013users}. Most passengers
-receive these predictions from the operator itself, through its own app and stop displays, or from third-party apps
-that relay the operator's figures. How accurate the operator's predictions are, and whether a third party with only
-the operator's open data can do better, is rarely measured on the same buses and at the same moments.
+\parencite{watkins2011,brakewood2019}, but only when it is accurate: wrong predictions erode trust and make passengers
+miss the bus they were told to expect \parencite{gooze2013benefits,rahman2013users}. Most passengers receive these
+predictions from the operator itself, through its app and stop displays, or from journey planners that relay the
+operator's figures. Whether a third party that has only the operator's \emph{open} data can predict better than the
+operator is rarely measured, and almost never on the same buses and at the same moments.
 
 This paper makes that measurement for Bizkaibus, the interurban bus network of the province of Biscay (Spain). Since
 2023 Bizkaibus shows its own real-time waiting times in an official app and on some stop displays. It also publishes,
 as open data, the GPS position of every vehicle in service (a SIRI Vehicle Monitoring feed, \cite{siri}) and its
-timetable (GTFS, \cite{gtfs}), but not the predictions themselves. A companion paper
-\parencite{garrido2026metodo} and a technical report \parencite{garrido2026memoria} describe and evaluate a method
-that predicts arrivals from those two open sources alone, used by the independent Bizkaibus+ app. That evaluation
-compared the method with the published timetable, which is the obvious but weak baseline: after the first hour of a
-trip, most Bizkaibus buses pass a stop more than two minutes before the published time.
+timetable (GTFS, \cite{gtfs}), but not its predictions. The \emph{Bide+} method\footnote{Used by the independent
+Bide+ app, \url{https://www.bideplus.eus} (formerly Bizkaibus+). The app is not affiliated with Bizkaibus, the
+Diputación Foral de Bizkaia or the operators of the service.} predicts arrivals from those two open sources alone. It is
+documented in a technical report \parencite{garrido2026memoria} and specified for reimplementation in a companion paper
+\parencite{garrido2026metodo}. Both evaluated it against the published timetable, which is a weak baseline on this
+network: after the first hour of a trip, most buses pass a stop more than two minutes before the published time.
 
-Here the baseline is the operator's own live prediction. For one week in November 2026 we recorded, every minute, the
-waiting times that the official service gave for 60 stops, together with the live feed every 20 seconds. We then
-compared, for the same bus at the same stop and the same minute, the waiting time announced by the operator with the
-arrival predicted by the method, and both with the moment the bus actually passed.
+Here the baseline is the strongest one available: the operator's own live prediction. The research question is:
+
+\begin{quote}
+\emph{For the same bus, at the same stop and at the same minute, is the arrival predicted by the Bide+ method from open
+data closer to the actual passage than the waiting time announced by Bizkaibus?}
+\end{quote}
+
+For one week in November 2026 we recorded, every minute, the waiting times that the official service gave for 60
+stops, and the live feed every 20 seconds. We then paired each official announcement with the bus it referred to, with
+the Bide+ prediction for that bus at that minute, and with the moment the bus actually passed.
+Figure~\ref{fig:minutes} summarises the answer: from three minutes before arrival onwards, Bide+ is within two minutes of
+the actual passage about twice as often as the official service.
 
 The contributions are:
 \begin{enumerate}
   \item A paired protocol to compare a third-party predictor with an operator's real-time predictions when the
-        operator publishes positions but not predictions: what is captured, how each announcement is matched to a
-        vehicle, how the actual passage is reconstructed and how the comparison avoids giving either side an
-        advantage.
-  \item The comparison itself, over one week of data, by how far ahead the bus is, by type of day and by type of stop,
-        with confidence intervals that respect the dependence between predictions of the same trip.
-  \item The data, the capture program and the analysis, openly available, so that the comparison can be repeated
-        on other days or other networks.
+        operator publishes positions but not predictions: what to capture, how to match each announcement to a vehicle,
+        how to reconstruct the actual passage, and how to avoid giving either side an advantage.
+  \item The comparison itself, over 160,046 paired predictions on five normal days, by time to arrival, direction of
+        the error, stop, time of day and day, with confidence intervals that respect the dependence between
+        predictions of the same trip, plus a strike day analysed separately.
+  \item The capture program, the raw data and the analysis, openly available, so that the comparison can be repeated on
+        other days or networks.
 \end{enumerate}
 
-Section~\ref{sec:related} reviews related work, Section~\ref{sec:data} describes the data,
-Section~\ref{sec:design} the comparison, Section~\ref{sec:results} the results and Section~\ref{sec:discussion} their
-interpretation and limits.
+Section~\ref{sec:predictors} describes the two predictors, Section~\ref{sec:related} related work,
+Section~\ref{sec:data} the data, Section~\ref{sec:design} the comparison, Section~\ref{sec:results} the results and
+Section~\ref{sec:discussion} their meaning and limits.
+
+% =====================================================================================================================
+\section{The two predictors}
+\label{sec:predictors}
+
+\subsection{The official Bizkaibus waiting times}
+
+The official Bizkaibus app (since 2023) and some stop displays show, for each stop, the waiting time of the next buses
+of each line. The app obtains them from a public web service (\texttt{GetPasoParadaMobile\_JSON}) that, for a stop,
+returns the next two buses of every line that serves it, each with its waiting time in whole minutes and its distance in
+metres. How these times are computed is not published. They are the figures that a Bizkaibus passenger sees when
+checking the official sources.
+
+\subsection{The Bide+ method}
+
+The Bide+ method \parencite{garrido2026memoria,garrido2026metodo} predicts the arrival of each bus at each stop from the
+public position feed and the timetable. Its design responds to two properties of the Bizkaibus data: the feed reports
+positions but no delays, and the intermediate times of the timetable are interpolated at constant speed between the
+terminals, so they drift further from the actual passage as the trip advances. Figure~\ref{fig:method} outlines it.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=4mm and 4mm, every node/.style={font=\footnotesize},
+  caja/.style={draw=gris, rounded corners=2pt, fill=gris!8, align=center, minimum height=9mm, text width=20mm},
+  dato/.style={draw=ruta, rounded corners=2pt, fill=ruta!8, align=center, minimum height=9mm, text width=18mm},
+  flecha/.style={-{Stealth[length=2mm]}, gris}]
+\node[dato] (feed) {Position feed\\(SIRI, every 20 s)};
+\node[dato, below=of feed] (gtfs) {Timetable\\(GTFS)};
+\node[caja, right=of feed, yshift=-6.5mm] (match) {Match vehicle to trip; project GPS onto route};
+\node[caja, right=of match] (tt) {Position in \emph{timetable time}};
+\node[caja, right=of tt] (layers) {Three layers:\\GPS, last stop, corrected timetable};
+\node[caja, below=of tt, yshift=-3mm] (learn) {Learned segment times by band, pace factors, per-trip correction};
+\node[dato, right=of layers, text width=14mm, draw=gps, fill=gps!8] (eta) {Arrival\\$\hat a$};
+\draw[flecha] (feed) -- (match);
+\draw[flecha] (gtfs) -- (match);
+\draw[flecha] (match) -- (tt);
+\draw[flecha] (tt) -- (layers);
+\draw[flecha] (learn) -| (layers);
+\draw[flecha] (layers) -- (eta);
+\node[below=1mm of learn, text width=60mm, align=center, color=gris] {recalibrated every night from captured passages};
+\end{tikzpicture}
+\caption{The Bide+ method \parencite{garrido2026memoria,garrido2026metodo}. Only open data enter it: the operator's
+position feed and timetable.}
+\label{fig:method}
+\end{figure}
+
+In brief:
+\begin{itemize}
+  \item \textbf{Timetable time.} Each vehicle is matched to its scheduled trip and its GPS position is projected onto the
+        route and converted into the scheduled time at that point. Predictions are then built from \emph{differences}
+        of timetable times, which are reliable even when the absolute intermediate times are not.
+  \item \textbf{Learned segment times.} The actual travel time between each pair of consecutive stops is learned from
+        captured passages by time band, as a median shrunk towards the all-day median of the segment, with a fallback
+        by segment length for segments without data.
+  \item \textbf{Three layers.} The prediction uses, in order, the projected GPS position, the last stop reported by the
+        feed and the timetable corrected trip by trip. Each layer abstains under explicit rules, and the state of the
+        prediction says which layer produced it.
+  \item \textbf{Daily recalibration.} Every night the tables are recalibrated from the latest captures, and a change is
+        adopted only if it reduces the error on held-out data.
+\end{itemize}
+
+Against the published timetable, over 9.1 million predictions in 23 days, the arrival shown by the method was within
+$\pm2$~minutes in 92--96\% of cases with the bus less than three minutes away and in 67\% at 10 to 20 minutes, against
+23--25\% for the timetable \parencite{garrido2026metodo}. The report \parencite{garrido2026memoria} gives the
+measurements behind each constant and the history of each rule. An open reference implementation in Python reproduces
+the production engine exactly (it passes 407 test vectors produced by that engine), and it is the implementation used in
+this paper.
 
 % =====================================================================================================================
 \section{Related work}
 \label{sec:related}
 
-The accuracy of operator real-time information has been studied mostly through the operator's own logs.
-\textcite{cats2016realtime} evaluated the bus arrival information system of Stockholm against automatic vehicle
-location records and found that prediction errors grow with the prediction horizon and depend on the type of stop and
-on the time of day. Studies of passenger benefits \parencite{watkins2011,mishalani2006,liu2020waiting} use the
-operator's predictions as given and show that the value of real-time information depends on its accuracy
-\parencite{gooze2013benefits}. On the other side, third-party predictors built only on public data have been shown
-to be feasible: \textcite{garciamaurino2024improving} improve arrival predictions using only data available through
+The accuracy of operator real-time information has been studied mostly with the operator's own records.
+\textcite{cats2016realtime} evaluated the bus arrival information of Stockholm against automatic vehicle location data
+and found that errors grow with the prediction horizon and depend on the stop and the time of day. Studies of passenger
+benefits \parencite{watkins2011,mishalani2006,liu2020waiting} take the operator's predictions as given and show that
+their value depends on their accuracy \parencite{gooze2013benefits}. On the other side, predictors built only on public
+data are feasible: \textcite{garciamaurino2024improving} improve arrival predictions using only data available through
 public transport APIs, and \textcite{wessel2017retrospective} reconstruct actual passage times from a public vehicle
-location feed, the same kind of ground truth used here. The gap that this paper addresses is the direct comparison:
-operator predictions and a third-party predictor on the same vehicles, stops and moments, against the same actual
-passage, with the operator's predictions recorded as passengers saw them.
+location feed, the kind of ground truth used here. Reviews of bus arrival prediction
+\parencite{moreiramatias2015survey,singh2022review,kumar2025review} compare methods with each other or with the
+timetable, rarely with the operator's live service. This paper fills that gap: operator predictions and an open-data
+predictor on the same vehicles, stops and moments, against the same actual passage, with the operator's predictions
+recorded as passengers saw them.
 
-The evaluation follows the rules of out-of-sample forecasting evaluation \parencite{tashman2000outofsample}: the
-method is calibrated only with data from before the week that is measured, so that nothing from the test days leaks
-into it \parencite{kaufman2012leakage}.
+The evaluation follows the rules of out-of-sample forecast evaluation \parencite{tashman2000outofsample}: the Bide+
+method is calibrated only with data from before the week that is measured, so nothing from the test days leaks into it
+\parencite{kaufman2012leakage}.
 
 % =====================================================================================================================
 \section{Data}
@@ -65,31 +142,28 @@ into it \parencite{kaufman2012leakage}.
 
 \subsection{What was captured}
 
-A program running on GitHub Actions captured, from 06:00 to 23:00 Madrid time (the night feed repeats stale data):
+A program running on GitHub Actions captured, from 06:00 to 23:00 Madrid time (at night the feed repeats stale data):
 \begin{itemize}
   \item \textbf{The live feed}, every 20 seconds: the public SIRI Vehicle Monitoring file of Bizkaibus, with the GPS
-        position, the trip and the next stop of every vehicle in service. The file changes every 60 seconds, so two
-        of every three copies repeat the previous one.
-  \item \textbf{The official waiting times}, every minute, for each of 60 stops: the response of the web service
-        behind the official Bizkaibus app (\texttt{GetPasoParadaMobile\_JSON}). For each line that serves the stop,
-        the service gives the next two buses (here $e_1$ and $e_2$), each with its waiting time in whole minutes and
-        its distance in metres. The stops are queried one after another, so each stop is queried about once a minute.
+        position, the trip and the next stop of every vehicle in service. The file changes every 60 seconds, so two of
+        every three copies repeat the previous one.
+  \item \textbf{The official waiting times}, about once a minute for each of 60 stops: the full response of the official
+        web service for that stop. The stops are queried one after another, about one query per second in total.
   \item \textbf{The timetable} of the day (GTFS), once a day.
 \end{itemize}
 
 The 60 stops are intermediate stops with many buses and lines, at least 15 minutes after the start of the trip (where
 predictions are hardest and most useful), plus 28 \emph{priority} stops: stops pointed out by passengers and the Bilbao
-stops where the actual passage deviates most from the published time. Each stop and the reason for its choice are
-listed in the repository (\texttt{paradas.json}).
+stops where the actual passage deviates most from the published time. Each stop and the reason for its choice are listed
+in the repository.
 
 \subsection{Days}
 
-The week runs from Sunday 8 to Saturday 14 November 2026 (Table~\ref{tab:days}). Wednesday 11 was a general strike:
-Bizkaibus ran minimum services (about 30\%), with about 160 vehicles in the feed against 240 on a normal day. That day
-is analysed separately and does not enter the results of the week. Three days are incomplete: on Monday 9 the morning
-block was lost because the capture overran its time limit; on Thursday 12 the official service stopped answering over
-plain HTTP at 17:12 (it answers over HTTPS, which the capture uses from then on), so that afternoon has no official
-times; and on Saturday 14 the capture started at 09:41. The live feed has no gap longer than two minutes on any day.
+The week runs from Sunday 8 to Saturday 14 November 2026 (Table~\ref{tab:days}). Wednesday 11 was a general strike, with
+minimum services (about 30\%): about 160 vehicles in the feed against 240 on a normal day. It is analysed separately and
+does not enter the results of the week. Monday 9 lacks its morning, Thursday 12 lacks official times after 17:12 (the
+service stopped answering over plain HTTP; it answers over HTTPS, which the capture has used since) and Saturday 14
+starts at 09:41. The live feed has no gap longer than two minutes on any day.
 
 \input{tabla-dias.tex}
 
@@ -99,102 +173,264 @@ times; and on Saturday 14 the capture started at 09:41. The live feed has no gap
 
 \subsection{The two predictions}
 
-\paragraph{Official} For a query at time $t$ to stop $s$, an announcement of $m$ minutes for a bus of line $\ell$
-gives the predicted arrival $\hat a_{\mathrm{off}} = t + 60\,m$.
+\paragraph{Official} For a query at time $t$ to stop $s$, an announcement of $m$ minutes for a bus of line $\ell$ gives
+the predicted arrival $\hat a_{\mathrm{off}} = t + 60\,m$.
 
-\paragraph{Method} The method of \textcite{garrido2026metodo} is recomputed from the captured feed with its open
-reference implementation, which reproduces the production engine exactly (it passes the 407 test vectors produced by
-that engine). It is not taken from the live app, so that anyone can repeat it. Its learned tables (segment times, pace
-factors and per-trip corrections) are those of Saturday 7 November, calibrated only with data from before the week,
-and they are not updated during the week. For the query at time $t$, the method's prediction is the one it gave in the
-last copy of the feed before $t$, provided that copy is at most 60 seconds old; it is therefore never more recent
-than the official one. Its predicted arrival $\hat a_{\mathrm{met}}$ is compared in seconds and also rounded to whole
-minutes from $t$, as a passenger would see it:
-$\hat a_{\mathrm{met,min}} = t + 60\,\max\bigl(0, \operatorname{round}\bigl((\hat a_{\mathrm{met}} - t)/60\bigr)\bigr)$.
-The main comparison uses the rounded value, so that neither side gains from the resolution of its figures.
+\paragraph{Bide+} The Bide+ prediction is recomputed from the captured feed with the reference implementation, not taken
+from the live app, so that anyone can repeat it. Its learned tables are those of Saturday 7 November, calibrated with data
+from before the week, and they are not updated during the week. For the query at $t$, the Bide+ prediction is the one it
+gave in the last copy of the feed before $t$, provided that copy is at most 60 seconds old. It is therefore never more
+recent than the official one. The main comparison rounds it to whole minutes from $t$, as the app shows it:
+$\hat a_{\mathrm{B+}} = t + 60\,\max\bigl(0, \operatorname{round}((\hat a - t)/60)\bigr)$, so that neither side gains
+from the resolution of its figures.
 
 \subsection{The actual passage}
 
-The actual passage of a bus at a stop, $a$, is reconstructed from the feed as in the companion paper: it is the midpoint
-between the last copy of the feed in which the bus had not yet passed the stop (its next stop is the stop itself or an
-earlier one) and the first copy in which it had, without the bus changing trip in between. Because the feed changes
-every 60 seconds, $a$ is known to within about $\pm30$ seconds. The same $a$ is used for both predictions, so this
-uncertainty adds the same noise to both errors and does not favour either.
+The actual passage $a$ of a bus at a stop is reconstructed from the feed as in the companion paper: it is the midpoint
+between the last copy of the feed in which the bus had not yet passed the stop and the first copy in which it had, without
+the bus changing trip in between. Because the feed changes every 60 seconds, $a$ is known to within about $\pm30$~s. The
+same $a$ serves both predictions, so this noise is shared and favours neither.
 
 \subsection{Matching announcements to buses}
 
-The official service does not say which vehicle it announces. For a query at $t$ to stop $s$, its $e_1$ for line $\ell$
-is matched to the first bus of line $\ell$ that actually passes $s$ after $t$, and its $e_2$ to the second. This is the
-bus a passenger waiting at $s$ would take. Lines listed twice in the same response (two routes of the same line) are
-left out, as are announcements whose matched bus passes more than 30 minutes after $t$ or is not tracked by the feed.
-Because buses of the same line can bunch, the results are repeated without the pairs in which another bus of the same
-line passes within two minutes of the matched one; the conclusions do not change (Section~\ref{sec:results}).
+The official service does not say which vehicle it announces. For a query at $t$ to stop $s$, its first announcement for
+line $\ell$ is matched to the first bus of line $\ell$ that actually passes $s$ after $t$, and its second announcement to
+the second bus. This is the bus a passenger waiting at $s$ would take. Lines listed twice in the same response are left
+out, as are announcements whose matched bus passes more than 30 minutes after $t$ or is not tracked by the feed.
+Figure~\ref{fig:example} shows one matched bus.
 
 \subsection{Metrics}
 
-The error of each prediction is $\hat a - a$ (positive: the bus arrives earlier than announced). For each source we
-give the median absolute error, the share of predictions within $\pm1$ and $\pm2$ minutes, and the median signed
-error, by horizon $a - t$ (0--3, 3--6, 6--10, 10--20 and 20--30 minutes), by type of day and by type of stop.
-Predictions of the same trip are not independent, so confidence intervals for the difference between the two sources
-are obtained by bootstrap over whole trips \parencite{efron1993bootstrap}: each of 400 resamples draws trips with
-replacement, with all their pairs.
+The error of each prediction is $\hat a - a$: positive when the bus arrives \emph{earlier} than announced, the error that
+makes a passenger miss it. For each source we report the median absolute error, the share within $\pm1$ and $\pm2$~minutes,
+the share of buses that arrive more than two minutes early (\emph{early}) and the median signed error, by time to the actual
+passage $a - t$. Predictions of the same trip are not independent, so confidence intervals for the difference between the
+two sources are obtained by bootstrap over whole trips \parencite{efron1993bootstrap}: each of 400 resamples draws trips
+(day, line, trip number and vehicle) with replacement, with all their pairs.
 
 % =====================================================================================================================
 \section{Results}
 \label{sec:results}
 
-\subsection{Overall}
+Over the five normal days analysed (8, 9, 10, 12 and 13 November), 160,046 official announcements were paired with a bus
+and with the Bide+ prediction for that bus at the same moment: 8,210 passages of 2,648 trips, made by 313 vehicles on 72
+lines, at the 60 stops.
 
-Over the five normal days analysed so far (8, 9, 10, 12 and 13 November), 160,046 official announcements were paired
-with a bus and with the method's prediction for the same bus at the same moment: 2,854 passages of 879 trips of 72
-lines at the 60 stops. Table~\ref{tab:horizon} gives the errors by how far away the bus was.
+\subsection{Accuracy by time to arrival}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\textwidth, height=6.2cm,
+  xlabel={Minutes to the actual passage}, ylabel={Within $\pm2$ min (\%)},
+  xmin=0, xmax=30, ymin=0, ymax=100, xtick={0,5,...,30},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\footnotesize, draw=none, fill=none, at={(0.98,0.98)}, anchor=north east}]
+\addplot[name path=bhi, draw=none, forget plot] table[x=min, y=methi] {figuras/minutos.dat};
+\addplot[name path=blo, draw=none, forget plot] table[x=min, y=metlo] {figuras/minutos.dat};
+\addplot[ruta!25, forget plot] fill between[of=bhi and blo];
+\addplot[name path=ohi, draw=none, forget plot] table[x=min, y=ofihi] {figuras/minutos.dat};
+\addplot[name path=olo, draw=none, forget plot] table[x=min, y=ofilo] {figuras/minutos.dat};
+\addplot[gps!25, forget plot] fill between[of=ohi and olo];
+\addplot[ruta, very thick] table[x=min, y=met] {figuras/minutos.dat};
+\addlegendentry{Bide+ (open data)}
+\addplot[gps, very thick, dashed] table[x=min, y=ofi] {figuras/minutos.dat};
+\addlegendentry{Official Bizkaibus}
+\end{axis}
+\end{tikzpicture}
+\caption{Share of predictions within two minutes of the actual passage, by minutes to that passage (one-minute bins;
+shaded: 95\% bootstrap interval by trip). Five normal days, 160,046 paired predictions.}
+\label{fig:minutes}
+\end{figure}
 
 \begin{table}[t]
 \centering
 \caption{Errors by time to the actual passage, five normal days. \emph{Median}: median absolute error (s).
-\emph{$\pm$2 min}: share of predictions within two minutes (\%). \emph{Early}: share of buses that arrive more than
-two minutes \emph{before} the announced time (\%), the error that makes passengers miss the bus. The method is rounded
-to whole minutes, as shown to passengers.}
+\emph{$\pm$2 min}: share of predictions within two minutes (\%). \emph{Early}: share of buses that arrive more than two
+minutes \emph{before} the predicted time (\%). Bide+ is rounded to whole minutes, as shown to passengers.}
 \label{tab:horizon}
 \small
 \setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{lrrrrrrr}
 \toprule
- & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Method} \\
+ & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Bide+} \\
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}
 Minutes to arrival & Pairs & Median & $\pm$2 min & Early & Median & $\pm$2 min & Early \\
 \midrule
-\csname @@input\endcsname tablas/horizonte.tex 
+\csname @@input\endcsname tablas/horizonte.tex
 \bottomrule
 \end{tabular}
 \end{table}
 
-When the bus is less than three minutes away, both are accurate and close: 86\% of official announcements and 88\%
-of the method's predictions are within two minutes. From three minutes on, they separate. With 6 to 10 minutes to go,
-37\% of official announcements are within two minutes against 71\% for the method, and the median error is 167 s
-against 68 s. With 10 to 20 minutes to go, the figures are 27\% and 61\%. The difference in the share within two
-minutes, method minus official, has 95\% bootstrap intervals (by trip) of $[+1.2, +4.0]$ points at 0--3 minutes,
-$[+22.7, +26.9]$ at 3--6, $[+32.0, +36.9]$ at 6--10, $[+31.8, +36.3]$ at 10--20 and $[+26.3, +31.1]$ at 20--30
-minutes. Comparing the method in seconds instead of whole minutes changes these figures by at most one point.
+When the bus is less than three minutes away, both are accurate: 86\% of official announcements and 88\% of Bide+
+predictions are within two minutes (Table~\ref{tab:horizon}, Figure~\ref{fig:minutes}). From three minutes on they
+separate quickly. The official share within two minutes falls to 37\% at 6--10 minutes and 27\% at 10--20 minutes; Bide+
+keeps 71\% and 61\%. The median error at 10--20 minutes is 246~s for the official service and 91~s for Bide+. The
+difference in the share within two minutes (Bide+ minus official) has 95\% intervals of $[+1.7, +3.7]$ points at 0--3
+minutes, $[+23.3, +26.0]$ at 3--6, $[+32.7, +35.8]$ at 6--10, $[+32.6, +36.1]$ at 10--20 and $[+26.5, +30.6]$ at
+20--30 minutes. Comparing Bide+ in seconds instead of whole minutes changes these figures by at most one point.
 
 \subsection{Direction of the errors}
 
-The two sources fail in opposite directions. The official announcements are late: the median signed error is $+124$~s
-at 10--20 minutes and $+149$~s at 20--30 minutes, and in about half of the announcements made 10 to 30 minutes ahead
-the bus arrives more than two minutes \emph{earlier} than announced (51--52\%, against 16\% for the method). This is
-the costly error for a passenger, who plans to reach the stop shortly before the announced time and finds that the bus
-has gone. The method leans the other way at long horizons (median $-24$~s at 10--20 minutes and $-60$~s at 20--30
-minutes): when it errs, the passenger waits a little longer at the stop rather than missing the bus.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\textwidth, height=5.8cm,
+  xlabel={Error $\hat a - a$ (minutes; positive: the bus arrives earlier than predicted)},
+  ylabel={Predictions (\%)},
+  xmin=-10, xmax=10, ymin=0, xtick={-10,-8,...,10},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\footnotesize, draw=none, fill=none, at={(0.02,0.98)}, anchor=north west}]
+\addplot[const plot mark mid, ruta, very thick] table[x=min, y=met] {figuras/errores.dat};
+\addlegendentry{Bide+}
+\addplot[const plot mark mid, gps, very thick, dashed] table[x=min, y=ofi] {figuras/errores.dat};
+\addlegendentry{Official Bizkaibus}
+\draw[gris, densely dotted] (axis cs:-2,0) -- (axis cs:-2,100);
+\draw[gris, densely dotted] (axis cs:2,0) -- (axis cs:2,100);
+\end{axis}
+\end{tikzpicture}
+\caption{Distribution of the error with the bus 10 to 20 minutes away (30-second bins; the end bins collect everything
+beyond $\pm10$ minutes). Dotted lines: $\pm2$ minutes. The official distribution is wide and shifted to the right: the
+bus often arrives several minutes before the announced time.}
+\label{fig:errors}
+\end{figure}
+
+The two sources fail in opposite directions (Figure~\ref{fig:errors}). The official median signed error is $+124$~s at
+10--20 minutes and $+149$~s at 20--30 minutes. In about half of the announcements made 10 to 30 minutes ahead, the bus
+arrives more than two minutes \emph{earlier} than announced (51--52\%, against 16\% for Bide+). This is the costly error
+for a passenger, who plans to reach the stop shortly before the announced time and finds that the bus has gone. Bide+
+leans slightly the other way at long horizons (median $-24$~s at 10--20 minutes and $-60$~s at 20--30 minutes): when it
+errs, the passenger more often waits a little longer than misses the bus.
 
 The official announcements are not simply the published timetable: only 12--17\% of them are within one minute of the
 timetable time, and the timetable itself is within two minutes of the actual passage in only 14--18\% of these cases.
 
-\subsection{Days, stops and robustness}
+\subsection{One bus}
 
-The pattern holds on every day (Table~\ref{tab:days-results}): the share within two minutes is 33--38\% for the official
-service and 59--72\% for the method. It holds on weekdays (37\% against 63\%) and on Sunday (33\% against 72\%), and at
-the priority stops (35\% against 62\%) as at the others (37\% against 66\%). For the second announced bus ($e_2$), which
-is further away, the official service is within two minutes in 26\% of cases and the method in 53\%.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\textwidth, height=6cm,
+  x dir=reverse,
+  xlabel={Minutes before the bus actually passed}, ylabel={Announced waiting time (min)},
+  xmin=0, xmax=30, ymin=0, ymax=34, xtick={30,25,...,0},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\footnotesize, draw=none, fill=white, at={(0.02,0.04)}, anchor=south west}]
+\addplot[gris, thick, domain=0:30] {x};
+\addlegendentry{Perfect prediction}
+\addplot[ruta, very thick, mark=*, mark size=1.2pt] table[x=antes, y=met] {figuras/ejemplo.dat};
+\addlegendentry{Bide+}
+\addplot[gps, very thick, dashed, mark=square*, mark size=1.2pt] table[x=antes, y=ofi] {figuras/ejemplo.dat};
+\addlegendentry{Official Bizkaibus}
+\end{axis}
+\end{tikzpicture}
+\caption{One bus, chosen because both of its error medians are close to the overall ones: line 3641 at stop 270 on
+Thursday 12 November, queried every minute during the 30 minutes before it passed. The grey line is a perfect prediction.
+The official announcements stay several minutes too long until the bus is close; Bide+ follows the line.}
+\label{fig:example}
+\end{figure}
+
+Figure~\ref{fig:example} shows the minute-by-minute announcements for one bus. With 20.8 minutes to go, the official service
+announced 24 minutes and Bide+ 22; with 9.5 minutes to go, 14 and 10. The official announcement only came within a minute
+of the actual waiting time in the last five minutes, the pattern behind Figures~\ref{fig:minutes} and~\ref{fig:errors}.
+
+\subsection{Stops, time of day and days}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.62\textwidth, height=0.62\textwidth,
+  xlabel={Official: within $\pm2$ min (\%)}, ylabel={Bide+: within $\pm2$ min (\%)},
+  xmin=0, xmax=100, ymin=0, ymax=100,
+  axis lines*=left, grid=major, grid style={gris!15},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\footnotesize, draw=none, fill=none, at={(0.98,0.02)}, anchor=south east}]
+\addplot[gris, domain=0:100] {x};
+\addlegendentry{Equal accuracy}
+\addplot[only marks, mark=*, mark size=1.6pt, ruta] table[x=ofi, y=met, restrict expr to domain={\thisrow{prioritaria}}{0:0}] {figuras/paradas.dat};
+\addlegendentry{Other stop}
+\addplot[only marks, mark=triangle*, mark size=2.2pt, gps] table[x=ofi, y=met, restrict expr to domain={\thisrow{prioritaria}}{1:1}] {figuras/paradas.dat};
+\addlegendentry{Priority stop}
+\end{axis}
+\end{tikzpicture}
+\caption{Each point is one of the 60 stops: share of predictions within two minutes, with the bus 3 to 30 minutes away.
+Bide+ is more accurate at 58 of the 60 stops (above the diagonal).}
+\label{fig:stops}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  name=horas, width=0.56\textwidth, height=5.4cm,
+  xlabel={Hour of the day}, ylabel={Within $\pm2$ min (\%)},
+  xmin=5.5, xmax=22.5, ymin=0, ymax=100, xtick={6,8,...,22},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\scriptsize, draw=none, fill=none, at={(0.5,1.02)}, anchor=south, legend columns=2}]
+\addplot[ruta, very thick, mark=*, mark size=1.2pt] table[x=hora, y=met] {figuras/horas.dat};
+\addlegendentry{Bide+}
+\addplot[gps, very thick, dashed, mark=square*, mark size=1.2pt] table[x=hora, y=ofi] {figuras/horas.dat};
+\addlegendentry{Official}
+\end{axis}
+\begin{axis}[
+  at={(horas.east)}, anchor=west, xshift=12mm,
+  width=0.48\textwidth, height=5.4cm,
+  ybar, bar width=5pt, ymin=0, ymax=100,
+  symbolic x coords={{Sun 8},{Mon 9},{Tue 10},{Wed 11*},{Thu 12},{Fri 13}},
+  xtick=data, x tick label style={rotate=45, anchor=east, font=\scriptsize},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}]
+\addplot[fill=ruta, draw=ruta] table[x=dia, y=met] {figuras/dias.dat};
+\addplot[fill=gps, draw=gps] table[x=dia, y=ofi] {figuras/dias.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Share within two minutes, bus 3 to 30 minutes away. Left: by hour of the query (five normal days). Right: by day
+(*~general strike, not part of the week's results).}
+\label{fig:hours-days}
+\end{figure}
+
+The advantage is not confined to a few stops, hours or days. Bide+ is more accurate at 58 of the 60 stops
+(Figure~\ref{fig:stops}), at every hour of the day (Figure~\ref{fig:hours-days}, left) and on every day (right). It holds
+on weekdays (37\% against 63\% within two minutes, all horizons) and on Sunday (33\% against 72\%), at the priority stops
+(35\% against 62\%) as at the others (37\% against 66\%), and for the second announced bus, which is further away (26\%
+against 53\%). Both sources are least accurate in the peaks, at 08:00 and around 17:00--19:00, when traffic is least
+predictable. Table~\ref{tab:groups} gives the figures by group.
+
+\begin{table}[t]
+\centering
+\caption{Errors by type of day, type of stop and announced bus, all horizons up to 30 minutes. Columns as in
+Table~\ref{tab:horizon}.}
+\label{tab:groups}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Bide+} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Group & Pairs & Median & $\pm$2 min & Early & Median & $\pm$2 min & Early \\
+\midrule
+\csname @@input\endcsname tablas/tipo.tex
+\midrule
+\csname @@input\endcsname tablas/paradas.tex
+\midrule
+\csname @@input\endcsname tablas/e.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Robustness}
+
+Buses of the same line can bunch, and then the matching could pick the wrong bus. Removing the pairs in which another bus of
+the same line passed within two minutes of the matched one removes 1.3\% of the pairs and changes no figure by more than one
+point. The day-by-day results (Table~\ref{tab:days-results}) show the same pattern on each day.
 
 \begin{table}[t]
 \centering
@@ -205,24 +441,21 @@ strike) is shown for reference and is not part of the results of the week.}
 \setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{lrrrrrrr}
 \toprule
- & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Method} \\
+ & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Bide+} \\
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}
 Day & Pairs & Median & $\pm$2 min & Early & Median & $\pm$2 min & Early \\
 \midrule
-\csname @@input\endcsname tablas/dias.tex 
+\csname @@input\endcsname tablas/dias.tex
 \bottomrule
 \end{tabular}
 \end{table}
 
-Removing the pairs in which another bus of the same line passed within two minutes of the matched one, where the
-matching could pick the wrong bus, removes 1.3\% of the pairs and changes no figure by more than one point.
-
 \subsection{The strike day}
 
-On Wednesday 11, with minimum services, the official service was within two minutes in 36\% of cases and the method in
-63\%, the same as on a normal day. The method was, however, more often late on that day: in 27\% of cases the bus
-arrived more than two minutes before its prediction, against 12--16\% on normal days. Its learned travel times come from
-normal traffic, and with fewer buses and lighter traffic the buses ran faster than learned.
+On Wednesday 11, with minimum services, the official service was within two minutes in 36\% of cases and Bide+ in 63\%,
+the same as on a normal day. Bide+ was, however, more often early on that day: in 27\% of cases the bus arrived more than
+two minutes before its prediction, against 12--16\% on normal days. Its learned travel times come from normal traffic,
+and with fewer buses and lighter traffic the buses ran faster than learned.
 
 % =====================================================================================================================
 \section{Discussion}
@@ -230,40 +463,42 @@ normal traffic, and with fewer buses and lighter traffic the buses ran faster th
 
 \subsection{What the comparison shows}
 
-On the buses and stops compared, a method that uses only the operator's open data predicts arrivals more accurately
-than the operator's own service from three minutes before arrival onwards, and the gap is largest, about 34 points in
-the share within two minutes, when the bus is 6 to 20 minutes away. That is the range in which a passenger decides when
-to leave for the stop. Below three minutes both are accurate, because both effectively see the bus approaching.
+On the buses and stops compared, a method that uses only the operator's open data predicts arrivals more accurately than
+the operator's own service from three minutes before arrival onwards. The gap is largest, about 34 points in the share
+within two minutes, when the bus is 6 to 20 minutes away: the range in which a passenger decides when to leave for the
+stop. In that range, a passenger who follows the official waiting time finds that the bus has already gone, or is about
+to, in roughly half of the cases; with Bide+, in about one in six. Below three minutes both are accurate, because both
+effectively see the bus approaching.
 
-The comparison does not reveal how the official service computes its waiting times, and we do not claim to know. Its
-errors grow quickly with the horizon and are biased towards announcing the bus later than it comes. That is the
-behaviour one would expect from a prediction that does not learn how fast buses actually travel on each segment, which is
-the core of the method \parencite{garrido2026metodo}.
+The comparison does not reveal how the official service computes its waiting times, and we do not claim to know. Its errors
+grow fast with the horizon and are biased towards announcing the bus later than it comes, the behaviour one would expect
+from a prediction that does not learn how fast buses actually travel on each segment. Learning those segment times is the
+core of the Bide+ method \parencite{garrido2026memoria,garrido2026metodo}, and the previous evaluations against the
+timetable already showed that the published intermediate times run slow on this network.
 
 \subsection{Third-party apps}
 
-Many passengers do not use the official app but general-purpose journey planners, which receive real-time data from
-operators. If such an app shows the operator's prediction unchanged, its accuracy is the official accuracy measured
-here. We have not measured any third-party app directly, and their processing may differ.
+Many passengers use general-purpose journey planners, which receive real-time data from operators. If such an app shows the
+operator's prediction unchanged, its accuracy is the official accuracy measured here. We have not measured any third-party
+app directly, and their processing may differ.
 
 \subsection{Limitations}
 
 \begin{itemize}
-  \item \textbf{Which buses are compared.} An announcement can only be compared if the actual passage of the matched
-        bus can be reconstructed from the feed. This excludes buses for which the stop is at or near the end of their
-        trip (the feed stops reporting them when the trip ends) and buses not reported by the feed. Of the official
-        announcements of the next bus up to 25 minutes ahead, 19\% could be paired. The results describe the buses
-        whose passage is observable, which are the majority of buses \emph{in the middle} of their trip, not every
-        announcement.
-  \item \textbf{One week, one network.} The data cover five normal days (one of them a Sunday) in November, at 60
-        stops chosen for their traffic and their difficulty. Other seasons, timetables or networks may differ.
+  \item \textbf{Which buses are compared.} An announcement can only be compared if the actual passage of the matched bus
+        can be reconstructed from the feed. This excludes buses for which the stop is at or near the end of their trip (the
+        feed stops reporting them when the trip ends) and buses not reported by the feed. Of the official announcements of
+        the next bus up to 25 minutes ahead, 19\% could be paired. The results describe buses whose passage is observable,
+        mostly buses in the middle of their trip, not every announcement.
+  \item \textbf{One week, one network.} The data cover five normal days (one of them a Sunday) in November, at 60 stops
+        chosen for their traffic and difficulty. Other seasons, timetables or networks may differ.
   \item \textbf{Resolution of the actual passage.} The feed changes every 60 seconds, so the actual passage is known to
-        about $\pm30$~s. This adds the same noise to both sources and cannot explain differences of minutes.
-  \item \textbf{Matching.} The official service does not identify the vehicle it announces. Matching by order of
-        passage is what a passenger experiences, and the results do not change when ambiguous cases are removed.
-  \item \textbf{The method is the replay, not the app.} The method is recomputed from the feed with its reference
-        implementation, with tables frozen before the week. The live app recalibrates every night and also remembers
-        buses that have recently passed, so it may perform slightly differently.
+        about $\pm30$~s. This noise is shared by both sources and cannot explain differences of minutes.
+  \item \textbf{Matching.} The official service does not identify the vehicle it announces. Matching by order of passage is
+        what a passenger experiences, and the results do not change when ambiguous cases are removed.
+  \item \textbf{The replay, not the app.} Bide+ is recomputed with its reference implementation and tables frozen before
+        the week. The live app recalibrates every night and remembers buses that have just passed, so it may perform
+        slightly differently, most likely better.
 \end{itemize}
 
 % =====================================================================================================================
@@ -271,19 +506,20 @@ here. We have not measured any third-party app directly, and their processing ma
 \label{sec:repro}
 
 The capture program, the list of stops with the reason for each, the days used (\texttt{dias.json}), the comparison
-(\texttt{comparar.py}) and the tables (\texttt{resultados.py}) are in the folder \texttt{articulo-comparacion} of the
-repository. The raw captures (feed snapshots, official responses and the timetable of each day) are published as assets
-of the release \texttt{comparacion-2026-11}. The method's reference implementation and the learned tables used are those
-of the companion paper.
+(\texttt{comparar.py}), the tables (\texttt{resultados.py}) and the figure data (\texttt{figuras.py}) are in the folder
+\texttt{articulo-comparacion} of the repository. The raw captures (feed copies, official responses and the timetable of
+each day) are assets of the release \texttt{comparacion-2026-11}. The reference implementation of the Bide+ method, its
+test vectors and the learned tables are those of the companion paper, and the technical report
+\parencite{garrido2026memoria} documents every constant.
 
 % =====================================================================================================================
 \section{Conclusions}
 \label{sec:conclusions}
 
-For one week, at 60 stops of the Bizkaibus network, we recorded the official real-time waiting times minute by minute
-and compared them, bus by bus, with the arrivals predicted by an open method that uses only the operator's published
-positions and timetable. With the bus 6 to 20 minutes away, the official service is within two minutes of the actual
-passage in about a third of cases and the method in about two thirds, and the official errors are mostly in the
-direction that makes passengers miss the bus. Operators that publish their vehicle positions already make possible
-predictions better than their own; adopting a learned, segment-based method, or opening the predictions to independent
-evaluation, would directly benefit their passengers.
+For one week, at 60 stops of the Bizkaibus network, we recorded the official real-time waiting times minute by minute and
+compared them, bus by bus, with the arrivals predicted by the Bide+ method, which uses only the operator's published
+positions and timetable. With the bus 6 to 20 minutes away, the official service is within two minutes of the actual passage
+in about a third of cases and Bide+ in about two thirds, at almost every stop, hour and day. The official errors are mostly
+in the direction that makes passengers miss the bus. Operators that publish their vehicle positions already make possible
+predictions better than their own. Adopting a method that learns segment travel times, or opening their predictions to
+independent evaluation, would directly benefit their passengers.

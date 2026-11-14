@@ -10,6 +10,14 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs,tabularx}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\definecolor{ruta}{HTML}{01573C}
+\definecolor{gps}{HTML}{C8102E}
+\definecolor{gris}{HTML}{6B7280}
 \usepackage[hidelinks]{hyperref}
 \makeatletter\let\c@author\relax\makeatother
 \usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false,giveninits=true,doi=true,url=false]{biblatex}
@@ -27,8 +35,8 @@
 
 \begin{frontmatter}
 
-\title{Can open data beat the operator? A paired comparison of a reproducible arrival prediction method with the
-official real-time waiting times of an interurban bus network}
+\title{Bide+ versus the official Bizkaibus waiting times: a paired comparison of bus arrival predictions on the same
+buses, stops and minutes}
 
 \author{Yeray Garrido\fnref{orcid}}
 \fntext[orcid]{Independent researcher, Bilbao, Biscay, Spain. ORCID:
