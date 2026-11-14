@@ -96,33 +96,63 @@ def main():
                round(p2([p['eo'] for p in v]), 1), round(p2([p['em'] for p in v]), 1), round(p2([p['eh'] for p in v]), 1))
               for d, v in sorted(por_dia.items())])
 
-    # 6. Ejemplos: uno al azar de toda la red, uno al azar de la línea 3513 y uno al azar en cada sentido de San Juan (Amorebieta), paradas
-    # 3388 y 3391, de las líneas 3513, 3514 y 3515 (semilla fija), entre los pasos con consultas desde 25 minutos antes.
+    # 6. Ejemplos: cuatro autobuses al azar de toda la red (semilla fija), entre los pasos con consultas desde 25 min antes.
     pasos = collections.defaultdict(list)
     for p in semana:
         if p['e'] == 1:
             pasos[RS.clave_paso(p)].append(p)
+
     def validos(filtro):
         return sorted(k for k, ps in pasos.items() if filtro(k, ps) and max(p['real'] - p['t'] for p in ps) >= 1500 and len(ps) >= 15)
-    rnd = random.Random(2026)
+
+    def escribir_ejemplo(nombre, k):
+        ps = sorted(pasos[k], key=lambda p: p['t'])
+        escribir(os.path.join(salida, nombre), 'antes ofi hor met',
+                 [(round((p['real'] - p['t']) / 60, 2), round((p['oficial'] - p['t']) / 60, 2), round((p['horario'] - p['t']) / 60, 2),
+                   round((p['t'] + 60 * max(0, RS.redondeo_php((p['metodo'] - p['t']) / 60)) - p['t']) / 60, 2)) for p in ps])
+        return '%s %s línea %s parada %s vehículo %s' % (nombre, k[0], ps[0]['linea'], k[3], k[2])
+
     candidatos = validos(lambda k, ps: True)
-    elegidos = rnd.sample(candidatos, 1)
-    # Segundo ejemplo: un autobús al azar de la línea 3513, fuera de San Juan, para que salgan las tres líneas.
-    elegidos.append(rnd.choice(validos(lambda k, ps: ps[0]['linea'] == '3513' and k[3] not in ('3388', '3391'))))
-    for parada in ('3388', '3391'):
-        elegidos.append(rnd.choice(validos(lambda k, ps, s=parada: k[3] == s and ps[0]['linea'] in ('3513', '3514', '3515'))))
+    elegidos = random.Random(2026).sample(candidatos, 4)
     with open(os.path.join(salida, 'ejemplos.txt'), 'w', encoding='utf-8') as f:
         for i, k in enumerate(elegidos, 1):
-            ps = sorted(pasos[k], key=lambda p: p['t'])
-            escribir(os.path.join(salida, 'ejemplo%d.dat' % i), 'antes ofi hor met',
-                     [(round((p['real'] - p['t']) / 60, 2), round((p['oficial'] - p['t']) / 60, 2), round((p['horario'] - p['t']) / 60, 2),
-                       round((p['t'] + 60 * max(0, RS.redondeo_php((p['metodo'] - p['t']) / 60)) - p['t']) / 60, 2)) for p in ps])
-            f.write('%d %s línea %s parada %s vehículo %s\n' % (i, k[0], ps[0]['linea'], k[3], k[2]))
-    # Y el resumen de San Juan (Amorebieta), líneas 3513–3515, los dos sentidos, de 3 a 30 minutos.
-    sj = [p for p in semana if p['parada'] in ('3388', '3391') and p['linea'] in ('3513', '3514', '3515') and p['real'] - p['t'] >= 180]
-    r = RS.resumen(sj)
+            f.write(escribir_ejemplo('ejemplo%d.dat' % i, k) + '\n')
+
+    # 7. San Juan (Amorebieta), paradas 3388 y 3391 (un sentido cada una), líneas 3513, 3514 y 3515: un autobús al azar por
+    # sentido, la proporción a ±2 min por línea y por minutos hasta el paso, y el resumen (3–30 min).
+    SJ, LINEAS = ('3388', '3391'), ('3513', '3514', '3515')
+    rnd = random.Random(2026)
     with open(os.path.join(salida, 'sanjuan.txt'), 'w', encoding='utf-8') as f:
-        f.write('pares %d horario %.1f oficial %.1f bide %.1f\n' % (len(sj), 100 * r['horario']['p2'], 100 * r['oficial']['p2'], 100 * r['bide']['p2']))
+        for i, parada in enumerate(SJ, 1):
+            k = rnd.choice(validos(lambda k, ps, s=parada: k[3] == s and ps[0]['linea'] in LINEAS))
+            f.write(escribir_ejemplo('sanjuan%d.dat' % i, k) + '\n')
+        sj = [p for p in semana if p['parada'] in SJ and p['linea'] in LINEAS]
+        sj3 = [p for p in sj if p['real'] - p['t'] >= 180]
+        r = RS.resumen(sj3)
+        f.write('pares3a30 %d horario %.1f oficial %.1f bide %.1f\n' % (len(sj3), 100 * r['horario']['p2'], 100 * r['oficial']['p2'], 100 * r['bide']['p2']))
+        for parada in SJ:
+            ps = [p for p in sj3 if p['parada'] == parada]
+            r = RS.resumen(ps)
+            f.write('parada %s pares %d horario %.1f oficial %.1f bide %.1f\n' % (parada, len(ps), 100 * r['horario']['p2'], 100 * r['oficial']['p2'], 100 * r['bide']['p2']))
+    filas = []
+    for linea in LINEAS:
+        ps = [p for p in sj3 if p['linea'] == linea]
+        r = RS.resumen(ps)
+        filas.append((linea, round(100 * r['horario']['p2'], 1), round(100 * r['oficial']['p2'], 1), round(100 * r['bide']['p2'], 1), len(ps)))
+    escribir(os.path.join(salida, 'sanjuan-lineas.dat'), 'linea hor ofi met n', filas)
+    filas = []
+    for lo, hi, nombre in RS.HORIZONTES:
+        ps = [p for p in sj if lo <= p['real'] - p['t'] < hi]
+        r = RS.resumen(ps)
+        filas.append(((lo + hi) / 120, round(100 * r['horario']['p2'], 1), round(100 * r['oficial']['p2'], 1), round(100 * r['bide']['p2'], 1), len(ps)))
+    escribir(os.path.join(salida, 'sanjuan-horizonte.dat'), 'min hor ofi met n', filas)
+
+    # 8. Curva de desplazamiento del paso real (±2 min con todos los horizontes) y paso por GPS.
+    filas = []
+    for s in range(-180, 181, 30):
+        r = RS.resumen(semana, desplazamiento=s)
+        filas.append((s, round(100 * r['horario']['p2'], 1), round(100 * r['oficial']['p2'], 1), round(100 * r['bide']['p2'], 1)))
+    escribir(os.path.join(salida, 'desplazamiento.dat'), 's hor ofi met', filas)
     print('candidatos', len(candidatos), 'elegidos', elegidos)
 
 
