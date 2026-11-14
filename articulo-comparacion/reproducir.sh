@@ -28,4 +28,5 @@ done
 python3 -I articulo-comparacion/resultados.py "$W/pares" --ablacion todo="$W/abl-todo" --ablacion tramos="$W/abl-tramos" \
   --ablacion ritmo="$W/abl-ritmo" --ablacion viajes="$W/abl-viajes" --tex articulo-comparacion/tablas | tee "$W/resultados.txt"
 python3 -I articulo-comparacion/figuras.py "$W/pares" articulo-comparacion/figuras
+python3 -I articulo-comparacion/extra.py "$W/pares" "$W/dias" --tramos "$W/abl-tramos" --tex articulo-comparacion/tablas | tee "$W/extra.txt"
 (cd articulo-comparacion && latexmk -pdf -interaction=nonstopmode articulo.tex)

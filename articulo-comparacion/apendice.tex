@@ -1,6 +1,7 @@
 % =====================================================================================================================
 \appendix
 \section{Supporting tables and figures}
+\setcounter{table}{0}\setcounter{figure}{0}
 \label{app:extra}
 
 \begin{table}[h]
@@ -18,6 +19,54 @@ distance check failed. \emph{Main}: pairs in the main analysis. *~General strike
 Day & Queries & Paired & Beyond 30 & Within 30 & Fallback & Excl. & Not conf. & Main \\
 \midrule
 \csname @@input\endcsname tablas/flujo.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Coverage of the official announcements of the first bus with an announced wait under 30 minutes (five normal
+days, 06:00--23:00), by minutes announced: share paired with a bus whose passage was observed within 30 minutes, and share
+in the main analysis (\%).}
+\label{tab:coverage}
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+Announced & Announcements & Paired & Main \\
+\midrule
+\csname @@input\endcsname tablas/cobertura.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Share within two minutes (\%) in the main analysis and in the paired announcements excluded from it (all
+horizons up to 30 minutes, five normal days, excluded stop and failed reconstructions removed). For pairs whose bus was not
+in the feed, Bide+ gives its fallback prediction.}
+\label{tab:excluded}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Pairs & Number & Timetable & Official & Bide+ \\
+\midrule
+\csname @@input\endcsname tablas/excluidos.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Share within two minutes (\%) by decile of the ratio between the official distance and the straight-line distance
+of the matched bus (main analysis, bus more than 500~m away). Bide+ is ahead in every decile, so the result does not
+depend on the pairs whose identity is least certain.}
+\label{tab:ratio}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Decile & Ratio & Pairs & Official & Bide+ \\
+\midrule
+\csname @@input\endcsname tablas/razon.tex 
 \bottomrule
 \end{tabular}
 \end{table}
@@ -168,26 +217,26 @@ Day & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$2 & Ea
 \pgfplotsset{ejemplo/.style={width=0.5\textwidth, height=4.4cm, x dir=reverse, xmin=0, xmax=30, ymin=0, ymax=45,
   xtick={30,20,10,0}, axis lines*=left, ymajorgrids, grid style={gris!20}, tick label style={font=\scriptsize},
   label style={font=\scriptsize}, title style={font=\scriptsize}}}
-\begin{axis}[ejemplo, name=e1, title={Line 3917, stop 255, Sun 8}, ylabel={Predicted wait (min)}]
+\begin{axis}[ejemplo, name=e1, title={Line 3917, stop 2576, Sun 8}, ylabel={Predicted wait (min)}]
 \addplot[gris, thin, domain=0:30] {x};
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo1.dat};
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo1.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo1.dat};
 \end{axis}
-\begin{axis}[ejemplo, name=e2, at={(e1.east)}, anchor=west, xshift=8mm, title={Line 3527, stop 3396, Tue 10}]
+\begin{axis}[ejemplo, name=e2, at={(e1.east)}, anchor=west, xshift=8mm, title={Line 3527, stop 3437, Tue 10}]
 \addplot[gris, thin, domain=0:30] {x};
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo2.dat};
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo2.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo2.dat};
 \end{axis}
 \begin{axis}[ejemplo, name=e3, at={(e1.below south west)}, anchor=north west, yshift=-6mm,
-  title={Line 3632, stop 2576, Thu 12}, ylabel={Predicted wait (min)}, xlabel={Minutes before the actual passage}]
+  title={Line 3641, stop 270, Thu 12}, ylabel={Predicted wait (min)}, xlabel={Minutes before the actual passage}]
 \addplot[gris, thin, domain=0:30] {x};
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo3.dat};
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo3.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo3.dat};
 \end{axis}
-\begin{axis}[ejemplo, at={(e3.east)}, anchor=west, xshift=8mm, title={Line 3642, stop 4087, Thu 12},
+\begin{axis}[ejemplo, at={(e3.east)}, anchor=west, xshift=8mm, title={Line 3911, stop 264, Thu 12},
   xlabel={Minutes before the actual passage},
   legend style={font=\scriptsize, draw=none, fill=white, at={(0.02,0.98)}, anchor=north west}]
 \addplot[gris, thin, domain=0:30] {x};
@@ -240,6 +289,6 @@ the passages with queries from at least 25 minutes before. The thin line is a pe
 \end{axis}
 \end{tikzpicture}
 \caption{Share within two minutes with the bus 3 to 30 minutes away. Left: by hour of the query (five normal days,
-12,000 to 36,000 pairs per hour). Right: by day (*~general strike, not part of the main results).}
+12,000 to 37,000 pairs per hour). Right: by day (*~general strike, not part of the main results).}
 \label{fig:hours-days}
 \end{figure}

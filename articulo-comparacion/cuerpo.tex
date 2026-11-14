@@ -37,7 +37,7 @@ The contributions are:
         publishes positions but not predictions: what to capture, how to match each announcement to a vehicle and confirm
         it, how to reconstruct the actual passage and check it against an independent GPS-based passage, and how to report
         coverage.
-  \item The comparison of the three sources over 484,026 paired predictions on five normal days, by actual and announced
+  \item The comparison of the three sources over 491,612 paired predictions on five normal days, by actual and announced
         time to arrival, with inference that accounts for dependence within trips and stops, a passenger decision model, an
         ablation of the learned components of Bide+, and a set of sensitivity analyses.
   \item The capture program, the raw data, the timetable and learned tables used, and the analysis, openly available, so
@@ -170,8 +170,10 @@ For a query sent at time $t$ to stop $s$, and the bus matched to it (Section~\re
   \item \textbf{Timetable:} $\hat a_{\mathrm{tt}}$, the published time of the bus's trip at $s$.
   \item \textbf{Official:} $\hat a_{\mathrm{off}} = t + 60\,m$, where $m$ is the announced waiting time in minutes. Whether
         the service rounds or truncates $m$ is unknown; truncation is tested in the sensitivity analysis.
-  \item \textbf{Bide+:} the prediction of the reference implementation in the last copy of the feed before $t$, at most
-        60 seconds old (median 28~s, a small handicap for Bide+), with the learned tables of Saturday 7 November,
+  \item \textbf{Bide+:} the prediction of the reference implementation in the last copy of the feed downloaded at or
+        before $t$, at most 60 seconds earlier (median 10~s). The positions in a copy are themselves older than its
+        download: the newest position in each copy was a median of 77~s older than the download (10th and 90th
+        percentiles 45 and 112~s), so Bide+ works with positions about one and a half minutes old. It uses the learned tables of Saturday 7 November,
         calibrated only with data from before the week and not updated during it. It is rounded to whole minutes from
         $t$ as the app shows it, $\hat a_{\mathrm{B+}} = t + 60\max(0, [(\hat a - t)/60])$, halves away from zero.
 \end{itemize}
@@ -188,7 +190,7 @@ changes every 60 seconds, $a$ is known to within about $\pm30$~s.
 
 \paragraph{From GPS} This definition uses the same feed field that Bide+ uses. An independent passage $a_{\mathrm{GPS}}$
 is therefore computed from the positions alone: the moment of closest approach of the bus to the stop, interpolated between
-the two positions that bracket the stop, if one of them is within 500~m. It is available for 99.7\% of the pairs. The two
+the two positions that bracket the stop, if one of them is within 500~m. It is available for 99.7\% of the eligible pairs. The two
 agree closely: $a_{\mathrm{GPS}} - a$ has a median of $-4$~s, its 10th and 90th percentiles are $-36$ and $+34$~s, and
 89\% of the differences are within one minute. The main analysis uses $a$; $a_{\mathrm{GPS}}$ is used as an alternative
 ground truth.
@@ -210,8 +212,8 @@ $s$ after $t$, and its second announcement ($e_2$) to the second; passages up to
 match is accepted only if the distance that the official service gives for the announced bus is consistent with the
 straight-line distance of the matched bus from the stop in the feed: within 500~m, or between 0.6 and 2 times it. The
 official distance appears to be measured along the road: for buses more than 1~km away, its ratio to the straight-line
-distance has a median of 1.28 (10th and 90th percentiles 0.97 and 1.91). The check rejects a median of 6\% of the pairs
-per stop (at most 37\%). A stricter version, within 300~m or between 0.9 and 1.6 times, is reported as a sensitivity
+distance has a median of 1.24 (10th and 90th percentiles 0.78 and 1.87); ratios below one occur because the feed
+position is older than the official answer. The check rejects a median of 11\% of the pairs per stop (at most 40\%). A stricter version, within 300~m or between 0.9 and 1.6 times, is reported as a sensitivity
 analysis. Lines listed twice in the same response would be left out; there were none. No stop is visited twice by the same trip,
 but 12 of the 60 stops are the last stop of some routes; a bus ending its trip there has no reconstructed passage, so an
 announcement for it would be matched to the next bus. Such a mismatch makes the official error negative, the opposite of
@@ -248,10 +250,18 @@ the share of missed buses and the expected wait including that cost, for announc
 
 \subsection{Pairs and coverage}
 
-Of the official announcements of the next bus less than 30 minutes ahead on the five normal days (720,567), 74.0\% could
-be paired with a bus whose actual passage was observed, and 54.8\% passed the identity check and entered the main
-analysis. The main analysis has 484,026 pairs: 25,843 passages of 9,137 trips, made by 316 vehicles on 73 lines, at 59
-stops, with between 199 and 281 different vehicles in each hour from 06:00 to 22:00. Table~\ref{tab:flow} in
+Coverage is measured on the official announcements of the first bus of each line with an announced wait under 30
+minutes, on the five normal days: 720,567. Of these, 533,549 (74.0\%) could be paired with a bus whose actual passage
+was observed, and 396,931 (55.1\%) entered the main analysis; the rest were lost because the bus was not in the feed at
+$t$ or failed the identity check. The share entering the main analysis is lowest for announcements of 0--2 minutes
+(44\%) and of 20--29 minutes (49\%) and highest at 3--9 minutes (62--65\%; Table~\ref{tab:coverage} in
+\ref{app:extra}). The main analysis, which also includes announcements of the second bus and of 30 minutes or more whose
+bus passed within 30 minutes, has 491,612 pairs: 25,748 passages of 9,098 trips, made by 316 vehicles on 73 lines, at
+59 stops, with between 160 and 281 different vehicles in each hour from 06:00 to 22:00. For the announcements that could
+be paired but did not enter the main analysis, the official real time was as accurate as in the main analysis (42\% within
+two minutes when the bus was not in the feed, 40\% when the identity was not confirmed, against 39\%), and so was Bide+
+(63\% and 67\%, against 64\%; Table~\ref{tab:excluded}). Announcements that could not be paired at all cannot be
+evaluated. Table~\ref{tab:flow} in
 \ref{app:extra} follows the pairs by day.
 
 \subsection{Accuracy by time to arrival}
@@ -288,7 +298,7 @@ stops, with between 199 and 281 different vehicles in each hour from 06:00 to 22
 \end{tikzpicture}
 \caption{Top: share of predictions within two minutes of the actual passage, by minutes to that passage (one-minute bins).
 Bottom: 95\% bootstrap interval (2,000 resamples of trips per bin) of the difference, Bide+ minus official, in percentage
-points. Main analysis, 484,026 pairs.}
+points. Main analysis, 491,612 pairs.}
 \label{fig:minutes}
 \end{figure}
 
@@ -311,12 +321,12 @@ Minutes & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$2 
 \end{tabular}
 \end{table}
 
-The published timetable is within two minutes of the actual passage in 14--19\% of cases at every horizon, with a median
+The published timetable is within two minutes of the actual passage in 14--20\% of cases at every horizon, with a median
 absolute error of six to eight minutes (Table~\ref{tab:horizon}, Figure~\ref{fig:minutes}). With the bus less than three
-minutes away, the official real time and Bide+ are equally accurate: 92\% of their predictions are within two minutes
-(difference $-0.6$ to $+0.2$ points, 95\% interval by trip). From three minutes on, Bide+ is more often within two minutes:
-82\% against 59\% at 3--6 minutes, 75\% against 42\% at 6--10, 63\% against 31\% at 10--20 and 49\% against 23\% at 20--30
-minutes. Over all horizons the shares are 16\% for the timetable, 41\% for the official real time and 67\% for Bide+, and
+minutes away, the official real time and Bide+ are equally often within two minutes (90\%; difference $-0.7$ to $+0.3$
+points, 95\% interval by trip). From three minutes on, Bide+ is more often within two minutes: 80\% against 59\% at 3--6
+minutes, 74\% against 42\% at 6--10, 62\% against 30\% at 10--20 and 48\% against 23\% at 20--30 minutes. Over all
+horizons the shares are 16\% for the timetable, 39\% for the official real time and 64\% for Bide+, and
 the ordering is the same within one and within three minutes (Table~\ref{tab:metrics} in \ref{app:extra}).
 
 \subsection{Inference}
@@ -339,23 +349,25 @@ Minutes & By trip & By stop & $d$ (s) & $z$ (stop) & $z$ (stop-day) \\
 \end{table}
 
 From three minutes on, the difference in the share within two minutes is positive with either clustering; the lowest
-lower bound, by stop at 3--6 minutes, is 16 points (Table~\ref{tab:inference}). The mean absolute
+lower bound, by stop at 3--6 minutes, is 14 points (Table~\ref{tab:inference}). Resampling whole lines (73) gives
+similar intervals, from $+16$ to $+36$ points at 3 to 20 minutes and $[-3.8, +3.0]$ below three minutes. The mean absolute
 error gives a more nuanced picture. Below six minutes the official real time has the smaller mean absolute error, because
 Bide+ has more very large errors (Section~\ref{sec:tails}); between 6 and 10 minutes the two do not differ; from 10 minutes
-on Bide+ has the smaller mean absolute error, by 76 to 141~s. Bide+ is therefore more often close to the actual passage
+on Bide+ has the smaller mean absolute error, by 77 to 140~s. Bide+ is therefore more often close to the actual passage
 from three minutes on, while its mean error is smaller only from ten.
 
 \subsection{Accuracy by announced waiting time}
 
 A passenger sees the announced time, not the actual one. Table~\ref{tab:announced} bins all announcements of up to 29
 minutes by the minutes announced. The ranking is the same: when the official service announced 6 to 9 minutes, its
-announcement was within two minutes of the actual passage in 54\% of cases and Bide+ in 76\%; at 10 to 19 minutes, 37\% and
-65\%; at 20 to 29 minutes, 23\% and 52\%. Over all these announcements the shares are 17\%, 44\% and 67\%.
+announcement was within two minutes of the actual passage in 54\% of cases and Bide+ in 74\%; at 10 to 19 minutes, 36\% and
+63\%; at 20 to 29 minutes, 23\% and 51\%. Over all these announcements the shares are 17\%, 42\% and 64\%.
 
 \begin{table}[t]
 \centering
 \caption{Errors of the three sources by the waiting time announced by the official service (minutes, $m \le 29$; buses
-passing within the next hour). Columns as in Table~\ref{tab:horizon}.}
+passing within the next hour). Columns as in Table~\ref{tab:horizon}. At 0--2 minutes the official \emph{Early} share is
+zero by construction, since $\hat a_{\mathrm{off}} \le t + 120$~s $\le a + 120$~s.}
 \label{tab:announced}
 \footnotesize
 \setlength{\tabcolsep}{2.6pt}
@@ -372,10 +384,10 @@ Announced & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$
 
 \subsection{Robustness to the ground truth}
 
-With the GPS-based passage as ground truth, the shares within two minutes are 16\%, 42\% and 69\%, and below three minutes
-Bide+ is slightly ahead (95\% against 94\%; Table~\ref{tab:gps} in \ref{app:extra}). Shifting the feed-based passage
+With the GPS-based passage as ground truth (483,567 pairs, re-binned by time to that passage), the shares within two
+minutes are 16\%, 40\% and 66\%, and below three minutes Bide+ is slightly ahead (93\% against 92\%; Table~\ref{tab:gps} in \ref{app:extra}). Shifting the feed-based passage
 (Figure~\ref{fig:shift} in \ref{app:extra}) shows that Bide+ fits best when the passage is taken 30~s earlier and the
-official real time when it is taken as is. Bide+ stays ahead unless the true passage were more than two minutes later than
+official real time when it is taken as is or 30~s later. Bide+ stays ahead unless the true passage were more than two minutes later than
 reconstructed, an offset that the agreement with the GPS-based passage rules out. The ranking is also unchanged in the
 other 11 sensitivity analyses (Table~\ref{tab:sensitivity} in \ref{app:extra}): official minutes truncated rather than
 rounded, Bide+ in seconds or truncated, a stricter identity check or none, with the fallback pairs, without Zabalburu, with
@@ -416,23 +428,23 @@ only.
 \end{tikzpicture}
 \caption{Errors with the bus 10 to 20 minutes away (legend in the left panel). Left: cumulative distribution of the
 absolute error. Right: distribution of the signed error in 30-second bins; positive means the bus arrives earlier than
-predicted. Beyond $+10$ minutes lie 33.8\% of timetable, 10.6\% of official and 1.4\% of Bide+ predictions; below $-10$
-minutes, 4.8\%, 0.5\% and 0.5\%.}
+predicted. Beyond $+10$ minutes lie 34.4\% of timetable, 10.8\% of official and 1.3\% of Bide+ predictions; below $-10$
+minutes, 4.6\%, 0.4\% and 0.6\%.}
 \label{fig:errors}
 \end{figure}
 
-The timetable errs in one direction: buses run ahead of it (median signed error $+334$~s at 10--20 minutes), and 63\% of
+The timetable errs in one direction: buses run ahead of it (median signed error $+346$~s at 10--20 minutes), and 64\% of
 them pass more than two minutes before the published time. The official real time keeps that direction with less than
-half the size ($+132$~s): in about half of the cases at 10 to 30 minutes, the bus passes more than two minutes before the
-announced time. Bide+ is nearly centred ($-32$~s at 10--20 minutes), and the bus is more than two minutes early in 12\% of
+half the size ($+138$~s): in more than half of the cases at 10 to 30 minutes, the bus passes more than two minutes before the
+announced time. Bide+ is nearly centred ($-34$~s at 10--20 minutes), and the bus is more than two minutes early in 13\% of
 cases at those horizons (Figure~\ref{fig:errors}; Table~\ref{tab:horizon-extra} in \ref{app:extra}).
 
-Bide+ has, however, more very large errors at short horizons: with the bus less than six minutes away, 1.7--1.8\% of its
-predictions are more than ten minutes off, against 0.1--1.1\% for the official real time (Table~\ref{tab:tails} in
-\ref{app:extra}). Of these 2,030 errors, 832 occur at one Bilbao stop (Zabalburu, 305), and two thirds come from its
+Bide+ has, however, more very large errors at short horizons: with the bus less than six minutes away, 1.6--1.7\% of its
+predictions are more than ten minutes off, against 0.1--1.2\% for the official real time (Table~\ref{tab:tails} in
+\ref{app:extra}). Of these 1,627 errors, 585 occur at one Bilbao stop (Zabalburu, 305), and 70\% come from its
 fallback layers: the bus was in the feed, but the GPS layer abstained and Bide+ used the last reported stop or the
-corrected timetable. Without that stop the shares within two minutes are unchanged (41\% and
-67\%; Table~\ref{tab:sensitivity}).
+corrected timetable. Without that stop the shares within two minutes are 39\% and
+65\% ( Table~\ref{tab:sensitivity}).
 
 \subsection{Consequences for a passenger}
 
@@ -455,8 +467,11 @@ $k$ & Miss & Wait & Miss & Wait & Miss & Wait \\
 \end{table}
 
 A passenger who arrives two minutes before the predicted time misses the bus in 58\% of cases when following the
-timetable, 37\% with the official real time and 9\% with Bide+. Counting the wait for the next bus when the first is
-missed, the expected wait is 19.9, 18.1 and 5.3 minutes (Table~\ref{tab:passenger}). The ranking holds for every margin.
+timetable, 38\% with the official real time and 9\% with Bide+. Counting the wait for the next bus when the first is
+missed, the expected wait is 20.1, 18.5 and 5.6 minutes (Table~\ref{tab:passenger}). The ranking of missed buses holds for every
+margin; Bide+ gives the shortest expected wait for every margin, but with a one-minute margin the official real time gives
+a slightly longer one than the timetable. The model uses 353,392 of the 401,356 announcements of 3 to 29 minutes; the
+rest, mostly the last buses of the day, have no next bus of the line within two hours.
 The model is deliberately simple: it ignores that a passenger may see an updated prediction on the way to the stop.
 
 \subsection{San Juan (Amorebieta)}
@@ -475,7 +490,7 @@ The model is deliberately simple: it ignores that a passenger may see an updated
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/sanjuan1.dat};
 \end{axis}
 \begin{axis}[sj, name=s2, at={(s1.east)}, anchor=west, xshift=10mm, x dir=reverse, xmin=0, xmax=30, ymin=0, ymax=45,
-  xtick={30,20,10,0}, title={Direction 2: stop 3391, line 3513, Thu 12}, xlabel={Minutes before the actual passage},
+  xtick={30,20,10,0}, title={Direction 2: stop 3391, line 3514, Thu 12}, xlabel={Minutes before the actual passage},
   legend style={font=\scriptsize, draw=none, fill=none, at={(-0.12,1.22)}, anchor=south, legend columns=4,
     /tikz/every even column/.append style={column sep=3mm}}]
 \addplot[gris, thin, domain=0:30] {x};
@@ -509,10 +524,10 @@ minutes to the actual passage (points at the middle of the bins of Table~\ref{ta
 \end{figure}
 
 San Juan, in Amorebieta, is one of the stops that passengers asked about, served in both directions by lines 3513 to 3515
-(Figure~\ref{fig:sanjuan}). Over 8,298 pairs with the bus 3 to 30 minutes away, the timetable was within two minutes in
-17\% of cases, the official real time in 33\% and Bide+ in 67\%, close to the network-wide figures for the same horizons
-(15\%, 34\% and 63\%). The official real time was much less accurate in one direction (20\% at stop 3388) than in the other
-(47\% at 3391), while Bide+ was similar in both (65\% and 70\%). The two buses drawn at random illustrate the aggregate pattern:
+(Figure~\ref{fig:sanjuan}). Over 8,563 pairs with the bus 3 to 30 minutes away, the timetable was within two minutes in
+17.1\% of cases, the official real time in 32.4\% and Bide+ in 64.5\%, close to the network-wide figures for the same
+horizons (15.3\%, 33.6\% and 61.6\%). The official real time was much less accurate in one direction (19\% at stop 3388)
+than in the other (46\% at 3391), while Bide+ was more similar in both (60\% and 69\%). The two buses drawn at random illustrate the aggregate pattern:
 the timetable is offset by a roughly constant amount, the official real time is closer but announces the bus later than it
 comes, and Bide+ follows the actual waiting time most closely. Four buses drawn at random from the whole network are shown in
 Figure~\ref{fig:examples} in \ref{app:extra}.
@@ -544,14 +559,15 @@ Figure~\ref{fig:examples} in \ref{app:extra}.
 \end{axis}
 \end{tikzpicture}
 \caption{Each point is one stop (bus 3 to 30 minutes away; marker radius proportional to the square root of the number of
-pairs, on the same scale for both groups). Bide+ is more often within two minutes at 57 of the 59 stops, and at 56 the
-95\% interval of the difference (2,000 resamples of trips) excludes zero.}
+pairs, on the same scale for both groups). Bide+ is more often within two minutes at 57 of the 59 stops; at 56 the
+unadjusted 95\% interval of the difference (2,000 resamples of trips) excludes zero, and 56 remain significant after a
+Holm correction for 59 tests.}
 \label{fig:stops}
 \end{figure}
 
 The ranking is not confined to a few stops, hours or days. Bide+ is more often within two minutes than the official real
-time at 57 of the 59 stops (Figure~\ref{fig:stops}). Of the other two, at Zabalburu (305) the two tie (35\%), and at Labakua
-(2856) the timetable is the most accurate source (72\%, against 65\% official and 59\% Bide+). The ranking timetable,
+time at 57 of the 59 stops (Figure~\ref{fig:stops}). Of the other two, at Zabalburu (305) the two practically tie (35.5\% and 35.1\%), and at
+Labakua (2856) the timetable is the most accurate source (75\%, against 68\% official and 61\% Bide+). The ranking timetable,
 official, Bide+ holds at every hour from 06:00 to 22:00 and on each of the five normal days
 (Figure~\ref{fig:hours-days} in \ref{app:extra}), at the priority stops and at the others, on weekdays and on Sunday, and
 for the second announced bus (Table~\ref{tab:groups}).
@@ -577,16 +593,17 @@ Minutes & Pairs & Official & all tables & segment times & pace factors & trip co
 \end{table}
 
 Table~\ref{tab:ablation} recomputes Bide+ on the same pairs without its learned tables. Without any of them, the arrival is
-built from timetable differences only, and Bide+ is within two minutes in 33\% of cases, below the official real time
-(41\%). Removing the learned segment times alone lowers it from 67\% to 38\%. Removing the per-trip correction costs one
-point. Removing the pace factors changes nothing, because they act only where a segment has no learned time. On these pairs
+built from timetable differences only, and Bide+ is within two minutes in 29\% of cases, below the official real time
+(39\%). Removing the learned segment times alone lowers it from 64\% to 34\% (difference $+29.0$ to $+30.7$ points, 95\%
+interval by trip), 4 to 5 points below the official real time (interval $-5.0$ to $-3.8$ by trip, $-6.0$ to $-2.9$ by
+stop). Removing the per-trip correction costs one point. Removing the pace factors changes nothing, because they act only where a segment has no learned time. On these pairs
 and by this metric, the learned segment travel times are what puts Bide+ ahead of the operator; locating the bus in
 timetable time is not enough on its own.
 
 \subsection{The strike day}
 
 On Wednesday 11, with minimum service, the ranking was the same as on normal days (Table~\ref{tab:days-results} in
-\ref{app:extra}). Bide+ was more often early than on normal days (21\% against 8--17\%), which is consistent with buses
+\ref{app:extra}). Bide+ was more often early than on normal days (23\% against 8--18\%), which is consistent with buses
 running faster than in the normal traffic its tables were learned from; this was not tested directly.
 
 % =====================================================================================================================
@@ -597,10 +614,10 @@ running faster than in the normal traffic its tables were learned from; this was
 
 On the buses compared, the published timetable is a poor guide to when the bus will come, the operator's real time removes
 part of its error, and Bide+, built only on the operator's open data, is within two minutes of the actual passage more
-often than the operator's real time from three minutes before arrival onwards. The gap is largest, about 32 percentage
+often than the operator's real time from three minutes before arrival onwards. The gap is largest, about 31 percentage
 points, with the bus 6 to 20 minutes away, the range in which a passenger decides when to leave for the stop. Below three
 minutes the two are equally often within two minutes, and below six minutes Bide+ has a small share of very large errors
-that the operator does not have, about two fifths of them at one stop.
+that the operator does not have, about a third of them at one stop.
 
 \subsection{Possible explanations}
 
@@ -612,7 +629,7 @@ times is not published, so this paper cannot say why its errors take the form th
 \subsection{Implications}
 
 Operators that publish vehicle positions make possible independent predictions that, on this network and week, and for
-the announcements that could be matched and confirmed (55\%), were more often within two minutes than their own. The most
+the announcements that could be matched and confirmed (55\% of first-bus announcements under 30 minutes), were more often within two minutes than their own. The most
 direct implication is for evaluation: operators that also publish their predictions, for example as GTFS-Realtime trip
 updates \parencite{gtfsrt} or SIRI estimated timetables, would allow their accuracy to be audited independently and
 continuously, as done here by recording a web service. The timetable itself could also be improved: with most buses passing more than two minutes before the published time at
@@ -623,9 +640,12 @@ their accuracy; none was measured here.
 \subsection{Limitations}
 
 \begin{itemize}
-  \item \textbf{Coverage.} 55\% of the official announcements of the next bus less than 30 minutes ahead entered the main
-        analysis (74\% could be paired at all). Pairs where Bide+ had no live position are excluded by construction from
-        the main analysis; including them, without the identity check, gives 39\% and 65\% (Table~\ref{tab:sensitivity}).
+  \item \textbf{Coverage.} 55\% of the first-bus announcements under 30 minutes entered the main analysis, and 74\% could be
+        paired at all. Pairs whose bus was not in the feed at $t$ (15\% of the paired ones) are excluded from the main
+        analysis; including them, without the identity check, gives 39\% and 64\% (Table~\ref{tab:sensitivity}), and the
+        official real time was as accurate on the excluded pairs as on the main ones. The 26\% that could not be paired,
+        for example buses that the official service announces but the feed does not track, cannot be evaluated, and the
+        direction of any bias from them is unknown.
   \item \textbf{Ground truth.} The main ground truth comes from the feed field that Bide+ also uses, and its learned
         segment times were fitted on passages defined in the same way, so Bide+ is calibrated to this definition and is
         more sensitive than the official real time to shifting it (Figure~\ref{fig:shift}). The GPS-based passage shares
@@ -633,10 +653,11 @@ their accuracy; none was measured here.
         not use that field, agrees with it to within a minute in 89\% of cases and gives the same ranking. Field
         observation was not possible.
   \item \textbf{Matching.} The official service does not identify the vehicle it announces. The distance check compares
-        a road distance with a straight-line one; stricter or no checks do not change the ranking, but some mismatches may
-        remain, and they would count against the official source.
+        a road distance with a straight-line one; stricter or no checks do not change the ranking, Bide+ is ahead in every
+        decile of the distance ratio (Table~\ref{tab:ratio}), and across stops the gap is unrelated to the share of matches
+        rejected (correlation $-0.05$). Some mismatches may remain, and they would count against the official source.
   \item \textbf{Selection of stops.} The stops were chosen by the author; 28 of them partly because the timetable deviates
-        most there. Results without them are the same (41\% and 67\%), but the stops are not a random sample of the
+        most there. Results without them are the same (39\% and 65\%), but the stops are not a random sample of the
         network.
   \item \textbf{One week, one network.} Five normal days in November, one of them a Sunday. Day-level variance cannot be
         estimated, and other seasons, networks or operators may differ.
@@ -656,9 +677,9 @@ their accuracy; none was measured here.
 For one week, at 59 stops of the Bizkaibus network, the official real-time waiting times were recorded minute by minute and
 compared, bus by bus, with the published timetable and with the arrivals predicted by the Bide+ method from the operator's
 open position feed and timetable. Over all horizons up to 30 minutes, the timetable was within two minutes of the actual
-passage in 16\% of the paired cases, the official real time in 41\% and Bide+ in 67\%, with the same ranking against an
+passage in 16\% of the paired cases, the official real time in 39\% and Bide+ in 64\%, with the same ranking against an
 independent GPS-based ground truth. Below three minutes the two real-time sources were equally often within two minutes;
 from three minutes on Bide+ was more often within two minutes at almost every stop, hour and day, although its mean error
 was smaller only from ten minutes. An ablation attributes its advantage to its learned segment travel times. These results
-apply to the 55\% of announcements that could be matched and confirmed, and they call for a replication on other periods
+apply to the 55\% of first-bus announcements whose bus was tracked, observed and confirmed, and they call for a replication on other periods
 and networks.

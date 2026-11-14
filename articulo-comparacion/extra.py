@@ -54,7 +54,7 @@ def main():
     anuncios = collections.Counter()
     for dia in sorted(os.listdir(a.capturas)):
         d = '%s-%s-%s' % (dia[:4], dia[4:6], dia[6:])
-        if d in aparte:
+        if d in aparte or not os.path.exists(os.path.join(a.pares, 'pares-%s.jsonl' % dia)):
             continue
         for f in glob.glob(os.path.join(a.capturas, dia, '**', 'oficial.jsonl'), recursive=True):
             for linea in open(f, encoding='utf-8'):
@@ -182,8 +182,8 @@ def main():
     # 6. Emparejamiento: precisión oficial por deciles de la razón distancia oficial / línea recta (dentro de 0,6–2,0,
     # autobús a más de 500 m) y diferencia Bide+ − oficial frente al rechazo por parada.
     print('\n== Emparejamiento')
-    conr = sorted((p['metros_oficial'] / p['metros_bus'], p) for p in semana
-                  if p.get('metros_bus') and p['metros_bus'] > 500 and p.get('metros_oficial'))
+    conr = sorted(((p['metros_oficial'] / p['metros_bus'], p) for p in semana
+                   if p.get('metros_bus') and p['metros_bus'] > 500 and p.get('metros_oficial')), key=lambda x: x[0])
     n = len(conr)
     for k in range(10):
         trozo = [p for _, p in conr[k * n // 10:(k + 1) * n // 10]]

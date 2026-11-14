@@ -1,13 +1,13 @@
-This paper compares an operator's real-time bus predictions with an independent predictor on the same buses and moments,
-for Bizkaibus, the interurban bus network of Biscay (Spain), which publishes vehicle positions and its timetable as open
-data and shows its own waiting times in an official app. For one week in November 2026, the official waiting times of 60
-stops were recorded every minute together with the position feed. Each official announcement was matched to the
-bus it referred to, confirmed by the distance the service reports, and compared with the published timetable and the
+This paper compares an operator's real-time bus predictions with an independent predictor for the same buses at the same
+moments, for Bizkaibus, the interurban network of Biscay (Spain), which publishes vehicle positions and timetable
+as open data and shows its own waiting times in an app. For one week in November 2026, the official waiting times
+of 60 stops were recorded every minute with the position feed. Each official announcement was matched to the bus
+it referred to, confirmed by the distance the service reports, and compared with the published timetable and with the
 Bide+ method, which predicts arrivals from the open data alone and was frozen before the week. All three were checked
-against the actual passage, reconstructed from the feed and, independently, from GPS positions. Over 484,026 paired
-predictions on five normal days, the timetable was within two minutes of the actual passage in 16\% of cases, the official
-real time in 41\% and Bide+ in 67\%. Below three minutes the two real-time sources were equally accurate (92\%); from
-three minutes on, Bide+ was more often within two minutes, by 31 to 34 percentage points at 10--20 minutes (95\% interval
-by trip), at 57 of 59 stops and at every hour, although it had more very large errors at short horizons. An
-ablation attributes its advantage to learned segment travel times. The results apply to the 55\% of announcements whose
-bus could be observed and confirmed, and to one week; data and code are open.
+against the actual passage, reconstructed from the feed and from GPS positions. Over 491,612 paired
+predictions over five days, the timetable was within two minutes of the actual passage in 16\% of cases, the official
+real time in 39\% and Bide+ in 64\%. Below three minutes the two real-time sources were equally often within two minutes,
+although the official one had the smaller mean error below six minutes; from three minutes on, Bide+ was more often
+within two minutes, by 29 to 34 percentage points at 10--20 minutes (95\% interval by stop), at 57 of 59 stops and at
+every hour. An ablation attributes its advantage to learned segment travel times. The results apply to the 55\% of
+first-bus announcements whose bus was tracked and confirmed, and to one week; data and code are open.
