@@ -96,7 +96,7 @@ def main():
                round(p2([p['eo'] for p in v]), 1), round(p2([p['em'] for p in v]), 1), round(p2([p['eh'] for p in v]), 1))
               for d, v in sorted(por_dia.items())])
 
-    # 6. Ejemplos: dos autobuses al azar de toda la red y uno al azar en cada sentido de San Juan (Amorebieta), paradas
+    # 6. Ejemplos: uno al azar de toda la red, uno al azar de la línea 3513 y uno al azar en cada sentido de San Juan (Amorebieta), paradas
     # 3388 y 3391, de las líneas 3513, 3514 y 3515 (semilla fija), entre los pasos con consultas desde 25 minutos antes.
     pasos = collections.defaultdict(list)
     for p in semana:
@@ -106,7 +106,9 @@ def main():
         return sorted(k for k, ps in pasos.items() if filtro(k, ps) and max(p['real'] - p['t'] for p in ps) >= 1500 and len(ps) >= 15)
     rnd = random.Random(2026)
     candidatos = validos(lambda k, ps: True)
-    elegidos = rnd.sample(candidatos, 2)
+    elegidos = rnd.sample(candidatos, 1)
+    # Segundo ejemplo: un autobús al azar de la línea 3513, fuera de San Juan, para que salgan las tres líneas.
+    elegidos.append(rnd.choice(validos(lambda k, ps: ps[0]['linea'] == '3513' and k[3] not in ('3388', '3391'))))
     for parada in ('3388', '3391'):
         elegidos.append(rnd.choice(validos(lambda k, ps, s=parada: k[3] == s and ps[0]['linea'] in ('3513', '3514', '3515'))))
     with open(os.path.join(salida, 'ejemplos.txt'), 'w', encoding='utf-8') as f:

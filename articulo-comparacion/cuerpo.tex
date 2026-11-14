@@ -489,7 +489,7 @@ $k$ & Miss & Wait & Miss & Wait & Miss & Wait \\
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo1.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo1.dat};
 \end{axis}
-\begin{axis}[ejemplo, name=e2, at={(e1.east)}, anchor=west, xshift=8mm, title={Line 3923, stop 2853, Mon 9}]
+\begin{axis}[ejemplo, name=e2, at={(e1.east)}, anchor=west, xshift=8mm, title={Labeaga, line 3513, Tue 10}]
 \addplot[gris, thin, domain=0:30] {x};
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo2.dat};
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo2.dat};
@@ -516,14 +516,15 @@ $k$ & Miss & Wait & Miss & Wait & Miss & Wait \\
 \end{axis}
 \end{tikzpicture}
 \caption{Predicted waiting time against the actual one for four buses, among the passages with queries from at least 25
-minutes before. Top: two buses drawn at random from the whole network. Bottom: one bus drawn at random in each direction at
+minutes before. Top: one bus drawn at random from the whole network and one drawn at random from line 3513 (outside San Juan). Bottom: one bus drawn at random in each direction at
 San Juan (Amorebieta, stops 3388 and 3391), on lines 3513--3515, a stop pointed out by passengers. Fixed seed. The thin line
 is a perfect prediction.}
 \label{fig:examples}
 \end{figure}
 
-Figure~\ref{fig:examples} shows the minute-by-minute predictions for four passages: two drawn at random from the whole
-network and one drawn at random in each direction at San Juan (Amorebieta), on lines 3513 to 3515. At that stop, over both
+Figure~\ref{fig:examples} shows the minute-by-minute predictions for four passages: one drawn at random from the whole
+network, one from line 3513 at another stop, and one in each direction at San Juan (Amorebieta), on lines 3514 and 3515,
+all drawn at random. At that stop, over both
 directions and 2,626 pairs with the bus 3 to 30 minutes away, the timetable was within two minutes in 12\% of cases, the
 official real time in 31\% and Bide+ in 64\%. The four buses illustrate the pattern of the aggregate results: the timetable is offset by a roughly constant amount, the official real time is closer but
 tends to stay too long, and Bide+ is the closest to the actual waiting time over most of the 30 minutes.
