@@ -4,13 +4,14 @@
 
 Real-time passenger information (RTPI) shortens the time passengers wait at stops and makes that wait less uncertain
 \parencite{watkins2011,dziekan2007dynamic,brakewood2019}, but only when it is accurate: wrong predictions erode trust and
-can make passengers miss the bus they were told to expect \parencite{gooze2013benefits,rahman2013users}. Most passengers
+can make passengers miss the bus they were told to expect \parencite{gooze2013benefits,rahman2013users}. Many passengers
 receive these predictions from the operator, through its app and stop displays, or from journey planners that relay the
 operator's figures. Whether a third party with only the operator's \emph{open} data can predict better than the operator
-is rarely measured, and in our search we found no study that does so on the same buses and at the same moments.
+is rarely measured, and no study was found that does so on the same buses and at the same moments.
 
 This paper makes that measurement for Bizkaibus, the interurban bus network of the province of Biscay (Spain). Bizkaibus
-shows its own real-time waiting times in an official app, launched in 2023, and on some stop displays. It also publishes,
+shows its own real-time waiting times in an official app and on some stop displays; in this paper they are called the
+\emph{official real time}. It also publishes,
 as open data, the position of every vehicle in service, obtained by the Global Positioning System (GPS) and published as
 a SIRI Vehicle Monitoring feed (Service Interface for Real-time Information, \cite{siri}), and its timetable in the
 General Transit Feed Specification (GTFS, \cite{gtfs}), but not its predictions. The Bide+ method predicts arrivals from
@@ -141,9 +142,8 @@ the database built from it is published with the data.
 
 \subsection{Stops}
 
-The 60 stops, 28 of them \emph{priority} stops, were chosen before the capture. The 32 other stops are intermediate stops
-with many buses and lines, at least 15 minutes after the start of the trip by median scheduled time, whose name in the
-official service matches the timetable. The 28 priority stops are stops that passengers asked about (in San Juan, Durango
+The 60 stops, 28 of them \emph{priority} stops, were chosen before the capture. The 32 other stops are intermediate stops with many buses and lines. Each is reached at least 15 minutes after the
+start of the trip (median over its scheduled trips), and its name in the official service matches the timetable. The 28 priority stops are stops that passengers asked about (in San Juan, Durango
 and Elorrio) and the Bilbao stops where, in earlier captures, the actual passage deviated most from the published time.
 Because this second criterion could favour a method that corrects the timetable, results are also given without the
 priority stops. Each stop and the reason for its choice are listed in the repository.
@@ -194,10 +194,12 @@ agree closely: $a_{\mathrm{GPS}} - a$ has a median of $-4$~s, its 10th and 90th 
 ground truth.
 
 \paragraph{Failed reconstructions} A pair is discarded if $a$ and $a_{\mathrm{GPS}}$ differ by more than five minutes, or
-if reaching the stop by $a$ would require travelling at more than 30~m/s from the straight-line distance of the bus to the
-stop at $t$ (a lower bound on the road distance), allowing 60~s for the feed's resolution. This removes 1.9\% of the
+if reaching the stop by $a$ would require travelling at more than 30~m/s from the smaller of two distances at $t$: the
+straight-line distance of the bus in the feed (a lower bound on the road distance) and the distance reported by the
+official service, allowing 60~s for the feed's resolution. This removes 1.9\% of the
 eligible pairs. One stop, Atxuri (3394), where all three sources were off by the same 17 to 30 minutes, which points to a
-failure of the reconstruction rather than of the predictors, is excluded entirely.
+failure of the reconstruction rather than of the predictors, is excluded entirely. This exclusion was decided after
+inspecting the errors; the sensitivity analysis that keeps it changes no conclusion (Table~\ref{tab:sensitivity}).
 
 \subsection{Matching announcements to buses}
 \label{sec:matching}
@@ -210,7 +212,10 @@ straight-line distance of the matched bus from the stop in the feed: within 500~
 official distance appears to be measured along the road: for buses more than 1~km away, its ratio to the straight-line
 distance has a median of 1.28 (10th and 90th percentiles 0.97 and 1.91). The check rejects a median of 6\% of the pairs
 per stop (at most 37\%). A stricter version, within 300~m or between 0.9 and 1.6 times, is reported as a sensitivity
-analysis. Lines listed twice in the same response would be left out; there were none.
+analysis. Lines listed twice in the same response would be left out; there were none. No stop is visited twice by the same trip,
+but 12 of the 60 stops are the last stop of some routes; a bus ending its trip there has no reconstructed passage, so an
+announcement for it would be matched to the next bus. Such a mismatch makes the official error negative, the opposite of
+the bias observed (Section~\ref{sec:tails}), and most are rejected by the distance check.
 
 When the matched bus is not in the feed at $t$, Bide+ can only give a fallback prediction and the bus's distance is
 unknown, so the identity check cannot be applied. These pairs are excluded from the main analysis and included in a
@@ -224,6 +229,8 @@ rule of the kind that suits a decision with a tolerance \parencite{gneiting2011p
 the shares within $\pm1$ and $\pm3$~minutes, the median signed error and the share of buses that arrive more than two
 minutes early are also reported. The main analysis uses pairs with $0 \le a - t < 30$~min, by actual time to arrival;
 results by the announced time $m$ use all announcements of up to 29 minutes whose bus passed within the next hour.
+These rules (the 90-second gap rule, the identity check, the failed-reconstruction rule and the Atxuri exclusion) were
+set after the data had been collected and inspected; each is varied in the sensitivity analysis.
 
 Predictions of the same trip, and of the same stop, are not independent: one passage contributes a prediction every
 minute. Confidence intervals for the difference in the share within $\pm2$~minutes are percentile intervals from 2,000
@@ -280,7 +287,7 @@ stops, with between 199 and 281 different vehicles in each hour from 06:00 to 22
 \end{axis}
 \end{tikzpicture}
 \caption{Top: share of predictions within two minutes of the actual passage, by minutes to that passage (one-minute bins).
-Bottom: 95\% bootstrap interval (1,000 resamples of trips per bin) of the difference, Bide+ minus official, in percentage
+Bottom: 95\% bootstrap interval (2,000 resamples of trips per bin) of the difference, Bide+ minus official, in percentage
 points. Main analysis, 484,026 pairs.}
 \label{fig:minutes}
 \end{figure}
@@ -331,8 +338,8 @@ Minutes & By trip & By stop & $d$ (s) & $z$ (stop) & $z$ (stop-day) \\
 \end{tabular}
 \end{table}
 
-From three minutes on, the difference in the share within two minutes is positive with either clustering, and the
-narrowest interval by stop, at 3--6 minutes, still starts at 16 points (Table~\ref{tab:inference}). The mean absolute
+From three minutes on, the difference in the share within two minutes is positive with either clustering; the lowest
+lower bound, by stop at 3--6 minutes, is 16 points (Table~\ref{tab:inference}). The mean absolute
 error gives a more nuanced picture. Below six minutes the official real time has the smaller mean absolute error, because
 Bide+ has more very large errors (Section~\ref{sec:tails}); between 6 and 10 minutes the two do not differ; from 10 minutes
 on Bide+ has the smaller mean absolute error, by 76 to 141~s. Bide+ is therefore more often close to the actual passage
@@ -423,7 +430,8 @@ cases at those horizons (Figure~\ref{fig:errors}; Table~\ref{tab:horizon-extra} 
 Bide+ has, however, more very large errors at short horizons: with the bus less than six minutes away, 1.7--1.8\% of its
 predictions are more than ten minutes off, against 0.1--1.1\% for the official real time (Table~\ref{tab:tails} in
 \ref{app:extra}). Of these 2,030 errors, 832 occur at one Bilbao stop (Zabalburu, 305), and two thirds come from its
-fallback layers rather than from a live position. Without that stop the shares within two minutes are unchanged (41\% and
+fallback layers: the bus was in the feed, but the GPS layer abstained and Bide+ used the last reported stop or the
+corrected timetable. Without that stop the shares within two minutes are unchanged (41\% and
 67\%; Table~\ref{tab:sensitivity}).
 
 \subsection{Consequences for a passenger}
@@ -504,7 +512,7 @@ San Juan, in Amorebieta, is one of the stops that passengers asked about, served
 (Figure~\ref{fig:sanjuan}). Over 8,298 pairs with the bus 3 to 30 minutes away, the timetable was within two minutes in
 17\% of cases, the official real time in 33\% and Bide+ in 67\%, close to the network-wide figures for the same horizons
 (15\%, 34\% and 63\%). The official real time was much less accurate in one direction (20\% at stop 3388) than in the other
-(47\% at 3391), while Bide+ was similar in both (65\% and 70\%). The two buses drawn at random show the aggregate pattern:
+(47\% at 3391), while Bide+ was similar in both (65\% and 70\%). The two buses drawn at random illustrate the aggregate pattern:
 the timetable is offset by a roughly constant amount, the official real time is closer but announces the bus later than it
 comes, and Bide+ follows the actual waiting time most closely. Four buses drawn at random from the whole network are shown in
 Figure~\ref{fig:examples} in \ref{app:extra}.
@@ -607,8 +615,10 @@ Operators that publish vehicle positions make possible independent predictions t
 the announcements that could be matched and confirmed (55\%), were more often within two minutes than their own. The most
 direct implication is for evaluation: operators that also publish their predictions, for example as GTFS-Realtime trip
 updates \parencite{gtfsrt} or SIRI estimated timetables, would allow their accuracy to be audited independently and
-continuously, as done here by recording a web service. Journey planners that show the operator's figures unchanged inherit
-their accuracy; we have not measured any of them.
+continuously, as done here by recording a web service. The timetable itself could also be improved: with most buses passing more than two minutes before the published time at
+these stops, revising the intermediate times, or holding buses at timing points, would help both printed timetables and
+any real-time system anchored to them. Journey planners that show the operator's figures unchanged inherit
+their accuracy; none was measured here.
 
 \subsection{Limitations}
 
@@ -616,8 +626,10 @@ their accuracy; we have not measured any of them.
   \item \textbf{Coverage.} 55\% of the official announcements of the next bus less than 30 minutes ahead entered the main
         analysis (74\% could be paired at all). Pairs where Bide+ had no live position are excluded by construction from
         the main analysis; including them, without the identity check, gives 39\% and 65\% (Table~\ref{tab:sensitivity}).
-  \item \textbf{Ground truth.} The main ground truth comes from the feed field that Bide+ also uses, and Bide+ is more
-        sensitive than the official real time to shifting it (Figure~\ref{fig:shift}). The GPS-based passage, which does
+  \item \textbf{Ground truth.} The main ground truth comes from the feed field that Bide+ also uses, and its learned
+        segment times were fitted on passages defined in the same way, so Bide+ is calibrated to this definition and is
+        more sensitive than the official real time to shifting it (Figure~\ref{fig:shift}). The GPS-based passage shares
+        the feed's vehicle-to-trip assignment and clock. The GPS-based passage, which does
         not use that field, agrees with it to within a minute in 89\% of cases and gives the same ranking. Field
         observation was not possible.
   \item \textbf{Matching.} The official service does not identify the vehicle it announces. The distance check compares
@@ -632,7 +644,8 @@ their accuracy; we have not measured any of them.
         and frozen tables; the app was not measured. That the web service returns what the official app and the displays
         show was not verified independently.
   \item \textbf{Analytical choices.} The scoring rule, horizons and matching follow the companion paper, and the stops were
-        fixed before the capture, but the study was not preregistered. A confirmatory replication on another week, ideally
+        fixed before the capture, but the study was not preregistered, and the rules for reconstructing passages and
+        confirming matches were set after the data had been inspected. A confirmatory replication on another week, ideally
         by a third party, would strengthen the conclusions.
 \end{itemize}
 

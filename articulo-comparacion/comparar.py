@@ -20,6 +20,7 @@ Escribe una línea por par (consulta oficial, autobús) con los dos errores. res
 """
 import argparse
 import bisect
+import collections
 import datetime
 import glob
 import json
@@ -34,6 +35,8 @@ import referencia as R  # noqa: E402
 import evaluar as E  # noqa: E402
 
 MADRID = ZoneInfo('Europe/Madrid')
+RETRASOS = []                     # hora de descarga − hora del contenido de cada copia del feed (s)
+VIAJES_COMPARTIDOS = collections.defaultdict(set)   # (copia, viaje del horario) -> vehículos
 HORIZONTE_MAXIMO = 3600           # s: se emparejan pasos hasta 60 min después (el análisis principal usa hasta 30)
 HUECO_MAXIMO = 90                 # s: el paso real solo vale si las dos copias que lo encierran distan como mucho esto
 AUSENCIA_MAXIMA = 300             # s: el autobús puede faltar del feed hasta 5 min sin que se pierda su paso
@@ -125,15 +128,19 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
         mapa = E.leer_instantanea(fichero, dia)
         ahora = max((e['locationSeconds'] for entradas in mapa.values() for e in entradas
                      if e['locationSeconds'] is not None), default=0)
-        instantaneas.append((ahora, mapa))
-    instantes = [ahora for ahora, _ in instantaneas]
+        # Hora de descarga (nombre del fichero, hora de Madrid): solo se puede usar una copia ya descargada en t.
+        nombre = os.path.basename(fichero)[3:18]
+        bajada = segundos(datetime.datetime.strptime(nombre, '%Y%m%d-%H%M%S').replace(tzinfo=MADRID).timestamp(), dia)
+        instantaneas.append((ahora, mapa, bajada))
+    instantes = [ahora for ahora, _, _ in instantaneas]
+    RETRASOS.extend(b - a for a, _, b in instantaneas if a)
     por_vehiculo = {}
-    for i, (_, mapa) in enumerate(instantaneas):
+    for i, (_, mapa, _) in enumerate(instantaneas):
         for clave, entradas in mapa.items():
             for e in entradas:
                 por_vehiculo.setdefault(e['vehicleRef'], {})[i] = (e['tripRef'], e)
     metodo = {}       # (vehículo, clave, parada) -> {'linea', 'real', 'pred': [(instante, eta)]}
-    for i, (ahora, mapa) in enumerate(instantaneas):
+    for i, (ahora, mapa, bajada) in enumerate(instantaneas):
         if ahora == 0:
             continue
         refs = [e['tripRef'] for entradas in mapa.values() for e in entradas]
@@ -142,8 +149,9 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
         for entradas in mapa.values():
             for e in entradas:
                 v = alias.get(e['tripRef'])
-                if v is not None and v not in primera:
-                    primera[v] = e
+                if v is not None and (v, e['vehicleRef']) not in primera:
+                    primera[(v, e['vehicleRef'])] = e
+                    VIAJES_COMPARTIDOS[(i, v)].add(e['vehicleRef'])
         for clave, entradas in mapa.items():
             for e in entradas:
                 id_viaje = alias.get(e['tripRef'])
@@ -167,7 +175,7 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
                     if fila['real'] is None or fila['real'] - ahora > HORIZONTE_MAXIMO + ANTIGUEDAD_MAXIMA:
                         continue
                     if predictor is None:
-                        predictor = R.Matcher(viaje, primera.get(id_viaje), ahora, dia, tramos, ritmo, viajes, festivo)
+                        predictor = R.Matcher(viaje, primera.get((id_viaje, e['vehicleRef'])), ahora, dia, tramos, ritmo, viajes, festivo)
                     salida = predictor.enrich(parada['arr'], parada['seq'])
                     try:
                         metros = predictor.meters_from_stop(parada['seq'])
@@ -175,7 +183,7 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
                             metros = None
                     except Exception:
                         metros = None
-                    fila['pred'].append((ahora, salida['eta'], salida['status'], metros))
+                    fila['pred'].append((bajada, salida['eta'], salida['status'], metros))
     return metodo
 
 
@@ -222,7 +230,7 @@ def main():
         with open(fichero, encoding='utf-8') as f:
             oficiales += [json.loads(l) for l in f]
     cuentas = {'consultas': 0, 'anuncios': 0, 'sin_paso': 0, 'sin_metodo': 0, 'ruta_doble': 0, 'pares': 0,
-               'e1_menos_30': 0, 'consultas_antes_6': 0}
+               'e1_menos_30': 0, 'consultas_antes_6': 0, 'consultas_despues_23': 0}
     with open(a.salida, 'w', encoding='utf-8') as salida:
         for o in oficiales:
             if o.get('estado') != 'OK':
@@ -231,9 +239,11 @@ def main():
             t = segundos(o['t'], dia)
             if t < 6 * 3600:
                 cuentas['consultas_antes_6'] += 1
+            if t >= 23 * 3600:
+                cuentas['consultas_despues_23'] += 1
             lineas = [l for l in o['lineas'] if l.get('linea')]
             cuentas['e1_menos_30'] += sum(1 for l in lineas if l.get('e1') and l['e1'].get('minutos') is not None
-                                          and l['e1']['minutos'] < 30 and t >= 6 * 3600)
+                                          and l['e1']['minutos'] < 30 and 6 * 3600 <= t < 23 * 3600)
             repetidas = {k for k in (linea_numero(l['linea']) for l in lineas)
                          if sum(linea_numero(m['linea']) == k for m in lineas) > 1}
             for l in lineas:
@@ -282,6 +292,10 @@ def main():
                         'siguiente': None if siguiente is None else round(siguiente, 1),
                         'real_gps': None if fila_m['real_gps'] is None else round(fila_m['real_gps'], 1),
                     }) + '\n')
+    retrasos = sorted(RETRASOS)
+    if retrasos:
+        cuentas['descarga_menos_contenido'] = {q: retrasos[int(q / 100 * (len(retrasos) - 1))] for q in (10, 50, 90, 99)}
+    cuentas['viajes_con_varios_vehiculos'] = sum(1 for v in VIAJES_COMPARTIDOS.values() if len(v) > 1)
     print(dia, json.dumps(cuentas))
     with open(a.salida + '.cuentas.json', 'w', encoding='utf-8') as f:
         json.dump(dict(cuentas, dia=dia), f)

@@ -20,7 +20,7 @@
 \definecolor{gris}{HTML}{6B7280}
 \usepackage[hidelinks]{hyperref}
 \makeatletter\let\c@author\relax\makeatother
-\usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false,uniquename=false,giveninits=true,doi=true,url=false]{biblatex}
+\usepackage[style=authoryear,backend=biber,maxcitenames=2,maxbibnames=99,date=year,urldate=iso,seconds=false,uniquelist=false,uniquename=false,giveninits=true,doi=true,url=false]{biblatex}
 \addbibresource{referencias.bib}
 
 \makeatletter
@@ -51,7 +51,7 @@ in Biscay, Spain}
 
 \begin{keyword}
 bus arrival prediction \sep real-time passenger information \sep automatic vehicle location \sep paired forecast
-evaluation \sep open data \sep GTFS \sep SIRI
+evaluation \sep open data \sep General Transit Feed Specification \sep SIRI Vehicle Monitoring
 \end{keyword}
 
 \end{frontmatter}
@@ -64,6 +64,7 @@ evaluation \sep open data \sep GTFS \sep SIRI
 
 \input{apendice.tex}
 
+\clearpage
 \printbibliography
 
 \end{document}

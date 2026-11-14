@@ -280,7 +280,7 @@ def main():
         feed = [p for p in en30 if p['capa'] == 'feed']
         valido = [p for p in feed if p['parada'] not in excluidas and not paso_fallido(p)]
         conf = [p for p in valido if identidad_confirmada(p)]
-        r = (nombre_dia(d, aparte), c['consultas'] - c.get('consultas_antes_6', 0), len(ps), len(ps) - len(en30),
+        r = (nombre_dia(d, aparte), c['consultas'] - c.get('consultas_antes_6', 0) - c.get('consultas_despues_23', 0), len(ps), len(ps) - len(en30),
              len(en30), len(en30) - len(feed), len(feed) - len(valido), len(valido) - len(conf), len(conf))
         print('  %-8s consultas %6d emparejados %6d fuera_de_30 %6d en_30 %6d sin_feed %6d excl %5d sin_conf %6d principal %6d' % r)
         tex['flujo'].append('%s & %s \\\\' % (r[0], ' & '.join('{:,}'.format(x) for x in r[1:])))

@@ -43,7 +43,7 @@ def main():
     filas = []
     for m in range(30):
         ps = por_min[m]
-        lo, hi, _ = RS.bootstrap_dif(ps, RS.clave_viaje, 1000, semilla=m)
+        lo, hi, _ = RS.bootstrap_dif(ps, RS.clave_viaje, 2000, semilla=m)
         filas.append((m + 0.5, round(p2([p['eh'] for p in ps]), 1), round(p2([p['eo'] for p in ps]), 1),
                       round(p2([p['em'] for p in ps]), 1), round(100 * lo, 1), round(100 * hi, 1), len(ps)))
     escribir(os.path.join(salida, 'minutos.dat'), 'min hor ofi met diflo difhi n', filas)

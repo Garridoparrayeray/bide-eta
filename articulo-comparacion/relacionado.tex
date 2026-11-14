@@ -9,14 +9,16 @@ stops or timepoints \parencite{lin1999experimental,cathey2003prescription}. Late
 \parencite{chien2002,jeong2005} and, for stops served by several routes, models that share information across routes
 \parencite{yu2011multiple}. \textcite{mazloumi2010variability} documented how travel time varies by time of day and
 segment, the variation that segment-based methods learn. Reviews \parencite{moreiramatias2015survey,singh2022review,kumar2025review}
-compare methods with each other or with the timetable. The method evaluated here belongs to the family of
+compare methods with each other or with the timetable, and deep-learning predictors such as convolutional recurrent
+networks \parencite{petersen2019multioutput} are now common. This paper does not compare Bide+ with that state of the
+art; it compares it with what passengers are actually shown by the operator. The method evaluated here belongs to the family of
 segment-based historical methods \parencite{lin1999experimental,cathey2003prescription}: it learns the travel time of
 each segment between consecutive stops by time band, with shrinkage towards the all-day value, and adds the position of
 the vehicle.
 
 \paragraph{Accuracy of operator real-time information} Evaluations of the predictions that operators actually show
 passengers are rare. \textcite{cats2016realtime} evaluated the bus arrival information of Stockholm against AVL records
-and found that errors grow with the prediction horizon and depend on the stop and the time of day. We found no study that
+and found that errors grow with the prediction horizon and depend on the stop and the time of day. A search of the literature found no study that
 compares an operator's live predictions with an independent predictor on the same vehicles and moments.
 
 \paragraph{Value of accurate information for passengers} Real-time information reduces actual and perceived waiting
