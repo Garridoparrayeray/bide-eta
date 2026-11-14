@@ -54,6 +54,8 @@ def segundos(epoch, dia):
 
 
 def paso_real(por_vehiculo, instantes, vehiculo, clave, desde, seq):
+    # clave: la referencia completa del viaje en el feed (línea, número y hora de salida); Bizkaibus repite el número
+    # de viaje varias veces al día, así que la línea y el número solos no bastan.
     """Paso real por la parada seq, como en evaluar.paso_real (punto medio entre la última copia en la que aún no la
     había pasado y la primera en la que ya sí, sin cambiar de viaje), pero sin perderlo porque el autobús falte de una
     copia suelta (hasta AUSENCIA_MAXIMA) y sin darlo si esas dos copias distan más de HUECO_MAXIMO (hueco del feed)."""
@@ -129,7 +131,7 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
     for i, (_, mapa) in enumerate(instantaneas):
         for clave, entradas in mapa.items():
             for e in entradas:
-                por_vehiculo.setdefault(e['vehicleRef'], {})[i] = (clave, e)
+                por_vehiculo.setdefault(e['vehicleRef'], {})[i] = (e['tripRef'], e)
     metodo = {}       # (vehículo, clave, parada) -> {'linea', 'real', 'pred': [(instante, eta)]}
     for i, (ahora, mapa) in enumerate(instantaneas):
         if ahora == 0:
@@ -155,13 +157,13 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
                     continue
                 predictor = None
                 for parada in quedan:
-                    llave = (e['vehicleRef'], clave, parada['id'])
+                    llave = (e['vehicleRef'], e['tripRef'], parada['id'])
                     fila = metodo.get(llave)
                     if fila is None:
-                        real = paso_real(por_vehiculo, instantes, e['vehicleRef'], clave, i, parada['seq'])
+                        real = paso_real(por_vehiculo, instantes, e['vehicleRef'], e['tripRef'], i, parada['seq'])
                         fila = metodo[llave] = {'linea': viaje['line'], 'real': real, 'horario': parada['arr'], 'pred': [],
                                                 'id_viaje': id_viaje, 'seq': parada['seq'],
-                                                'real_gps': paso_gps(por_vehiculo, e['vehicleRef'], clave, i, parada.get('lat'), parada.get('lon'))}
+                                                'real_gps': paso_gps(por_vehiculo, e['vehicleRef'], e['tripRef'], i, parada.get('lat'), parada.get('lon'))}
                     if fila['real'] is None or fila['real'] - ahora > HORIZONTE_MAXIMO + ANTIGUEDAD_MAXIMA:
                         continue
                     if predictor is None:
