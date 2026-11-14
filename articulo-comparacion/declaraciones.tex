@@ -1,0 +1,37 @@
+% =====================================================================================================================
+\section*{Declaration of competing interest}
+
+The author designed the Bide+ method and develops the independent Bide+ passenger information app that uses it, and
+therefore has an interest in its results. To limit the effect of this interest on the evaluation, the method was frozen
+before the test week, its predictions were recomputed with the public reference implementation, the analysis rules are
+stated in Section~\ref{sec:design}, and all data and code are published so that the comparison can be repeated
+independently. The author has no relationship with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the
+service.
+
+\section*{Funding}
+
+This research did not receive any specific grant from funding agencies in the public, commercial or not-for-profit
+sectors.
+
+\section*{CRediT authorship contribution statement}
+
+\textbf{Yeray Garrido}: Conceptualization, Methodology, Software, Data curation, Formal analysis, Investigation,
+Visualization, Writing -- original draft, Writing -- review \& editing.
+
+\section*{Data availability}
+
+The capture program, the list of stops with the reason for each, the days and stops used and excluded, the comparison,
+the tables and the figure data are in the folder \texttt{articulo-comparacion} of the repository
+\url{https://github.com/Garridoparrayeray/bide-eta} (code under the MIT licence, texts and derived data under CC BY 4.0).
+The raw captures (feed copies, official responses and the timetable of each day) are assets of the release
+\texttt{comparacion-2026-11} of the same repository. An archived copy with a DOI will be deposited on Zenodo on
+acceptance. The position feed and the timetable are open data published by the Diputación Foral de Bizkaia and listed in
+the Spanish National Access Point \parencite{nap}.
+
+\section*{Data collection and terms of use}
+
+The official waiting times were obtained from the public web service used by the official Bizkaibus app, which requires
+no authentication. The capture queried it sequentially, about one request per second in total, with a user agent that
+identifies the project, and only during service hours. No permission was sought from the operator. The data contain no
+personal information: only stop, line and vehicle identifiers. The raw responses are redistributed for research with
+attribution, and they will be removed if the publisher of the data asks.

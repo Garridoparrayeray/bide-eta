@@ -1,0 +1,37 @@
+% =====================================================================================================================
+\section{Related work}
+\label{sec:related}
+
+\paragraph{Arrival prediction from automatic vehicle location} Bus arrival prediction from automatic vehicle location
+(AVL) data has a long history. Early methods combined the last observed position with historical travel times between
+stops or timepoints \parencite{lin1999experimental,cathey2003prescription}. Later work used Kalman filters
+\parencite{cathey2003prescription,shalaby2004,vanajakshi2009kalman}, artificial neural networks
+\parencite{chien2002,jeong2005} and, for stops served by several routes, models that share information across routes
+\parencite{yu2011multiple}. \textcite{mazloumi2010variability} documented how travel time varies by time of day and
+segment, the variation that segment-based methods learn. Reviews \parencite{moreiramatias2015survey,singh2022review,kumar2025review}
+compare methods with each other or with the timetable. The method evaluated here belongs to the family of
+segment-based historical methods \parencite{lin1999experimental,cathey2003prescription}: it learns the travel time of
+each segment between consecutive stops by time band, with shrinkage towards the all-day value, and adds the position of
+the vehicle.
+
+\paragraph{Accuracy of operator real-time information} Evaluations of the predictions that operators actually show
+passengers are rare. \textcite{cats2016realtime} evaluated the bus arrival information of Stockholm against AVL records
+and found that errors grow with the prediction horizon and depend on the stop and the time of day. We found no study that
+compares an operator's live predictions with an independent predictor on the same vehicles and moments.
+
+\paragraph{Value of accurate information for passengers} Real-time information reduces actual and perceived waiting
+times \parencite{watkins2011,dziekan2007dynamic,mishalani2006,liu2020waiting}, is valued by passengers
+\parencite{ferris2010onebusaway,rahman2013users} and can increase ridership \parencite{tang2012chicago,brakewood2015nyc};
+\textcite{brakewood2019} review these benefits. They depend on accuracy: wrong predictions reduce trust and lead to missed
+buses \parencite{gooze2013benefits}.
+
+\paragraph{Third-party predictors and open data} Predictors built only on public data are feasible:
+\textcite{garciamaurino2024improving} improve arrival predictions using only data available through public transport
+APIs, and \textcite{wessel2017retrospective} reconstruct actual passage times from a public vehicle location feed, the
+kind of ground truth used here.
+
+\paragraph{Comparing predictors} Comparing two predictors on the same targets is a classic forecasting problem. The loss
+differential should be tested with errors that account for dependence \parencite{diebold1995comparing}, the scoring rule
+should match the decision it serves \parencite{gneiting2011point}, and evaluation must be out of sample
+\parencite{tashman2000outofsample}, with no information from the test period leaking into the predictor
+\parencite{kaufman2012leakage}.

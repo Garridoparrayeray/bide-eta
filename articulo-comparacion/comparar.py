@@ -93,13 +93,18 @@ def predicciones_del_metodo(ficheros, dia, horario, tablas, objetivo, festivo):
                     fila = metodo.get(llave)
                     if fila is None:
                         real = E.paso_real(por_vehiculo, instantes, e['vehicleRef'], clave, i, parada['seq'])
-                        fila = metodo[llave] = {'linea': viaje['line'], 'real': real, 'horario': parada['arr'], 'pred': []}
+                        fila = metodo[llave] = {'linea': viaje['line'], 'real': real, 'horario': parada['arr'], 'pred': [],
+                                                'id_viaje': id_viaje, 'seq': parada['seq']}
                     if fila['real'] is None or fila['real'] - ahora > HORIZONTE_MAXIMO + ANTIGUEDAD_MAXIMA:
                         continue
                     if predictor is None:
                         predictor = R.Matcher(viaje, primera.get(id_viaje), ahora, dia, tramos, ritmo, viajes, festivo)
                     salida = predictor.enrich(parada['arr'], parada['seq'])
-                    fila['pred'].append((ahora, salida['eta'], salida['status']))
+                    try:
+                        metros = predictor.meters_from_stop(parada['seq'])
+                    except Exception:
+                        metros = None
+                    fila['pred'].append((ahora, salida['eta'], salida['status'], metros))
     return metodo
 
 
@@ -111,6 +116,8 @@ def main():
     p.add_argument('--paradas', required=True)
     p.add_argument('--salida', required=True)
     p.add_argument('--festivo', action='store_true')
+    p.add_argument('--sin-aprender', action='store_true',
+                   help='Bide+ sin lo aprendido (tablas vacías): solo las diferencias del horario, para la ablación')
     a = p.parse_args()
 
     paradas = {x['id']: x for x in json.load(open(a.paradas, encoding='utf-8'))['paradas']}
@@ -122,7 +129,10 @@ def main():
     dia = '%s-%s-%s' % (dia[:4], dia[4:6], dia[6:])
     tablas = tuple(json.load(open(os.path.join(a.tablas, n), encoding='utf-8'))
                    for n in ('segment-times.json', 'pace-factors.json', 'trip-offsets.json'))
-    metodo = predicciones_del_metodo(ficheros, dia, E.Horario(a.base), tablas, set(paradas), a.festivo)
+    if a.sin_aprender:
+        tablas = ({}, {}, {})
+    horario = E.Horario(a.base)
+    metodo = predicciones_del_metodo(ficheros, dia, horario, tablas, set(paradas), a.festivo)
 
     # Los pasos reales por parada y línea, en orden: con ellos se sabe qué autobús es e1 y cuál e2.
     pasos = {}
@@ -164,11 +174,20 @@ def main():
                     if real - t > HORIZONTE_MAXIMO:
                         cuentas['sin_paso'] += 1
                         continue
-                    preds = [x for x in metodo[(vehiculo, clave, o['parada'])]['pred'] if t - ANTIGUEDAD_MAXIMA <= x[0] <= t]
-                    if not preds:
+                    fila_m = metodo[(vehiculo, clave, o['parada'])]
+                    preds = [x for x in fila_m['pred'] if t - ANTIGUEDAD_MAXIMA <= x[0] <= t]
+                    if preds:
+                        instante, eta, estado, metros_bus = preds[-1]
+                        capa = 'feed'
+                    else:
+                        # El autobús aún no está en el feed (o lleva más de 60 s sin dato): la app daría la capa 3, el
+                        # horario corregido viaje a viaje, sin dato en directo. Se calcula igual, para no comparar solo
+                        # cuando Bide+ ve el autobús.
+                        viaje = horario.viaje(fila_m['id_viaje'])
+                        salida3 = R.Matcher(viaje, None, t, dia, *tablas, a.festivo).enrich(fila_m['horario'], fila_m['seq'])
+                        instante, eta, estado, metros_bus = t, salida3['eta'], salida3['status'], None
+                        capa = 'sin_feed'
                         cuentas['sin_metodo'] += 1
-                        continue
-                    instante, eta, estado = preds[-1]
                     anterior = lista[k + orden - 1][0] if k + orden >= 1 else None
                     siguiente = lista[k + orden + 1][0] if k + orden + 1 < len(lista) else None
                     cuentas['pares'] += 1
@@ -176,11 +195,14 @@ def main():
                         'dia': dia, 'viaje': clave, 'vehiculo': vehiculo, 'parada': o['parada'], 'prioritaria': bool(paradas[o['parada']].get('prioritaria')),
                         'linea': linea, 'e': orden + 1, 't': round(t), 'real': round(real, 1),
                         'oficial': round(t + 60 * l[e]['minutos']), 'minutos': l[e]['minutos'],
-                        'metodo': round(eta), 'estado': estado, 'instante': instante,
+                        'metodo': round(eta), 'estado': estado, 'instante': instante, 'capa': capa,
+                        'metros_oficial': l[e].get('metros'), 'tipo': l[e].get('tipo', ''), 'segundos_oficial': o.get('segundos'), 'metros_bus': None if metros_bus is None else round(metros_bus),
                         'horario': metodo[(vehiculo, clave, o['parada'])]['horario'],
                         'hueco': min([abs(real - x) for x in (anterior, siguiente) if x is not None], default=None),
                     }) + '\n')
     print(dia, json.dumps(cuentas))
+    with open(a.salida + '.cuentas.json', 'w', encoding='utf-8') as f:
+        json.dump(dict(cuentas, dia=dia), f)
 
 
 if __name__ == '__main__':

@@ -20,14 +20,14 @@
 \definecolor{gris}{HTML}{6B7280}
 \usepackage[hidelinks]{hyperref}
 \makeatletter\let\c@author\relax\makeatother
-\usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false,giveninits=true,doi=true,url=false]{biblatex}
+\usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false,uniquename=false,giveninits=true,doi=true,url=false]{biblatex}
 \addbibresource{referencias.bib}
 
 \makeatletter
 \def\ps@pprintTitle{%
   \let\@oddhead\@empty
   \let\@evenhead\@empty
-  \def\@oddfoot{\footnotesize\itshape Preprint, draft \hfill \today}%
+  \def\@oddfoot{\footnotesize\itshape Preprint, draft for review \hfill \today}%
   \let\@evenfoot\@oddfoot}
 \makeatother
 
@@ -38,38 +38,29 @@
 \title{Accuracy of open-data versus operator real-time bus arrival predictions: a paired evaluation of the Bide+ method
 in Biscay, Spain}
 
-\author{Yeray Garrido\fnref{orcid}}
-\fntext[orcid]{Independent researcher, Bilbao, Biscay, Spain. ORCID:
-\href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}. E-mail:
-\href{mailto:garridoparrayeraytx@gmail.com}{garridoparrayeraytx@gmail.com}. Code and data:
-\url{https://github.com/Garridoparrayeray/bide-eta}.}
+\author[1]{Yeray Garrido\fnref{orcid}}
+\ead{garridoparrayeraytx@gmail.com}
+\fntext[orcid]{ORCID: \href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}.}
+\affiliation[1]{organization={Independent researcher}, city={Bilbao}, state={Biscay}, country={Spain}}
+
+\input{highlights.tex}
 
 \begin{abstract}
 \input{resumen.tex}
 \end{abstract}
 
 \begin{keyword}
-bus arrival prediction \sep real-time passenger information \sep operator predictions \sep paired evaluation \sep
-SIRI \sep GTFS \sep open data \sep reproducibility
+bus arrival prediction \sep real-time passenger information \sep automatic vehicle location \sep paired forecast
+evaluation \sep open data \sep GTFS \sep SIRI
 \end{keyword}
 
 \end{frontmatter}
 
-\noindent\fbox{\begin{minipage}{0.97\textwidth}\small
-\textbf{Key results}
-\begin{itemize}\setlength\itemsep{1pt}
-  \item Bide+ predicts Bizkaibus arrivals from open data only: the operator's GPS feed and timetable.
-  \item Same bus, same stop, same minute: Bide+ is within two minutes of the actual passage in 64\% of cases, the
-        official real time in 36\% and the published timetable in 16\%.
-  \item With the bus 6 to 20 minutes away, Bide+ is right about twice as often as the operator's own service.
-  \item Bide+ is more accurate at 58 of the 60 stops, at every hour and on every day of the week.
-  \item The official real time often announces the bus later than it actually comes, so passengers miss it; Bide+ errors are small and
-        centred.
-\end{itemize}
-\end{minipage}}
-\vspace{1em}
+
 
 \input{cuerpo.tex}
+
+\input{declaraciones.tex}
 
 \printbibliography
 
