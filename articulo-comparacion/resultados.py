@@ -2,7 +2,8 @@
 
 Uso: python3 resultados.py <carpeta con los pares> [--tex <carpeta para las tablas LaTeX>]
 
-Errores = llegada anunciada menos paso real, en segundos. Para el servicio oficial, la hora de la consulta más los
+Errores = llegada anunciada menos paso real, en segundos. Tres fuentes: el horario publicado (la hora del GTFS en esa
+parada), el tiempo real oficial de Bizkaibus y Bide+. Para el servicio oficial, la hora de la consulta más los
 minutos que anuncia; para el método, su llegada prevista y, en «método (minutos)», esa misma llegada redondeada a
 minutos enteros desde la hora de la consulta, como la vería el viajero. Los días de «aparte» de captura/dias.json no
 entran en la semana y se dan por separado. Los intervalos de confianza (95 %) son de bootstrap por viajes enteros: cada
@@ -19,9 +20,9 @@ import statistics
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 HORIZONTES = [(0, 180, '0--3'), (180, 360, '3--6'), (360, 600, '6--10'), (600, 1200, '10--20'), (1200, 1800, '20--30')]
-FUENTES = ('oficial', 'metodo_min', 'metodo')
-FUENTES_TEX = ('oficial', 'metodo_min')
-NOMBRES = {'oficial': 'Official', 'metodo_min': 'Method (minutes)', 'metodo': 'Method (seconds)'}
+FUENTES = ('horario', 'oficial', 'metodo_min', 'metodo')
+FUENTES_TEX = ('horario', 'oficial', 'metodo_min')
+NOMBRES = {'horario': 'Timetable', 'oficial': 'Official real time', 'metodo_min': 'Bide+ (minutes)', 'metodo': 'Bide+ (seconds)'}
 REMUESTREOS = 400
 
 
@@ -36,7 +37,8 @@ def leer(carpeta):
 def errores(p):
     t, real = p['t'], p['real']
     minutos = round((p['metodo'] - t) / 60)
-    return {'oficial': p['oficial'] - real, 'metodo': p['metodo'] - real, 'metodo_min': t + 60 * max(0, minutos) - real}
+    return {'horario': p['horario'] - real, 'oficial': p['oficial'] - real, 'metodo': p['metodo'] - real,
+            'metodo_min': t + 60 * max(0, minutos) - real}
 
 
 def resumen(pares):

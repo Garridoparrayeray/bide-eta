@@ -36,7 +36,7 @@ def main():
     P = [p for p in RS.leer(entrada) if p['dia'] not in aparte and 0 <= p['real'] - p['t'] < 1800]
     for p in P:
         e = RS.errores(p)
-        p['eo'], p['em'] = e['oficial'], e['metodo_min']
+        p['eo'], p['em'], p['eh'] = e['oficial'], e['metodo_min'], e['horario']
 
     # 1. Por minuto que falta: proporción a ±2 min y error mediano, con IC 95 % por viajes (bootstrap).
     por_min = collections.defaultdict(list)
@@ -64,27 +64,28 @@ def main():
             bm.append(100 * me / n)
         bo.sort()
         bm.sort()
-        filas.append((m + 0.5, round(p2([p['eo'] for p in ps]), 1), round(bo[7], 1), round(bo[292], 1),
+        filas.append((m + 0.5, round(p2([p['eh'] for p in ps]), 1), round(statistics.median([abs(p['eh']) for p in ps])), round(p2([p['eo'] for p in ps]), 1), round(bo[7], 1), round(bo[292], 1),
                       round(p2([p['em'] for p in ps]), 1), round(bm[7], 1), round(bm[292], 1),
                       round(statistics.median([abs(p['eo']) for p in ps])), round(statistics.median([abs(p['em']) for p in ps])), len(ps)))
-    escribir(os.path.join(salida, 'minutos.dat'), 'min ofi ofilo ofihi met metlo methi maeofi maemet n', filas)
+    escribir(os.path.join(salida, 'minutos.dat'), 'min hor maehor ofi ofilo ofihi met metlo methi maeofi maemet n', filas)
 
     # 2. Distribución del error con signo, a 10–20 minutos (cubos de 30 s, de −10 a +10 min).
     sel = [p for p in P if 600 <= p['real'] - p['t'] < 1200]
-    co, cm = collections.Counter(), collections.Counter()
+    co, cm, ch = collections.Counter(), collections.Counter(), collections.Counter()
     for p in sel:
+        ch[max(-20, min(19, int(p['eh'] // 30)))] += 1
         co[max(-20, min(19, int(p['eo'] // 30)))] += 1
         cm[max(-20, min(19, int(p['em'] // 30)))] += 1
-    escribir(os.path.join(salida, 'errores.dat'), 'min ofi met',
-             [((b * 30 + 15) / 60, round(100 * co[b] / len(sel), 2), round(100 * cm[b] / len(sel), 2)) for b in range(-20, 20)])
+    escribir(os.path.join(salida, 'errores.dat'), 'min ofi met hor',
+             [((b * 30 + 15) / 60, round(100 * co[b] / len(sel), 2), round(100 * cm[b] / len(sel), 2), round(100 * ch[b] / len(sel), 2)) for b in range(-20, 20)])
 
     # 3. Por parada: proporción a ±2 min (horizontes de 3 a 30 min).
     por_parada = collections.defaultdict(list)
     for p in P:
         if p['real'] - p['t'] >= 180:
             por_parada[p['parada']].append(p)
-    escribir(os.path.join(salida, 'paradas.dat'), 'ofi met n prioritaria',
-             [(round(p2([p['eo'] for p in ps]), 1), round(p2([p['em'] for p in ps]), 1), len(ps), int(ps[0]['prioritaria']))
+    escribir(os.path.join(salida, 'paradas.dat'), 'ofi met n prioritaria hor',
+             [(round(p2([p['eo'] for p in ps]), 1), round(p2([p['em'] for p in ps]), 1), len(ps), int(ps[0]['prioritaria']), round(p2([p['eh'] for p in ps]), 1))
               for ps in por_parada.values() if len(ps) >= 100])
 
     # 4. Por hora del día (horizontes de 3 a 30 min).
@@ -92,8 +93,8 @@ def main():
     for p in P:
         if p['real'] - p['t'] >= 180:
             por_hora[int(p['t'] // 3600)].append(p)
-    escribir(os.path.join(salida, 'horas.dat'), 'hora ofi met n',
-             [(h, round(p2([p['eo'] for p in ps]), 1), round(p2([p['em'] for p in ps]), 1), len(ps))
+    escribir(os.path.join(salida, 'horas.dat'), 'hora ofi met n hor',
+             [(h, round(p2([p['eo'] for p in ps]), 1), round(p2([p['em'] for p in ps]), 1), len(ps), round(p2([p['eh'] for p in ps]), 1))
               for h, ps in sorted(por_hora.items()) if len(ps) >= 200])
 
     # 5. Por día.
@@ -101,11 +102,11 @@ def main():
     for p in RS.leer(entrada):
         if 180 <= p['real'] - p['t'] < 1800:
             e = RS.errores(p)
-            por_dia[p['dia']].append((e['oficial'], e['metodo_min']))
+            por_dia[p['dia']].append((e['oficial'], e['metodo_min'], e['horario']))
     nombres = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    escribir(os.path.join(salida, 'dias.dat'), 'dia ofi met',
+    escribir(os.path.join(salida, 'dias.dat'), 'dia ofi met hor',
              [('{%s %d%s}' % (nombres[datetime.date.fromisoformat(d).weekday()], int(d[8:]), '*' if d in aparte else ''),
-               round(p2([x[0] for x in v]), 1), round(p2([x[1] for x in v]), 1)) for d, v in sorted(por_dia.items())])
+               round(p2([x[0] for x in v]), 1), round(p2([x[1] for x in v]), 1), round(p2([x[2] for x in v]), 1)) for d, v in sorted(por_dia.items())])
 
     # 6. Un autobús de ejemplo: el paso (viaje, parada) con más consultas desde 25 min antes, con errores medianos
     # parecidos a los del conjunto (para no escoger un caso extremo a favor de ninguno).
@@ -123,8 +124,8 @@ def main():
     candidatos.sort()
     k = candidatos[0][1]
     ps = sorted(pasos[k], key=lambda p: p['t'])
-    escribir(os.path.join(salida, 'ejemplo.dat'), 'antes ofi met',
-             [(round((p['real'] - p['t']) / 60, 2), round((p['oficial'] - p['t']) / 60, 2), round((p['t'] + 60 * max(0, round((p['metodo'] - p['t']) / 60)) - p['t']) / 60, 2)) for p in ps])
+    escribir(os.path.join(salida, 'ejemplo.dat'), 'antes ofi hor met',
+             [(round((p['real'] - p['t']) / 60, 2), round((p['oficial'] - p['t']) / 60, 2), round((p['horario'] - p['t']) / 60, 2), round((p['t'] + 60 * max(0, round((p['metodo'] - p['t']) / 60)) - p['t']) / 60, 2)) for p in ps])
     with open(os.path.join(salida, 'ejemplo.txt'), 'w', encoding='utf-8') as f:
         f.write('%s viaje %s vehículo %s parada %s línea %s paso %s\n' % (k[0], k[1], k[2], k[3], ps[0]['linea'], k[4]))
     print('ejemplo:', k, ps[0]['linea'], len(ps))
