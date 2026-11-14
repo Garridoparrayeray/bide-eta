@@ -1,0 +1,140 @@
+% =====================================================================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Real-time arrival information shortens the time passengers wait at stops and makes that wait less uncertain
+\parencite{watkins2011,brakewood2019}, but only if it is accurate: inaccurate predictions erode trust and can make
+passengers miss the bus they were told to expect \parencite{gooze2013benefits,rahman2013users}. Most passengers
+receive these predictions from the operator itself, through its own app and stop displays, or from third-party apps
+that relay the operator's figures. How accurate the operator's predictions are, and whether a third party with only
+the operator's open data can do better, is rarely measured on the same buses and at the same moments.
+
+This paper makes that measurement for Bizkaibus, the interurban bus network of the province of Biscay (Spain). Since
+2023 Bizkaibus shows its own real-time waiting times in an official app and on some stop displays. It also publishes,
+as open data, the GPS position of every vehicle in service (a SIRI Vehicle Monitoring feed, \cite{siri}) and its
+timetable (GTFS, \cite{gtfs}), but not the predictions themselves. A companion paper
+\parencite{garrido2026metodo} and a technical report \parencite{garrido2026memoria} describe and evaluate a method
+that predicts arrivals from those two open sources alone, used by the independent Bizkaibus+ app. That evaluation
+compared the method with the published timetable, which is the obvious but weak baseline: after the first hour of a
+trip, most Bizkaibus buses pass a stop more than two minutes before the published time.
+
+Here the baseline is the operator's own live prediction. For one week in November 2026 we recorded, every minute, the
+waiting times that the official service gave for 60 stops, together with the live feed every 20 seconds. We then
+compared, for the same bus at the same stop and the same minute, the waiting time announced by the operator with the
+arrival predicted by the method, and both with the moment the bus actually passed.
+
+The contributions are:
+\begin{enumerate}
+  \item A paired protocol to compare a third-party predictor with an operator's real-time predictions when the
+        operator publishes positions but not predictions: what is captured, how each announcement is matched to a
+        vehicle, how the actual passage is reconstructed and how the comparison avoids giving either side an
+        advantage.
+  \item The comparison itself, over one week of data, by how far ahead the bus is, by type of day and by type of stop,
+        with confidence intervals that respect the dependence between predictions of the same trip.
+  \item The data, the capture program and the analysis, openly available, so that the comparison can be repeated
+        on other days or other networks.
+\end{enumerate}
+
+Section~\ref{sec:related} reviews related work, Section~\ref{sec:data} describes the data,
+Section~\ref{sec:design} the comparison, Section~\ref{sec:results} the results and Section~\ref{sec:discussion} their
+interpretation and limits.
+
+% =====================================================================================================================
+\section{Related work}
+\label{sec:related}
+
+The accuracy of operator real-time information has been studied mostly through the operator's own logs.
+\textcite{cats2016realtime} evaluated the bus arrival information system of Stockholm against automatic vehicle
+location records and found that prediction errors grow with the prediction horizon and depend on the type of stop and
+on the time of day. Studies of passenger benefits \parencite{watkins2011,mishalani2006,liu2020waiting} use the
+operator's predictions as given and show that the value of real-time information depends on its accuracy
+\parencite{gooze2013benefits}. On the other side, third-party predictors built only on public data have been shown
+to be feasible: \textcite{garciamaurino2024improving} improve arrival predictions using only data available through
+public transport APIs, and \textcite{wessel2017retrospective} reconstruct actual passage times from a public vehicle
+location feed, the same kind of ground truth used here. The gap that this paper addresses is the direct comparison:
+operator predictions and a third-party predictor on the same vehicles, stops and moments, against the same actual
+passage, with the operator's predictions recorded as passengers saw them.
+
+The evaluation follows the rules of out-of-sample forecasting evaluation \parencite{tashman2000outofsample}: the
+method is calibrated only with data from before the week that is measured, so that nothing from the test days leaks
+into it \parencite{kaufman2012leakage}.
+
+% =====================================================================================================================
+\section{Data}
+\label{sec:data}
+
+\subsection{What was captured}
+
+A program running on GitHub Actions captured, from 06:00 to 23:00 Madrid time (the night feed repeats stale data):
+\begin{itemize}
+  \item \textbf{The live feed}, every 20 seconds: the public SIRI Vehicle Monitoring file of Bizkaibus, with the GPS
+        position, the trip and the next stop of every vehicle in service. The file changes every 60 seconds, so two
+        of every three copies repeat the previous one.
+  \item \textbf{The official waiting times}, every minute, for each of 60 stops: the response of the web service
+        behind the official Bizkaibus app (\texttt{GetPasoParadaMobile\_JSON}). For each line that serves the stop,
+        the service gives the next two buses (here $e_1$ and $e_2$), each with its waiting time in whole minutes and
+        its distance in metres. The stops are queried one after another, so each stop is queried about once a minute.
+  \item \textbf{The timetable} of the day (GTFS), once a day.
+\end{itemize}
+
+The 60 stops are intermediate stops with many buses and lines, at least 15 minutes after the start of the trip (where
+predictions are hardest and most useful), plus 28 \emph{priority} stops: stops pointed out by passengers and the Bilbao
+stops where the actual passage deviates most from the published time. Each stop and the reason for its choice are
+listed in the repository (\texttt{paradas.json}).
+
+\subsection{Days}
+
+The week runs from Sunday 8 to Saturday 14 November 2026 (Table~\ref{tab:days}). Wednesday 11 was a general strike:
+Bizkaibus ran minimum services (about 30\%), with about 160 vehicles in the feed against 240 on a normal day. That day
+is analysed separately and does not enter the results of the week. Three days are incomplete: on Monday 9 the morning
+block was lost because the capture overran its time limit; on Thursday 12 the official service stopped answering over
+plain HTTP at 17:12 (it answers over HTTPS, which the capture uses from then on), so that afternoon has no official
+times; and on Saturday 14 the capture started at 09:41. The live feed has no gap longer than two minutes on any day.
+
+\input{tabla-dias.tex}
+
+% =====================================================================================================================
+\section{Comparison design}
+\label{sec:design}
+
+\subsection{The two predictions}
+
+\paragraph{Official} For a query at time $t$ to stop $s$, an announcement of $m$ minutes for a bus of line $\ell$
+gives the predicted arrival $\hat a_{\mathrm{off}} = t + 60\,m$.
+
+\paragraph{Method} The method of \textcite{garrido2026metodo} is recomputed from the captured feed with its open
+reference implementation, which reproduces the production engine exactly (it passes the 407 test vectors produced by
+that engine). It is not taken from the live app, so that anyone can repeat it. Its learned tables (segment times, pace
+factors and per-trip corrections) are those of Saturday 7 November, calibrated only with data from before the week,
+and they are not updated during the week. For the query at time $t$, the method's prediction is the one it gave in the
+last copy of the feed before $t$, provided that copy is at most 60 seconds old; it is therefore never more recent
+than the official one. Its predicted arrival $\hat a_{\mathrm{met}}$ is compared in seconds and also rounded to whole
+minutes from $t$, as a passenger would see it:
+$\hat a_{\mathrm{met,min}} = t + 60\,\max\bigl(0, \operatorname{round}\bigl((\hat a_{\mathrm{met}} - t)/60\bigr)\bigr)$.
+The main comparison uses the rounded value, so that neither side gains from the resolution of its figures.
+
+\subsection{The actual passage}
+
+The actual passage of a bus at a stop, $a$, is reconstructed from the feed as in the companion paper: it is the midpoint
+between the last copy of the feed in which the bus had not yet passed the stop (its next stop is the stop itself or an
+earlier one) and the first copy in which it had, without the bus changing trip in between. Because the feed changes
+every 60 seconds, $a$ is known to within about $\pm30$ seconds. The same $a$ is used for both predictions, so this
+uncertainty adds the same noise to both errors and does not favour either.
+
+\subsection{Matching announcements to buses}
+
+The official service does not say which vehicle it announces. For a query at $t$ to stop $s$, its $e_1$ for line $\ell$
+is matched to the first bus of line $\ell$ that actually passes $s$ after $t$, and its $e_2$ to the second. This is the
+bus a passenger waiting at $s$ would take. Lines listed twice in the same response (two routes of the same line) are
+left out, as are announcements whose matched bus passes more than 30 minutes after $t$ or is not tracked by the feed.
+Because buses of the same line can bunch, the results are repeated without the pairs in which another bus of the same
+line passes within two minutes of the matched one; the conclusions do not change (Section~\ref{sec:results}).
+
+\subsection{Metrics}
+
+The error of each prediction is $\hat a - a$ (positive: the bus arrives earlier than announced). For each source we
+give the median absolute error, the share of predictions within $\pm1$ and $\pm2$ minutes, and the median signed
+error, by horizon $a - t$ (0--3, 3--6, 6--10, 10--20 and 20--30 minutes), by type of day and by type of stop.
+Predictions of the same trip are not independent, so confidence intervals for the difference between the two sources
+are obtained by bootstrap over whole trips \parencite{efron1993bootstrap}: each of 400 resamples draws trips with
+replacement, with all their pairs.
