@@ -138,3 +138,152 @@ error, by horizon $a - t$ (0--3, 3--6, 6--10, 10--20 and 20--30 minutes), by typ
 Predictions of the same trip are not independent, so confidence intervals for the difference between the two sources
 are obtained by bootstrap over whole trips \parencite{efron1993bootstrap}: each of 400 resamples draws trips with
 replacement, with all their pairs.
+
+% =====================================================================================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Overall}
+
+Over the five normal days analysed so far (8, 9, 10, 12 and 13 November), 160,046 official announcements were paired
+with a bus and with the method's prediction for the same bus at the same moment: 2,854 passages of 879 trips of 72
+lines at the 60 stops. Table~\ref{tab:horizon} gives the errors by how far away the bus was.
+
+\begin{table}[t]
+\centering
+\caption{Errors by time to the actual passage, five normal days. \emph{Median}: median absolute error (s).
+\emph{$\pm$2 min}: share of predictions within two minutes (\%). \emph{Early}: share of buses that arrive more than
+two minutes \emph{before} the announced time (\%), the error that makes passengers miss the bus. The method is rounded
+to whole minutes, as shown to passengers.}
+\label{tab:horizon}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Method} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Minutes to arrival & Pairs & Median & $\pm$2 min & Early & Median & $\pm$2 min & Early \\
+\midrule
+\csname @@input\endcsname tablas/horizonte.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+When the bus is less than three minutes away, both are accurate and close: 86\% of official announcements and 88\%
+of the method's predictions are within two minutes. From three minutes on, they separate. With 6 to 10 minutes to go,
+37\% of official announcements are within two minutes against 71\% for the method, and the median error is 167 s
+against 68 s. With 10 to 20 minutes to go, the figures are 27\% and 61\%. The difference in the share within two
+minutes, method minus official, has 95\% bootstrap intervals (by trip) of $[+1.2, +4.0]$ points at 0--3 minutes,
+$[+22.7, +26.9]$ at 3--6, $[+32.0, +36.9]$ at 6--10, $[+31.8, +36.3]$ at 10--20 and $[+26.3, +31.1]$ at 20--30
+minutes. Comparing the method in seconds instead of whole minutes changes these figures by at most one point.
+
+\subsection{Direction of the errors}
+
+The two sources fail in opposite directions. The official announcements are late: the median signed error is $+124$~s
+at 10--20 minutes and $+149$~s at 20--30 minutes, and in about half of the announcements made 10 to 30 minutes ahead
+the bus arrives more than two minutes \emph{earlier} than announced (51--52\%, against 16\% for the method). This is
+the costly error for a passenger, who plans to reach the stop shortly before the announced time and finds that the bus
+has gone. The method leans the other way at long horizons (median $-24$~s at 10--20 minutes and $-60$~s at 20--30
+minutes): when it errs, the passenger waits a little longer at the stop rather than missing the bus.
+
+The official announcements are not simply the published timetable: only 12--17\% of them are within one minute of the
+timetable time, and the timetable itself is within two minutes of the actual passage in only 14--18\% of these cases.
+
+\subsection{Days, stops and robustness}
+
+The pattern holds on every day (Table~\ref{tab:days-results}): the share within two minutes is 33--38\% for the official
+service and 59--72\% for the method. It holds on weekdays (37\% against 63\%) and on Sunday (33\% against 72\%), and at
+the priority stops (35\% against 62\%) as at the others (37\% against 66\%). For the second announced bus ($e_2$), which
+is further away, the official service is within two minutes in 26\% of cases and the method in 53\%.
+
+\begin{table}[t]
+\centering
+\caption{Errors by day, all horizons up to 30 minutes. Columns as in Table~\ref{tab:horizon}. Wednesday 11 (general
+strike) is shown for reference and is not part of the results of the week.}
+\label{tab:days-results}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{Official} & \multicolumn{3}{c}{Method} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Day & Pairs & Median & $\pm$2 min & Early & Median & $\pm$2 min & Early \\
+\midrule
+\csname @@input\endcsname tablas/dias.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+Removing the pairs in which another bus of the same line passed within two minutes of the matched one, where the
+matching could pick the wrong bus, removes 1.3\% of the pairs and changes no figure by more than one point.
+
+\subsection{The strike day}
+
+On Wednesday 11, with minimum services, the official service was within two minutes in 36\% of cases and the method in
+63\%, the same as on a normal day. The method was, however, more often late on that day: in 27\% of cases the bus
+arrived more than two minutes before its prediction, against 12--16\% on normal days. Its learned travel times come from
+normal traffic, and with fewer buses and lighter traffic the buses ran faster than learned.
+
+% =====================================================================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{What the comparison shows}
+
+On the buses and stops compared, a method that uses only the operator's open data predicts arrivals more accurately
+than the operator's own service from three minutes before arrival onwards, and the gap is largest, about 34 points in
+the share within two minutes, when the bus is 6 to 20 minutes away. That is the range in which a passenger decides when
+to leave for the stop. Below three minutes both are accurate, because both effectively see the bus approaching.
+
+The comparison does not reveal how the official service computes its waiting times, and we do not claim to know. Its
+errors grow quickly with the horizon and are biased towards announcing the bus later than it comes. That is the
+behaviour one would expect from a prediction that does not learn how fast buses actually travel on each segment, which is
+the core of the method \parencite{garrido2026metodo}.
+
+\subsection{Third-party apps}
+
+Many passengers do not use the official app but general-purpose journey planners, which receive real-time data from
+operators. If such an app shows the operator's prediction unchanged, its accuracy is the official accuracy measured
+here. We have not measured any third-party app directly, and their processing may differ.
+
+\subsection{Limitations}
+
+\begin{itemize}
+  \item \textbf{Which buses are compared.} An announcement can only be compared if the actual passage of the matched
+        bus can be reconstructed from the feed. This excludes buses for which the stop is at or near the end of their
+        trip (the feed stops reporting them when the trip ends) and buses not reported by the feed. Of the official
+        announcements of the next bus up to 25 minutes ahead, 19\% could be paired. The results describe the buses
+        whose passage is observable, which are the majority of buses \emph{in the middle} of their trip, not every
+        announcement.
+  \item \textbf{One week, one network.} The data cover five normal days (one of them a Sunday) in November, at 60
+        stops chosen for their traffic and their difficulty. Other seasons, timetables or networks may differ.
+  \item \textbf{Resolution of the actual passage.} The feed changes every 60 seconds, so the actual passage is known to
+        about $\pm30$~s. This adds the same noise to both sources and cannot explain differences of minutes.
+  \item \textbf{Matching.} The official service does not identify the vehicle it announces. Matching by order of
+        passage is what a passenger experiences, and the results do not change when ambiguous cases are removed.
+  \item \textbf{The method is the replay, not the app.} The method is recomputed from the feed with its reference
+        implementation, with tables frozen before the week. The live app recalibrates every night and also remembers
+        buses that have recently passed, so it may perform slightly differently.
+\end{itemize}
+
+% =====================================================================================================================
+\section{Reproducibility}
+\label{sec:repro}
+
+The capture program, the list of stops with the reason for each, the days used (\texttt{dias.json}), the comparison
+(\texttt{comparar.py}) and the tables (\texttt{resultados.py}) are in the folder \texttt{articulo-comparacion} of the
+repository. The raw captures (feed snapshots, official responses and the timetable of each day) are published as assets
+of the release \texttt{comparacion-2026-11}. The method's reference implementation and the learned tables used are those
+of the companion paper.
+
+% =====================================================================================================================
+\section{Conclusions}
+\label{sec:conclusions}
+
+For one week, at 60 stops of the Bizkaibus network, we recorded the official real-time waiting times minute by minute
+and compared them, bus by bus, with the arrivals predicted by an open method that uses only the operator's published
+positions and timetable. With the bus 6 to 20 minutes away, the official service is within two minutes of the actual
+passage in about a third of cases and the method in about two thirds, and the official errors are mostly in the
+direction that makes passengers miss the bus. Operators that publish their vehicle positions already make possible
+predictions better than their own; adopting a learned, segment-based method, or opening the predictions to independent
+evaluation, would directly benefit their passengers.
