@@ -23,7 +23,7 @@ Visualization, Writing -- original draft, Writing -- review \& editing.
 The capture program, the list of stops with the reason for each, the days and stops used and excluded, the comparison,
 the tables and the figure data are in the folder \texttt{articulo-comparacion} of the repository
 \url{https://github.com/Garridoparrayeray/bide-eta} (code under the MIT licence, texts and derived data under CC BY 4.0).
-The raw captures (feed copies, official responses and the timetable of each day) are assets of the release
+The timetable database used is in the repository (\texttt{datos/horario}). The raw captures (feed copies, official responses and the timetable of each day) are assets of the release
 \texttt{comparacion-2026-11} of the same repository. An archived copy with a DOI will be deposited on Zenodo on
 acceptance. The position feed and the timetable are open data published by the Diputación Foral de Bizkaia and listed in
 the Spanish National Access Point \parencite{nap}.
@@ -32,6 +32,6 @@ the Spanish National Access Point \parencite{nap}.
 
 The official waiting times were obtained from the public web service used by the official Bizkaibus app, which requires
 no authentication. The capture queried it sequentially, about one request per second in total, with a user agent that
-identifies the project, and only during service hours. No permission was sought from the operator. The data contain no
+identifies the project, and only during service hours. No permission was sought from the operator. The service stopped answering over plain HTTP on 12 November; it kept answering over HTTPS at the same request rate, so there is no sign that the capture was being blocked. The publisher states no terms of use for this service that we could find, and none for redistributing its responses. The data contain no
 personal information: only stop, line and vehicle identifiers. The raw responses are redistributed for research with
 attribution, and they will be removed if the publisher of the data asks.

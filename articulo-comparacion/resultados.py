@@ -21,6 +21,7 @@ import math
 import os
 import random
 import statistics
+import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 HORIZONTES = [(0, 180, '0--3'), (180, 360, '3--6'), (360, 600, '6--10'), (600, 1200, '10--20'), (1200, 1800, '20--30')]
@@ -46,7 +47,14 @@ def cuantil(v, q):
     return v[lo] + (v[hi] - v[lo]) * (pos - lo)
 
 
-def leer(carpeta):
+CAMPOS = ('dia', 'viaje', 'vehiculo', 'parada', 'prioritaria', 'linea', 'e', 't', 'real', 'oficial', 'minutos', 'metodo',
+          'estado', 'instante', 'capa', 'metros_oficial', 'metros_bus', 'horario', 'segundos_oficial', 'siguiente', 'real_gps')
+TEXTOS = ('dia', 'viaje', 'vehiculo', 'parada', 'linea', 'estado', 'capa')
+_CACHE = {}
+TIPOS = collections.Counter()
+
+
+def leer_crudo(carpeta):
     for f in sorted(glob.glob(os.path.join(carpeta, 'pares-*.jsonl*'))):
         if f.endswith('.json'):
             continue
@@ -54,6 +62,21 @@ def leer(carpeta):
         with abrir(f, 'rt', encoding='utf-8') as fh:
             for linea in fh:
                 yield json.loads(linea)
+
+
+def leer(carpeta):
+    """Los pares de una carpeta, leídos una sola vez y con solo los campos que se usan (para no llenar la memoria)."""
+    if carpeta not in _CACHE:
+        pares = []
+        for p in leer_crudo(carpeta):
+            TIPOS[p.get('tipo', '')] += 1
+            q = {k: p.get(k) for k in CAMPOS}
+            for k in TEXTOS:
+                if q[k] is not None:
+                    q[k] = sys.intern(str(q[k]))
+            pares.append(q)
+        _CACHE[carpeta] = pares
+    return _CACHE[carpeta]
 
 
 def config():
@@ -247,7 +270,7 @@ def main():
 
     # 1. Flujo y cobertura.
     print('\n== Flujo')
-    todos = [p for p in leer(a.carpeta)]
+    todos = [p for p in leer(a.carpeta) if INICIO <= p['t'] < FIN]
     cobertura = collections.Counter()
     for f in sorted(glob.glob(os.path.join(a.carpeta, 'pares-*.jsonl.cuentas.json'))):
         c = json.load(open(f))
@@ -422,7 +445,7 @@ def main():
             tex['grupos'].append(fila(nombre, resumen(ps)))
             print('  %-20s n=%6d ofi %.1f bide %.1f' % (nombre, len(ps), 100 * resumen(ps)['oficial']['p2'], 100 * resumen(ps)['bide']['p2']))
     print('  estados de Bide+:', collections.Counter(p['estado'] for p in semana).most_common())
-    print('  tipo (oficial):', collections.Counter(p.get('tipo', '') for p in semana).most_common(3))
+    print('  tipo (oficial), todos los pares:', TIPOS.most_common(3))
     por_dia = collections.defaultdict(list)
     for p in semana + separado:
         por_dia[p['dia']].append(p)
@@ -457,17 +480,20 @@ def main():
     # 10. Ablación.
     if a.ablacion:
         print('\n== Ablación (mismos pares)')
+        clave_par = lambda p: (p['dia'], p['vehiculo'], p['viaje'], p['parada'], p['t'], p['e'])
+        principales = {clave_par(p) for p in semana}
         alt = {}
         for item in a.ablacion:
             nombre, carpeta = item.split('=', 1)
-            alt[nombre] = {(p['dia'], p['vehiculo'], p['viaje'], p['parada'], p['t'], p['e']): p for p in leer(carpeta)}
+            # Solo la predicción de Bide+ de los pares del conjunto principal (para no llenar la memoria).
+            alt[nombre] = {clave_par(p): p['metodo'] for p in leer_crudo(carpeta) if clave_par(p) in principales}
         orden = [n for n in ('todo', 'tramos', 'ritmo', 'viajes') if n in alt]
         for _, _, h in HORIZONTES + [(0, 0, 'All')]:
             ps = semana if h == 'All' else por_h[h]
-            claves = [(p['dia'], p['vehiculo'], p['viaje'], p['parada'], p['t'], p['e']) for p in ps]
+            claves = [clave_par(p) for p in ps]
             comunes = [(p, c) for p, c in zip(ps, claves) if all(c in alt[n] for n in orden)]
             con = resumen([p for p, _ in comunes])
-            celdas = [100 * resumen([alt[n][c] for _, c in comunes])['bide']['p2'] for n in orden]
+            celdas = [100 * resumen([dict(p, metodo=alt[n][c]) for p, c in comunes])['bide']['p2'] for n in orden]
             print('  %-7s n=%6d ofi %.1f Bide+ %.1f | %s' % (h, len(comunes), 100 * con['oficial']['p2'], 100 * con['bide']['p2'],
                                                          ' '.join('%s %.1f' % (n, v) for n, v in zip(orden, celdas))))
             tex['ablacion'].append('%s%s & %s & %.0f & %s & %.0f \\\\' % ('\\midrule\n' if h == 'All' else '', h, '{:,}'.format(len(comunes)),

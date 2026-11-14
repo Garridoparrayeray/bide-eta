@@ -1,1 +1,5 @@
-pares 2626 horario 11.6 oficial 31.3 bide 63.5
+sanjuan1.dat 2026-11-09 línea 3514 parada 3388 vehículo 8642
+sanjuan2.dat 2026-11-12 línea 3513 parada 3391 vehículo 8671
+pares3a30 8298 horario 16.7 oficial 32.9 bide 67.1
+parada 3388 pares 4284 horario 4.9 oficial 19.9 bide 64.6
+parada 3391 pares 4014 horario 29.4 oficial 46.7 bide 69.9
