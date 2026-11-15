@@ -9,7 +9,8 @@
  },
  "incompletos": {
   "2026-11-09": "Solo de 12:42 a 23:00: la tanda de 06:47 a 12:42 se perdió porque la captura pasó de su hora y GitHub la cortó (arreglado en #5).",
-  "2026-11-12": "Sin tiempos oficiales de 17:12 a 22:49 (el feed, completo): Bizkaia dejó de servir el servicio oficial por http y la captura lo pedía así; desde el 13 se pide por https."
+  "2026-11-12": "Sin tiempos oficiales de 17:12 a 22:49 (el feed, completo): Bizkaia dejó de servir el servicio oficial por http y la captura lo pedía así; desde el 13 se pide por https.",
+  "2026-11-14": "Desde las 09:41: GitHub no lanzó la captura a las 06:25 y la primera tanda empezó tarde."
  },
  "paradas_excluidas": {
   "3394": "Atxuri: el paso real no se puede reconstruir. El feed da el autobús por pasado de esta parada entre 17 y 30 minutos antes de que llegue (las tres fuentes, también el horario, salen con el mismo desfase), así que el fallo está en la verdad, no en las predicciones."

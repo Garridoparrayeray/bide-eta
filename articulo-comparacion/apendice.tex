@@ -25,7 +25,7 @@ Day & Queries & Paired & Beyond 30 & Within 30 & Fallback & Excl. & Not conf. & 
 
 \begin{table}[h]
 \centering
-\caption{Coverage of the official announcements of the first bus with an announced wait under 30 minutes (five normal
+\caption{Coverage of the official announcements of the first bus with an announced wait under 30 minutes (six normal
 days, 06:00--23:00), by minutes announced: share paired with a bus whose passage was observed within 30 minutes, and share
 in the main analysis (\%).}
 \label{tab:coverage}
@@ -42,7 +42,7 @@ Announced & Announcements & Paired & Main \\
 \begin{table}[h]
 \centering
 \caption{Share within two minutes (\%) in the main analysis and in the paired announcements excluded from it (all
-horizons up to 30 minutes, five normal days, excluded stop and failed reconstructions removed). For pairs whose bus was not
+horizons up to 30 minutes, six normal days, excluded stop and failed reconstructions removed). For pairs whose bus was not
 in the feed, Bide+ gives its fallback prediction.}
 \label{tab:excluded}
 \footnotesize
@@ -275,7 +275,7 @@ the passages with queries from at least 25 minutes before. The thin line is a pe
   at={(horas.east)}, anchor=west, xshift=14mm,
   width=0.48\textwidth, height=5.4cm, ylabel={Within $\pm2$ min (\%)},
   ybar, bar width=3.5pt, ymin=0, ymax=100,
-  symbolic x coords={{Sun 8},{Mon 9},{Tue 10},{Wed 11*},{Thu 12},{Fri 13}},
+  symbolic x coords={{Sun 8},{Mon 9},{Tue 10},{Wed 11*},{Thu 12},{Fri 13},{Sat 14}},
   xtick=data, x tick label style={rotate=45, anchor=east, font=\scriptsize},
   axis lines*=left, ymajorgrids, grid style={gris!20},
   tick label style={font=\footnotesize}, label style={font=\small},
@@ -288,7 +288,7 @@ the passages with queries from at least 25 minutes before. The thin line is a pe
 \addlegendentry{Timetable}
 \end{axis}
 \end{tikzpicture}
-\caption{Share within two minutes with the bus 3 to 30 minutes away. Left: by hour of the query (five normal days,
-12,000 to 37,000 pairs per hour). Right: by day (*~general strike, not part of the main results).}
+\caption{Share within two minutes with the bus 3 to 30 minutes away. Left: by hour of the query (six normal days,
+13,000 to 42,000 pairs per hour). Right: by day (*~general strike, not part of the main results).}
 \label{fig:hours-days}
 \end{figure}

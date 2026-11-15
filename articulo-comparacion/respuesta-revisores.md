@@ -122,3 +122,9 @@ In the same change:
 7. **Shared passage definition.** Stated in §7.4: the learned segment times were fitted on passages defined in the same way as the ground truth, so Bide+ is calibrated to that definition. The GPS-based passage shares the feed's vehicle-to-trip assignment and clock.
 8. **Rules set after seeing the data.** Stated in §5.4 and §7.4.
 9. **One passage per stop and trip.** No double visits exist among the target stops. Terminal stops are covered under point 2.
+
+**Note (Saturday 14 added).** After this response was drafted, Saturday 14 November (09:41–23:00) was added as a sixth normal day. The main set now has 555,744 pairs.
+- **Within ±2 min:** timetable 16%, official real time 39%, Bide+ 64%.
+- **Coverage:** 53.8% of 838,087 first-bus announcements under 30 min.
+- **Robustness:** every conclusion above holds, including the line-level bootstrap, the Holm correction (56 of 59 stops) and the distance-ratio deciles.
+- **Zabalburu (305):** the official real time is now slightly ahead there (35.9% against 34.1%), instead of the earlier near-tie.
