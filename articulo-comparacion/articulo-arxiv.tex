@@ -1,0 +1,78 @@
+% Artículo 2, versión para arXiv (natbib y BibTeX en lugar de biblatex; mismo texto). Generada a partir de articulo.tex.
+% Artículo 2: el método frente a los tiempos de espera oficiales de Bizkaibus, en los mismos autobuses y minutos.
+% Compilar con: latexmk -pdf articulo.tex (pdflatex + biber). Las cifras salen de comparar.py y resultados.py.
+\documentclass[preprint,11pt,authoryear]{elsarticle}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\setlength{\emergencystretch}{2em}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\definecolor{ruta}{HTML}{01573C}
+\definecolor{gps}{HTML}{C8102E}
+\definecolor{gris}{HTML}{6B7280}
+\usepackage[hidelinks,hypertexnames=false]{hyperref}
+
+\makeatletter
+\def\ps@pprintTitle{%
+  \let\@oddhead\@empty
+  \let\@evenhead\@empty
+  \def\@oddfoot{\footnotesize\itshape Preprint v1.0, November 2026. \doidatos. Not peer reviewed. Licence CC BY 4.0.\hfill}%
+  \let\@evenfoot\@oddfoot}
+\makeatother
+
+% DOI de los registros de Zenodo: se rellenan al depositar.
+\newcommand{\doidatos}{doi:10.5281/zenodo.24286027}
+
+% El texto usa las órdenes de cita de biblatex; aquí equivalen a las de natbib.
+\newcommand{\parencite}{\citep}
+\newcommand{\textcite}{\citet}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Accuracy of open-data versus operator real-time bus arrival predictions: a paired evaluation of the Bide+ method
+in Biscay, Spain}
+
+\author[1]{Yeray Garrido\corref{cor}\fnref{orcid}}
+\cortext[cor]{Corresponding author.}
+\ead{garridoparrayeraytx@gmail.com}
+\fntext[orcid]{ORCID: \href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}.}
+\affiliation[1]{organization={Independent researcher}, city={Bilbao}, state={Biscay}, country={Spain}}
+
+% Los highlights (highlights.tex) se envían a la revista como fichero aparte; no van en el preprint.
+% \input{highlights.tex}
+
+\begin{abstract}
+\input{resumen.tex}
+\end{abstract}
+
+\begin{keyword}
+bus arrival prediction \sep real-time passenger information \sep automatic vehicle location \sep paired forecast
+evaluation \sep open data \sep General Transit Feed Specification \sep SIRI Vehicle Monitoring
+\end{keyword}
+
+\end{frontmatter}
+
+
+
+\input{cuerpo.tex}
+
+\input{declaraciones.tex}
+
+\input{apendice.tex}
+
+\clearpage
+\bibliographystyle{elsarticle-harv}
+\bibliography{referencias-bibtex}
+
+\end{document}
