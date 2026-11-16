@@ -1,0 +1,59 @@
+% Artículo 2, versión para enviar a Public Transport (Springer), con la plantilla Springer Nature (sn-jnl, sn-basic).
+% El texto, las tablas y las figuras son los mismos que en articulo.tex (cuerpo.tex, apendice.tex, tablas/, figuras/).
+% Antes de compilar: python3 bib-a-bibtex.py (bibliografía en BibTeX y declaraciones con los encabezados de Springer).
+% Compilar con: latexmk -pdf articulo-springer.tex (pdflatex + bibtex).
+\documentclass[pdflatex,sn-basic]{sn-jnl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\definecolor{ruta}{HTML}{01573C}
+\definecolor{gps}{HTML}{C8102E}
+\definecolor{gris}{HTML}{6B7280}
+
+% El texto usa las órdenes de cita de biblatex; aquí equivalen a las de natbib.
+\providecommand{\parencite}{\citep}
+\providecommand{\textcite}{\citet}
+
+% DOI del preprint en Zenodo.
+\newcommand{\doidatos}{doi:10.5281/zenodo.24286027}
+
+% Apéndice: tablas y figuras A.1, A.2…, y «Appendix A» en las referencias cruzadas.
+\let\apendiceoriginal\appendix
+\renewcommand{\appendix}{\apendiceoriginal
+  \renewcommand{\thesection}{Appendix~\Alph{section}}
+  \renewcommand{\thetable}{A.\arabic{table}}\renewcommand{\thefigure}{A.\arabic{figure}}}
+
+
+\begin{document}
+
+\title[Open-data versus operator real-time bus arrival predictions]{Accuracy of open-data versus operator real-time
+bus arrival predictions: a paired evaluation of the Bide+ method in Biscay, Spain}
+
+\author*[1]{\fnm{Yeray} \sur{Garrido}}\email{garridoparrayeraytx@gmail.com}
+
+\affil*[1]{\orgname{Independent researcher}, \orgaddress{\city{Bilbao}, \state{Biscay}, \country{Spain}}}
+
+\abstract{\input{resumen.tex}}
+
+\keywords{bus arrival prediction, real-time passenger information, automatic vehicle location, paired forecast
+evaluation, open data, General Transit Feed Specification}
+
+\maketitle
+
+\input{cuerpo.tex}
+
+\input{apendice.tex}
+
+\backmatter
+
+\input{declaraciones-springer.tex}
+
+\bibliography{referencias-bibtex}
+
+\end{document}

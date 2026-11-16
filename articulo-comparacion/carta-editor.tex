@@ -1,0 +1,61 @@
+% Carta de presentación para el envío del artículo 2 a Public Transport (Springer). Compilar con: latexmk -pdf carta-editor.tex
+\documentclass[11pt,a4paper]{letter}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parskip}{0.6em}
+
+\signature{Yeray Garrido\\Independent researcher, Bilbao (Biscay), Spain\\ORCID
+\href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}}
+\address{Yeray Garrido\\Bilbao, Biscay, Spain}
+\date{\today}
+
+\begin{document}
+\begin{letter}{The Editors-in-Chief\\\emph{Public Transport -- Planning and Operations}\\Springer}
+
+\opening{Dear Editors,}
+
+I am pleased to submit the manuscript \emph{``Accuracy of open-data versus operator real-time bus arrival predictions:
+a paired evaluation of the Bide+ method in Biscay, Spain''} for consideration as an original research article in
+\emph{Public Transport}.
+
+Real-time passenger information is now standard, but the accuracy of the predictions that operators actually show
+passengers is rarely measured, and almost never against an alternative on the same vehicles and at the same moments.
+The manuscript does this for Bizkaibus, the interurban bus network of Biscay. For one week, the official waiting times
+of 60 stops were recorded every minute and compared, bus by bus, with the published timetable and with the arrivals
+predicted by the Bide+ method from the operator's open data alone (vehicle positions and timetable). Each announcement
+was matched to its vehicle and confirmed with the distance reported by the official service, and the actual passage was
+reconstructed in two independent ways.
+
+Across 555,744 paired predictions on six days, the timetable was within two minutes of the actual passage in 16\% of
+cases, the official real-time information in 39\% and the open-data method in 64\%. The two real-time sources were
+equally accurate below three minutes, and the open-data method was more often within two minutes from three minutes on,
+at 57 of 59 stops. The manuscript reports the limits of the comparison openly: coverage, the shared ground truth,
+matching uncertainty and the larger mean error of the open-data method below six minutes.
+
+I believe the manuscript fits the scope of \emph{Public Transport} because it concerns the information management and
+operation of a real public transport network, and because its main implication is practical: operators that publish
+vehicle positions, and also their own predictions, allow the quality of their passenger information to be audited
+independently and continuously. The paired protocol, the capture program, the data and the analysis are openly
+available, so that the comparison can be repeated on other networks.
+
+The manuscript has been posted as a preprint on Zenodo
+(\href{https://doi.org/10.5281/zenodo.24286027}{doi:10.5281/zenodo.24286027}). The method it evaluates is described in
+a separate preprint (\href{https://doi.org/10.5281/zenodo.24285540}{doi:10.5281/zenodo.24285540}) and in a technical
+report (\href{https://doi.org/10.5281/zenodo.24041572}{doi:10.5281/zenodo.24041572}). Apart from these preprints, the
+work has not been published and is not under consideration elsewhere.
+
+As stated in the manuscript, I designed the Bide+ method and develop the free passenger information app that uses it,
+which accepts voluntary donations to pay for its server; I receive no other income from it and have no relationship with
+the operator. To limit the effect of this interest, the method was frozen before the test week and all data and code are
+public.
+
+Thank you for considering this manuscript. I look forward to hearing from you.
+
+\closing{Yours sincerely,}
+
+\end{letter}
+\end{document}

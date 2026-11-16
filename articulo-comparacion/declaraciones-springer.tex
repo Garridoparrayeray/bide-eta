@@ -1,0 +1,50 @@
+% Generado por bib-a-bibtex.py a partir de declaraciones.tex: no editar a mano.
+\section*{Declarations}
+% =====================================================================================================================
+\bmhead{Competing interests}
+
+The author designed the Bide+ method and develops the independent Bide+ passenger information app that uses it, and
+therefore has an interest in its results. The app is free to use; it accepts voluntary donations, which are used to pay
+for the server that runs it, and the author receives no other income from it. To limit the effect of this interest on the evaluation, the method was frozen
+before the test week, its predictions were recomputed with the public reference implementation, the analysis rules are
+stated in Section~\ref{sec:design}, and all data and code are published so that the comparison can be repeated
+independently. The author has no relationship with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the
+service.
+
+\bmhead{Funding}
+
+This research did not receive any specific grant from funding agencies in the public, commercial or not-for-profit
+sectors.
+
+\bmhead{Author contributions}
+
+\textbf{Yeray Garrido}: Conceptualization, Methodology, Software, Data curation, Formal analysis, Investigation,
+Visualization, Writing -- original draft, Writing -- review \& editing.
+
+\bmhead{Ethics approval and consent}
+
+Not applicable: the study involves no human participants and no personal data.
+
+\bmhead{Data and code availability}
+
+The capture program, the list of stops with the reason for each, the days and stops used and excluded, the comparison,
+the tables and the figure data are in the folder \texttt{articulo-comparacion} of the repository
+\url{https://github.com/Garridoparrayeray/bide-eta} (code under the MIT licence, texts and derived data under CC BY 4.0; see below for the raw official responses).
+The timetable database used is in the repository (\texttt{datos/horario}). An archived copy of the code, the derived data and this
+preprint is deposited on Zenodo (\doidatos). The raw captures (feed copies, official responses and the timetable of
+each day) are not part of that record: they are assets of the release \texttt{comparacion-2026-11} of the GitHub
+repository, under the terms given below. The position feed and the timetable are open data published by the Diputación Foral de Bizkaia and listed in
+the Spanish National Access Point \parencite{nap}.
+
+\bmhead{Data collection and terms of use}
+
+The official waiting times were obtained from the public web service used by the official Bizkaibus app, which requires
+no authentication. The capture queried it sequentially, about one request per second in total, with a user agent that
+identifies the project, and only during service hours. No permission was sought from the operator. The capture first used the plain-HTTP address of the service; on 12
+November at 17:12 that address stopped answering (requests timed out), and from 13 November the capture used the HTTPS
+address of the same service. Over the week, 0.5\% of the requests failed (most of them on 12 November after 17:12), all by timeout or a closed
+connection; no
+error status, rate-limit or blocking response was received. The host serves no \texttt{robots.txt}, and no terms of use
+for the web service or for redistributing its responses were found. The data contain no
+personal information: only stop, line and vehicle identifiers. The raw official responses are not covered by the CC BY licence of the derived data: they are redistributed only for
+research, with attribution, and will be removed if their publisher asks.
