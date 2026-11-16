@@ -44,8 +44,8 @@ Con el DOI (o el enlace) de este registro se rellena `\doibrutos`.
 
 ## 4. Antes de subir
 
-- Decidir qué decir en *Declaration of competing interest* sobre si la app Bide+ te da ingresos (anuncios, donaciones,
-  ventas) o ninguno. Elsevier lo pregunta y el revisor lo ha pedido.
+- Hecho: la declaración de conflicto de intereses dice que la app es gratuita y acepta donaciones para pagar el
+  servidor, sin más ingresos.
 - El preprint lleva tu correo (campo `\ead` de elsarticle) en la primera página. Quitarlo si no quieres que sea público.
 - Después de subirlo:
   - añadir la línea «Cite as: Garrido, Y. (2026)… Zenodo. doi:…» en la portada de la versión para leer;
