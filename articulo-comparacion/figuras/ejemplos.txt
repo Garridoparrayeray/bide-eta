@@ -1,0 +1,4 @@
+ejemplo1.dat 2026-11-08 línea 3917 parada 2576 vehículo 3336
+ejemplo2.dat 2026-11-10 línea 3527 parada 3437 vehículo 2082
+ejemplo3.dat 2026-11-12 línea 3641 parada 270 vehículo 3359
+ejemplo4.dat 2026-11-12 línea 3911 parada 264 vehículo 3389

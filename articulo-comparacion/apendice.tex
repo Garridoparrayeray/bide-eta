@@ -1,0 +1,294 @@
+% =====================================================================================================================
+\appendix
+\section{Supporting tables and figures}
+\setcounter{table}{0}\setcounter{figure}{0}
+\label{app:extra}
+
+\begin{table}[h]
+\centering
+\caption{From official announcements to the pairs analysed, by day (first and second bus, queries 06:00--23:00).
+\emph{Paired}: announcements matched to a bus whose passage was observed within 60 minutes. \emph{Beyond 30} and
+\emph{Within 30}: that passage more or less than 30 minutes after the query. \emph{Fallback}: the bus was not in the feed
+at $t$ (Bide+ gives its fallback prediction). \emph{Excl.}: excluded stop or failed reconstruction. \emph{Not conf.}:
+distance check failed. \emph{Main}: pairs in the main analysis. *~General strike, not part of the main results.}
+\label{tab:flow}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Day & Queries & Paired & Beyond 30 & Within 30 & Fallback & Excl. & Not conf. & Main \\
+\midrule
+\csname @@input\endcsname tablas/flujo.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Coverage of the official announcements of the first bus with an announced wait under 30 minutes (six normal
+days, 06:00--23:00), by minutes announced: share paired with a bus whose passage was observed within 30 minutes, and share
+in the main analysis (\%).}
+\label{tab:coverage}
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+Announced & Announcements & Paired ($<$30 min) & Main \\
+\midrule
+\csname @@input\endcsname tablas/cobertura.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Share within two minutes (\%) in the main analysis and in the paired announcements excluded from it (all
+horizons up to 30 minutes, six normal days, excluded stop and failed reconstructions removed). For pairs whose bus was not
+in the feed, Bide+ gives its fallback prediction.}
+\label{tab:excluded}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Pairs & Number & Timetable & Official & Bide+ \\
+\midrule
+\csname @@input\endcsname tablas/excluidos.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Share within two minutes (\%) by decile of the ratio between the official distance and the straight-line distance
+of the matched bus (main analysis, bus more than 500~m away). Bide+ is ahead in every decile, so the result does not
+depend on the pairs whose identity is least certain.}
+\label{tab:ratio}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Decile & Ratio & Pairs & Official & Bide+ \\
+\midrule
+\csname @@input\endcsname tablas/razon.tex 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Further metrics, all horizons up to 30 minutes (main analysis).}
+\label{tab:metrics}
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+Metric & Timetable & Official & Bide+ \\
+\midrule
+\csname @@input\endcsname tablas/metricas.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Share within one minute (\%) and median signed error (s) by time to the actual passage. A positive signed error
+means that the bus arrives earlier than predicted.}
+\label{tab:horizon-extra}
+\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Timetable} & \multicolumn{2}{c}{Official} & \multicolumn{2}{c}{Bide+} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Minutes & $\pm$1 & Signed & $\pm$1 & Signed & $\pm$1 & Signed \\
+\midrule
+\csname @@input\endcsname tablas/horizonte_extra.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Mean absolute error (s) and share of predictions more than ten minutes off (\%), by time to the actual passage.}
+\label{tab:tails}
+\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Timetable} & \multicolumn{2}{c}{Official} & \multicolumn{2}{c}{Bide+} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Minutes & MAE & $>$10 min & MAE & $>$10 min & MAE & $>$10 min \\
+\midrule
+\csname @@input\endcsname tablas/colas.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{With the GPS-based passage as ground truth: share within two minutes (\%) by time to that passage, and 95\%
+bootstrap interval (2,000 resamples of trips) of the difference Bide+ minus official (percentage points).}
+\label{tab:gps}
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+Minutes & Pairs & Timetable & Official & Bide+ & Difference \\
+\midrule
+\csname @@input\endcsname tablas/gps.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.62\textwidth, height=5.4cm,
+  xlabel={Shift applied to the actual passage (s)}, ylabel={Within $\pm2$ min (\%)},
+  xmin=-180, xmax=180, ymin=0, ymax=100, xtick={-180,-120,...,180},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\scriptsize, draw=none, fill=none, at={(0.02,0.98)}, anchor=north west}]
+\addplot[ruta, very thick, mark=*, mark size=1.2pt] table[x=s, y=met] {figuras/desplazamiento.dat};
+\addlegendentry{Bide+}
+\addplot[gps, very thick, dashed, mark=square*, mark size=1.2pt] table[x=s, y=ofi] {figuras/desplazamiento.dat};
+\addlegendentry{Official}
+\addplot[gris, very thick, dotted] table[x=s, y=hor] {figuras/desplazamiento.dat};
+\addlegendentry{Timetable}
+\draw[gris, dashed] (axis cs:-36,0) -- (axis cs:-36,100);
+\draw[gris, dashed] (axis cs:34,0) -- (axis cs:34,100);
+\end{axis}
+\end{tikzpicture}
+\caption{Share within two minutes, all horizons, when the feed-based actual passage is shifted by the amount shown
+(positive: later). The dashed lines mark the 10th and 90th percentiles of the difference between the GPS-based and the
+feed-based passage.}
+\label{fig:shift}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Sensitivity analyses: share within two minutes (\%) over all horizons and with the bus 10 to 20 minutes away.}
+\label{tab:sensitivity}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{All horizons} & \multicolumn{2}{c}{10--20 min} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-7}
+Variant & Pairs & Timet. & Official & Bide+ & Official & Bide+ \\
+\midrule
+\csname @@input\endcsname tablas/sensibilidad.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Errors by group, all horizons up to 30 minutes. Columns as in Table~\ref{tab:horizon}.}
+\label{tab:groups}
+\footnotesize
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{Timetable} & \multicolumn{3}{c}{Official real time} & \multicolumn{3}{c}{Bide+} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}
+Group & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early \\
+\midrule
+\csname @@input\endcsname tablas/grupos.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Errors by day, all horizons up to 30 minutes. Columns as in Table~\ref{tab:horizon}. *~General strike, shown for
+reference and not part of the main results.}
+\label{tab:days-results}
+\footnotesize
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{Timetable} & \multicolumn{3}{c}{Official real time} & \multicolumn{3}{c}{Bide+} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}
+Day & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early \\
+\midrule
+\csname @@input\endcsname tablas/dias.tex
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\pgfplotsset{ejemplo/.style={width=0.5\textwidth, height=4.4cm, x dir=reverse, xmin=0, xmax=30, ymin=0, ymax=45,
+  xtick={30,20,10,0}, axis lines*=left, ymajorgrids, grid style={gris!20}, tick label style={font=\scriptsize},
+  label style={font=\scriptsize}, title style={font=\scriptsize}}}
+\begin{axis}[ejemplo, name=e1, title={Line 3917, stop 2576, Sun 8}, ylabel={Predicted wait (min)}]
+\addplot[gris, thin, domain=0:30] {x};
+\addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo1.dat};
+\addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo1.dat};
+\addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo1.dat};
+\end{axis}
+\begin{axis}[ejemplo, name=e2, at={(e1.east)}, anchor=west, xshift=8mm, title={Line 3527, stop 3437, Tue 10}]
+\addplot[gris, thin, domain=0:30] {x};
+\addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo2.dat};
+\addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo2.dat};
+\addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo2.dat};
+\end{axis}
+\begin{axis}[ejemplo, name=e3, at={(e1.below south west)}, anchor=north west, yshift=-14mm,
+  title={Line 3641, stop 270, Thu 12}, ylabel={Predicted wait (min)}, xlabel={Minutes before the actual passage}]
+\addplot[gris, thin, domain=0:30] {x};
+\addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo3.dat};
+\addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo3.dat};
+\addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo3.dat};
+\end{axis}
+\begin{axis}[ejemplo, at={(e3.east)}, anchor=west, xshift=8mm, title={Line 3911, stop 264, Thu 12},
+  xlabel={Minutes before the actual passage},
+  legend style={font=\scriptsize, draw=none, fill=white, at={(0.98,0.98)}, anchor=north east}]
+\addplot[gris, thin, domain=0:30] {x};
+\addlegendentry{Perfect}
+\addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo4.dat};
+\addlegendentry{Bide+}
+\addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo4.dat};
+\addlegendentry{Official}
+\addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo4.dat};
+\addlegendentry{Timetable}
+\end{axis}
+\end{tikzpicture}
+\caption{Predicted against actual waiting time for four buses drawn at random from the whole network (fixed seed), among
+the passages with queries from at least 25 minutes before. The thin line is a perfect prediction.}
+\label{fig:examples}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  name=horas, width=0.54\textwidth, height=5.4cm,
+  xlabel={Hour of the query}, ylabel={Within $\pm2$ min (\%)},
+  xmin=5.5, xmax=22.5, ymin=0, ymax=100, xtick={6,8,...,22},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\scriptsize, draw=none, fill=none, at={(0.5,1.02)}, anchor=south, legend columns=3}]
+\addplot[ruta, very thick, mark=*, mark size=1.2pt] table[x=hora, y=met] {figuras/horas.dat};
+\addlegendentry{Bide+}
+\addplot[gps, very thick, dashed, mark=square*, mark size=1.2pt] table[x=hora, y=ofi] {figuras/horas.dat};
+\addlegendentry{Official}
+\addplot[gris, very thick, dotted] table[x=hora, y=hor] {figuras/horas.dat};
+\addlegendentry{Timetable}
+\end{axis}
+\begin{axis}[
+  at={(horas.east)}, anchor=west, xshift=14mm,
+  width=0.48\textwidth, height=5.4cm, ylabel={Within $\pm2$ min (\%)},
+  ybar, bar width=3.5pt, ymin=0, ymax=100,
+  symbolic x coords={{Sun 8},{Mon 9},{Tue 10},{Wed 11*},{Thu 12},{Fri 13},{Sat 14}},
+  xtick=data, x tick label style={rotate=45, anchor=east, font=\scriptsize},
+  axis lines*=left, ymajorgrids, grid style={gris!20},
+  tick label style={font=\footnotesize}, label style={font=\small},
+  legend style={font=\scriptsize, draw=none, fill=none, at={(0.5,1.02)}, anchor=south, legend columns=3}]
+\addplot[fill=ruta, draw=ruta] table[x=dia, y=met] {figuras/dias.dat};
+\addlegendentry{Bide+}
+\addplot[fill=gps, draw=gps] table[x=dia, y=ofi] {figuras/dias.dat};
+\addlegendentry{Official}
+\addplot[fill=gris!60, draw=gris] table[x=dia, y=hor] {figuras/dias.dat};
+\addlegendentry{Timetable}
+\end{axis}
+\end{tikzpicture}
+\caption{Share within two minutes with the bus 3 to 30 minutes away. Left: by hour of the query (six normal days,
+13,000 to 42,000 pairs per hour). Right: by day (*~general strike, not part of the main results).}
+\label{fig:hours-days}
+\end{figure}

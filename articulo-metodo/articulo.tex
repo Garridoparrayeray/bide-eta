@@ -18,7 +18,7 @@
 \usepackage{algpseudocode}
 \usepackage[hidelinks]{hyperref}
 \makeatletter\let\c@author\relax\makeatother
-\usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false,giveninits=true,doi=true,url=false]{biblatex}
+\usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false,uniquename=false,giveninits=true,doi=true,url=false]{biblatex}
 \addbibresource{referencias.bib}
 
 \definecolor{ruta}{HTML}{01573C}
@@ -39,12 +39,15 @@
 \def\ps@pprintTitle{%
   \let\@oddhead\@empty
   \let\@evenhead\@empty
-  \def\@oddfoot{\footnotesize\itshape Preprint, version 1.0 \hfill 7 November 2026}%
+  \def\@oddfoot{\footnotesize\itshape Preprint v1.1, November 2026. \doiversion. Not peer reviewed. Licence CC BY 4.0.\hfill}%
   \let\@evenfoot\@oddfoot}
 \makeatother
 
 \newtheorem{definition}{Definition}
 \newtheorem{proposition}{Proposition}
+
+% DOI de esta versión en Zenodo (se rellena al reservarlo con «New version»).
+\newcommand{\doiversion}{doi:10.5281/zenodo.24286302}
 
 \begin{document}
 
@@ -100,7 +103,7 @@ constant speed along the route. Real buses are slower in towns and faster on hig
 times drift further from the actual passage times as the trip progresses. Section~\ref{sec:drift} quantifies this drift:
 over 169,308 observed stop passages, after the first hour of a trip 85\% of buses pass more than two minutes before
 the published time, and the median passage is almost fourteen minutes early. A passenger who trusted the published
-time and reached the stop two minutes beforehand would find that the bus had already gone in 52\% of cases.
+time and reached the stop two minutes beforehand would find that the bus had already gone in 52\% of all observed passages.
 
 This setting is not specific to Bizkaibus. Position-only feeds are common in automatic vehicle location systems, and
 interpolated intermediate times are allowed by GTFS (\texttt{timepoint=0}) and widespread in regional networks. Under
@@ -129,7 +132,7 @@ evaluation of the first period used here. The contributions are:
         which one it used (Section~\ref{sec:layers}).
   \item An open, verifiable package: a reference implementation written only from the specification, test
         vectors with 407 checks produced by the production engine, an evaluator that reproduces the production
-        histograms bin by bin, and the learned tables and evaluation data (Section~\ref{sec:reuse}).
+        histograms bin by bin on a 40-minute test capture, and the learned tables and evaluation data (Section~\ref{sec:reuse}).
 \end{enumerate}
 
 \noindent The rest of the paper reviews related work (Section~\ref{sec:related}), describes the data and the problem
@@ -245,7 +248,9 @@ t_{\mathrm{actual}}=\frac{t_{m-1}+t_m}{2},
 \end{equation}
 where $t_m$ is the most recent position time in snapshot $m$. The resolution is half the interval between snapshots,
 about $\pm30$~s, and the measured error includes this uncertainty. The reconstruction does not use GPS positions and is
-therefore independent of the projection used by the method.
+therefore independent of the projection used by layer~1; it is not independent of layer~2, which uses the same
+changes of next stop. Only vehicles present in the feed whose passage is later observed are evaluated, so trips without a
+vehicle, shown with layer~3, are not.
 
 \paragraph{Metrics} Predictions are grouped by horizon, i.e.\ the time actually remaining until the arrival (0--3,
 3--6, 6--10 and 10--20 minutes), because accuracy depends mainly on it. The main metric is the share of predictions
@@ -304,7 +309,7 @@ Horizon (min) & Predictions & $\pm1$ & $\pm2$ & $\pm3$ & $\pm1$ & $\pm2$ & $\pm3
 two ablations over the second period. Deleting the GPS positions costs little: the stop registered by the feed is
 updated often enough that accuracy below three minutes is unchanged, and at ten to twenty minutes it drops from 67\%
 to 64\%. Without any live data, the corrected timetable reaches 50--54\% within $\pm2$~minutes at every horizon,
-twice the share of the published timetable: between 40\% and two thirds of the gain over the timetable, depending
+twice the share of the published timetable: between 38\% and two thirds of the gain over the timetable, depending
 on the horizon, comes from learning how long the segments really take, before any live data is used.
 
 \begin{table}[t]
@@ -331,7 +336,7 @@ the horizon, with 97\%, 92\%, 84\% and 68\% within $\pm2$~minutes from the short
 (registered stop) produced about 3\% of the predictions, and layer 3 (corrected timetable) between 3\% and 13\%.
 Layer-3 predictions below three minutes are rarely accurate (6\%): they correspond to buses that should be arriving
 but send no usable data. This probably contributes to the lower accuracy below three minutes in the second period
-than in the first, for which no breakdown by layer is available.
+than in the first, for which no breakdown by layer and horizon is available.
 
 \paragraph{By day type} Accuracy is similar on weekdays and at weekends (92\% for both below three minutes; 67\% and
 65\%, respectively, at ten to twenty minutes).
@@ -346,7 +351,8 @@ All the material needed to verify the results and to reuse the method is in the 
 \url{https://github.com/Garridoparrayeray/bide-eta}, under the MIT licence for code and CC~BY~4.0 for text and data.
 
 \begin{itemize}
-  \item \texttt{referencia/referencia.py} implements the method in Python using only the standard library. It was
+  \item \texttt{referencia/referencia.py} implements the prediction method and part of the calibration (segment times,
+        pace shrinkage, per-trip correction and the choice of the percentile) in Python using only the standard library. It was
         written from the specification, not from the production code.
   \item \texttt{referencia/vectores.json} contains test vectors with 407 checks: concrete inputs with the exact
         outputs of the production engine, covering feed parsing, the matching of each vehicle to its trip, vehicles
@@ -386,22 +392,37 @@ segment by time band with shrunk medians, and choosing for each stop the most re
 abstention rules, the method described here places the arrival shown within $\pm2$~minutes in 92--96\% of cases below
 three minutes and in 67\% at ten to twenty minutes, against 23--25\% for the published timetable, and doubles the
 accuracy of the published timetable even without live data. More complex models that also use same-day data reduce
-the error of segment sums by only 4--7\%, which supports keeping a method that can be audited by hand.
+the error of segment sums by at most 7\% (up to 2\% with the most recent buses, about 4\% with the vehicle's own
+pace, 6--7\% with a neural network), and a network without same-day data by 3--7\%, which supports keeping a method that can be audited by hand.
 
 Every rule, constant and evaluation step is specified, and the reference implementation, the test vectors, the
 evaluator, the learned tables and the evaluation data are public, so that the method can be reproduced, applied to
 other networks and compared with new methods on equal terms. A comparison with the waiting times shown by the operator
 itself is under way with the same tools.
 
+\section*{Declaration of competing interest}
+The author designed the method and develops the independent Bizkaibus+ (Bide+) passenger information app that uses
+it, and therefore has an interest in its results. The app is free to use; it accepts voluntary donations, which are used
+to pay for the server that runs it, and the author receives no other income from it. To make the results checkable, the
+method is fully specified, and its reference implementation, test vectors, evaluator and evaluation data are public.
+The author has no relationship with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the service.
+
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the public, commercial or not-for-profit
+sectors.
+
 \section*{Data and code availability}
-The technical report, reference implementation, test vectors, evaluator, learned tables and evaluation data are
-available at \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for text and data).
+The technical report is archived on Zenodo (\href{https://doi.org/10.5281/zenodo.24041572}{doi:10.5281/zenodo.24041572}).
+The reference implementation, test vectors, evaluator, learned tables and evaluation data are archived with this preprint
+on Zenodo and maintained at \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for
+text and data).
 The timetable and the live feed are open data from their respective publishers. The production engine of the app is
 not public.
 
 \printbibliography
 
 \appendix
+\setcounter{table}{0}
 \input{apendice}
 
 \end{document}
