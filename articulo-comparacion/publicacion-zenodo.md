@@ -2,7 +2,7 @@
 
 El orden importa: cada paso da un DOI que el siguiente cita.
 
-## 1. Artículo 1 (método) en Zenodo
+## 1. Artículo 1 (método) en Zenodo: hecho (10.5281/zenodo.24285541)
 
 El artículo 2 se apoya en él (Garrido 2026b): la especificación del método y la regla de ±2 min fijada de antemano.
 Ahora solo tiene la URL del repositorio, y los revisores piden un DOI.
