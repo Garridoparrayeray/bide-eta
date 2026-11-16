@@ -1,0 +1,122 @@
+% Artículo 2, versión para leer y difundir: el mismo texto, tablas y figuras que articulo.tex (formato de revista,
+% elsarticle), con otra maqueta. Compilar con: latexmk -pdf articulo-lectura.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{tgpagella}
+\usepackage[scale=0.92]{tgheros}
+\usepackage{microtype}
+\setlength{\emergencystretch}{2em}
+\usepackage[a4paper,top=24mm,bottom=24mm,left=24mm,right=24mm,headheight=14pt]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\definecolor{ruta}{HTML}{01573C}
+\definecolor{gps}{HTML}{C8102E}
+\definecolor{gris}{HTML}{6B7280}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont={sf,bf,color=ruta},labelsep=period]{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage[style=authoryear,backend=biber,maxcitenames=2,maxbibnames=99,date=year,urldate=iso,seconds=false,
+  uniquelist=false,uniquename=false,giveninits=true,doi=true,url=false]{biblatex}
+\addbibresource{referencias.bib}
+\renewcommand*{\bibfont}{\small}
+
+% Títulos de sección en sans, verde.
+\titleformat{\section}{\sffamily\Large\bfseries\color{ruta}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\sffamily\large\bfseries\color{ruta!85!black}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\sffamily\normalsize\bfseries}{\thesubsubsection}{0.6em}{}
+\titleformat{\paragraph}[runin]{\sffamily\normalsize\bfseries\color{ruta!85!black}}{}{}{}[.]
+\titlespacing*{\section}{0pt}{3.2ex plus 1ex}{1.4ex}
+\titlespacing*{\subsection}{0pt}{2.4ex plus 0.8ex}{1ex}
+
+% Cabecera y pie.
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{ruta!50}\leaders\hrule height \headrulewidth\hfill}}
+\fancyhead[L]{\sffamily\footnotesize\color{gris}Open-data versus operator real-time bus arrival predictions}
+\fancyhead[R]{\sffamily\footnotesize\color{gris}Garrido (2026) · Preprint}
+\fancyfoot[C]{\sffamily\footnotesize\thepage}
+\fancypagestyle{primera}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\fancyfoot[C]{\sffamily\footnotesize\thepage}}
+
+\setlist{itemsep=0.25ex,topsep=0.6ex}
+
+% Lo que en elsarticle viene de la clase: apéndice con tablas y figuras A.1, A.2…, y el entorno highlights.
+\let\apendiceoriginal\appendix
+\renewcommand{\appendix}{\apendiceoriginal
+  \renewcommand{\thesection}{Appendix~\Alph{section}}
+  \renewcommand{\thetable}{A.\arabic{table}}\renewcommand{\thefigure}{A.\arabic{figure}}
+  \titleformat{\section}{\sffamily\Large\bfseries\color{ruta}}{\thesection.}{0.6em}{}}
+\newenvironment{highlights}{}{}
+
+\begin{document}
+\thispagestyle{primera}
+
+% ----- Cabecera de la primera página -----------------------------------------------------------------------------
+\begin{tcolorbox}[enhanced, colback=ruta, colframe=ruta, arc=0mm, left=7mm, right=7mm, top=6mm, bottom=6mm,
+  boxsep=0mm, width=\linewidth]
+\color{white}\sffamily
+{\footnotesize\bfseries\MakeUppercase{Preprint · Research article · Public transport}}\par\vspace{3mm}
+{\LARGE\bfseries Accuracy of open-data versus operator real-time bus arrival predictions\par}
+\vspace{1.5mm}
+{\large A paired evaluation of the Bide+ method in Biscay, Spain\par}
+\vspace{5mm}
+{\normalsize\bfseries Yeray Garrido}\quad{\small Independent researcher, Bilbao · ORCID
+\href{https://orcid.org/0009-0008-0459-0294}{\color{white}0009-0008-0459-0294}}\par
+\end{tcolorbox}
+
+\vspace{4mm}
+
+% ----- Resultados clave ------------------------------------------------------------------------------------------
+\begin{tcolorbox}[enhanced, colback=ruta!5, colframe=ruta!40, arc=1.5mm, boxrule=0.5pt, left=5mm, right=5mm,
+  top=3mm, bottom=3mm, title={\sffamily\bfseries Key results}, coltitle=ruta, colbacktitle=ruta!5,
+  attach boxed title to top left={xshift=4mm, yshift=-2.5mm}, boxed title style={colframe=ruta!5, arc=0mm}]
+\sffamily\small
+\begin{tabularx}{\linewidth}{@{}X X X@{}}
+\centering{\fontsize{24}{26}\selectfont\color{gris}\bfseries 16\%}\par\centering Published timetable &
+\centering{\fontsize{24}{26}\selectfont\color{gps}\bfseries 39\%}\par\centering Official real time &
+\centering{\fontsize{24}{26}\selectfont\color{ruta}\bfseries 64\%}\par\centering Bide+ (open data only)
+\end{tabularx}
+\par\vspace{1mm}\centering share of predictions within two minutes of the actual passage · 555,744 paired predictions\par
+\vspace{2mm}\raggedright
+\begin{itemize}[leftmargin=4mm]
+  \item Same bus, same stop, same minute: 59 stops of the Bizkaibus network, six days in November 2026.
+  \item Equally accurate below three minutes (90\%); from three minutes on, Bide+ is ahead at 57 of 59 stops, every hour
+        and every day.
+  \item The gap comes from the travel times Bide+ learns between consecutive stops.
+\end{itemize}
+\end{tcolorbox}
+
+\vspace{3mm}
+
+% ----- Resumen ---------------------------------------------------------------------------------------------------
+\noindent{\sffamily\bfseries\color{ruta}Abstract}\quad
+{\small\input{resumen.tex}}
+
+\vspace{2mm}
+\noindent{\sffamily\small\bfseries\color{ruta}Keywords}\quad{\small bus arrival prediction · real-time passenger
+information · automatic vehicle location · paired forecast evaluation · open data · GTFS · SIRI}
+
+\vspace{2mm}
+\noindent{\color{ruta!40}\rule{\linewidth}{0.4pt}}
+
+\input{cuerpo.tex}
+
+\input{declaraciones.tex}
+
+\input{apendice.tex}
+
+\clearpage
+\printbibliography
+
+\end{document}
