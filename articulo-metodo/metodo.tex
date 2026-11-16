@@ -22,13 +22,14 @@ time is discarded. $t_{\mathrm{now}}$ is the current time.
 
 A \emph{time band} $\band(D,t)$ is one of twelve: the day type of $D$ (weekend on Saturday and Sunday, weekday
 otherwise) combined with one of six periods of the hour $\lfloor t/3600\rfloor\bmod24$, starting at 0, 6, 9, 13, 16
-and 20~h; 26:10 on a Friday thus falls in the Friday band that starts at 0~h. Four conventions are needed to
+and 20~h; 26:10 on a Friday thus falls in the weekday band that starts at 0~h (the band follows the service day, not the
+clock date). Four conventions are needed to
 reproduce every number. $\operatorname{rnd}$ rounds halves away from zero, and
 $\operatorname{rnd}_3(x)=\operatorname{rnd}(1000x)/1000$. $Q_\alpha(x)=x_{(\lfloor\alpha(|x|-1)\rfloor)}$ is the
 percentile $\alpha$ of the sorted values $x_{(0)}\le\dots\le x_{(|x|-1)}$, without interpolation, and
 $\med=Q_{0.5}$ is the low median. $\clamp(x,x_{\min},x_{\max})=\max(x_{\min},\min(x_{\max},x))$. Line numbers are
 written as in the timetable, without leading zeros, also in the keys of the learned tables: the feed writes
-\texttt{A0651} for line \texttt{651}. Appendix~\ref{app:constants} lists every constant.
+\texttt{A0651} for line \texttt{651}. \ref{app:constants} lists every constant.
 
 \subsection{Matching and localisation}
 \label{sec:localisation}

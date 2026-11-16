@@ -25,7 +25,8 @@ natural next step, once it has been evaluated on the full arrival shown to the u
 Several rules do not raise the measured hit rate but prevent the errors that most damage trust: labelling estimates as
 such, hiding an implausible delay while keeping the arrival, discarding two sources that contradict each other, and
 stating that a bus may already have passed rather than announcing it as approaching. On 3 November 2026, 97.8\% of the
-trips shown as \texttt{likely\_departed} were not seen in the feed at all that day.
+trips shown as \texttt{likely\_departed} were not seen in the feed at all that day (with tables that included the
+morning measured; 94.8--96.5\% on days not used for learning). That these buses had passed cannot be verified.
 
 \subsection{Limitations}
 \label{sec:limitations}
@@ -35,7 +36,8 @@ trips shown as \texttt{likely\_departed} were not seen in the feed at all that d
         changed during the evaluation, not a frozen version.
   \item \textbf{Ground truth.} The actual passage is known to within $\pm30$~s, which especially affects the
         $\pm1$-minute figures, and it is the moment at which the feed changes the next stop, which may lag slightly
-        behind the physical passage (equally for the method and the timetable).
+        behind the physical passage (equally for layer~1 and the timetable). It is not independent of layer~2, which uses
+        the same changes of next stop, so the results without GPS may be optimistic.
   \item \textbf{Censoring and dependence.} Only passages observed within the capture are evaluated, so very late buses
         may be missed; successive predictions for the same vehicle are correlated, so the effective sample size is
         smaller than the number of predictions.
@@ -59,7 +61,7 @@ and for learning); shapes (if stop distances along them are missing, they are me
 uses straight lines between stops); and a way to
 capture the feed periodically. Only the reading of the feed and the matching depend on the operator's format. The time
 bands reflect demand in Biscay, and several constants were measured there and should be re-measured (those marked M
-in Appendix~\ref{app:constants}), notably the 50~m corridor,
+in \ref{app:constants}), notably the 50~m corridor,
 the 20-minute limit of layer 2, the 45-minute cap on plausible delays and the 60~s late departure from the terminal.
 With no samples, the model reduces to timetable differences with $k=1$, which already removes the accumulated delay;
 learned segments appear after a few days of capture. The steps for another city are: check what the operator
@@ -73,8 +75,9 @@ copy of the timetable.
 \subsection{Open problems}
 \label{sec:open}
 
-The following questions remain open and are suitable for further research, including bachelor's and master's theses;
-the public data and evaluator allow any answer to be compared with the method on equal terms.
+The following questions remain open. The public evaluator, learned tables and evaluation data allow answers to be
+compared with the method; the raw captures and the frozen timetable database are being released separately, and the
+day-by-day evaluation of Tables~\ref{tab:shrinkage}--\ref{tab:methods} cannot yet be recomputed from public data.
 
 \begin{enumerate}
   \item \textbf{Own pace.} Evaluate the Kalman filter on the vehicle's own pace on the full arrival shown to the user.

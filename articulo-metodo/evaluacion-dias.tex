@@ -4,7 +4,7 @@
 \label{sec:day-by-day}
 
 Rules enter the method only after a day-by-day evaluation that reproduces how they will be used: for each of seven
-test days, everything is learned from the previous days only, and the prediction is evaluated end to end on runs of
+test days, everything is learned from the previous days only (exceptions are noted below), and the prediction is evaluated end to end on runs of
 consecutive segments (the arrival shown to the user is built from such sums, and a change can improve each segment
 without improving the sum). The measure concerns sums of segment times, not the full arrival shown. A rule is adopted if it improves accuracy at every horizon and on almost every day.
 
@@ -12,7 +12,9 @@ without improving the sum). The measure concerns sums of segment times, not the 
 Eq.~\eqref{eq:shrinkage} on 195,786 segment samples over 26 days (test days 25--31 October 2026). With $n_0=5$, every
 measure improves at every horizon. With $n_0=10$, the gain holds at short horizons, but at 12--20 minutes the result is
 worse than without shrinkage: too much shrinkage erases real differences between bands, and these accumulate over many
-segments, as Proposition~\ref{prop:shrinkage} predicts.
+segments, consistent with Proposition~\ref{prop:shrinkage}. The day-by-day tool falls back to the all-day median when a band has fewer than two tracks,
+whereas production keeps a band only if the segment has samples in two bands; the difference concerns rarely observed
+segments.
 
 \begin{table}[t]
 \centering
@@ -39,8 +41,8 @@ timetable, and its times were on average 131~s earlier than the actual passage. 
 the route, the mean absolute error fell to 158~s and the share within $\pm2$~minutes rose from 47\% to 54\%, whereas a
 single correction per band lowered the mean error but worsened the hit rates at tight tolerances, because the bias is
 not the same for every line and trip. Splitting the route into fifths, or down to individual stops, did not help.
-The segment times of layer 3 were learned from all 27 days, test days included, which favours the uncorrected row;
-if anything, the measured gain is understated.
+The segment times of layer 3 were learned from all 27 days, test days included, so these absolute errors are
+in-sample with respect to segment times; this probably favours the uncorrected row.
 Replacing the mean of the deviations with their 40th percentile, evaluated by reconstructing what the app would have
 shown on two days not used for learning, raised the share within $\pm2$~minutes by 4.1 and 2.5 percentage points and
 cut by a third the cases in which the bus passed more than two minutes before the time shown. The 35th percentile
@@ -52,14 +54,17 @@ the test days (ties go to the lower mean error).
 the same runs, with alternatives, most of which also use same-day data: a single scale factor fitted on earlier days; the recent ratio of
 the last buses on each segment; a Kalman filter per segment in the spirit of \textcite{shalaby2004}; a Kalman filter on
 the vehicle's own pace; and a neural network with 28 inputs and two hidden layers of 32 and 16 units, in the spirit of
-\textcite{chien2002} and \textcite{jeong2005}, trained for each test day on the previous days, also shown without its same-day inputs. Hyper-parameters were
-tuned on the seven days before the test period. The method already captures almost all of the gain over the published
+\textcite{chien2002} and \textcite{jeong2005}, trained for each test day on the previous days, also shown without its same-day inputs. The competitors' hyper-parameters were
+tuned on 18--24 October; the method's $n_0$ was chosen when the rule was adopted, on data overlapping the test days,
+which if anything favours the method. The method already captures almost all of the gain over the published
 timetable: at 4--8 minutes, the mean absolute error falls from 154~s to 42~s. The alternatives that use same-day data improve on it
 slightly, and on almost every day: the buses that have just run the same segments, used directly or through a Kalman filter, by
-1--2\%; the vehicle's own pace by about 4\%; and the neural network, which combines all these inputs, by 6--7\%. The
+up to 2\%; the vehicle's own pace by about 4\%; and the neural network, which combines all these inputs, by 6--7\%. The
 network is the only alternative that is better on all seven days at all three horizons (the 95\% bootstrap intervals of
 the difference exclude zero). Its gain is stable across random seeds (81.7 and 81.4~s at 12--20 minutes), whereas
-that of the network without same-day inputs is not (82.5 and 85.3~s). These comparisons concern sums of segment
+that of the network without same-day inputs is not (82.5 and 85.3~s); even so, with both seeds this network, which
+uses the same information as the method, improves on it by 3--7\% at 12--20 minutes (88.2~s). The method is kept
+because it can be audited by hand and runs without a trained model, not because it is the most accurate. These comparisons concern sums of segment
 times, not the full arrival shown to the user.
 
 \begin{table}[t]
