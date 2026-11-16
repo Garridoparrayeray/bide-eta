@@ -17,9 +17,9 @@ The work is published in three parts, each in its own folder:
 
 | | Folder | What it is | Status |
 |---|---|---|---|
-| 1 | [`memoria/`](memoria/) | **Technical report** (in Spanish, APA 7): the complete method, every measurement behind each constant, the full evaluation and the reference implementation. LaTeX sources and PDF. | Published first |
-| 2 | [`articulo-metodo/`](articulo-metodo/) | **Paper 1** (in English): the reproducible method, its evaluation over 23 days and the comparison with other methods. | Draft |
-| 3 | [`articulo-comparacion/`](articulo-comparacion/) | **Paper 2** (in English): the method against the waiting times that Bizkaibus itself shows, on the same buses and stops. The one-week capture is in [`captura/`](articulo-comparacion/captura/). | Capturing data |
+| 1 | [`memoria/`](memoria/) | **Technical report** (in Spanish, APA 7): the complete method, every measurement behind each constant, the full evaluation and the reference implementation. LaTeX sources and PDF. | Published: [10.5281/zenodo.24041572](https://doi.org/10.5281/zenodo.24041572) |
+| 2 | [`articulo-metodo/`](articulo-metodo/) | **Paper 1** (in English): the reproducible method, its evaluation over 23 days and the comparison with other methods. | Preprint: [10.5281/zenodo.24285540](https://doi.org/10.5281/zenodo.24285540) (latest version) |
+| 3 | [`articulo-comparacion/`](articulo-comparacion/) | **Paper 2** (in English): the method against the waiting times that Bizkaibus itself shows, on the same buses and stops, over one week. The capture program is in [`captura/`](articulo-comparacion/captura/) and the raw captures in the release [`comparacion-2026-11`](https://github.com/Garridoparrayeray/bide-eta/releases/tag/comparacion-2026-11). | Preprint: [10.5281/zenodo.24286027](https://doi.org/10.5281/zenodo.24286027) |
 
 Shared by the three:
 
@@ -59,7 +59,40 @@ minutes, against 24% and 25% for the published timetable.
 
 ## How to cite
 
-The method is described in the technical report (in Spanish), which has its own DOI:
+Each publication has its own DOI. The papers are preprints, not yet peer reviewed.
+
+> Garrido, Y. (2026). *Predicting bus arrivals when the feed reports positions but not delays: a reproducible
+> three-layer method with an open reference implementation* [Preprint]. Zenodo. https://doi.org/10.5281/zenodo.24285540
+
+> Garrido, Y. (2026). *Accuracy of open-data versus operator real-time bus arrival predictions: a paired evaluation of
+> the Bide+ method in Biscay, Spain* (Version 1.0) [Preprint]. Zenodo. https://doi.org/10.5281/zenodo.24286027
+
+```bibtex
+@misc{garrido_method_2026,
+  author       = {Garrido, Yeray},
+  title        = {Predicting Bus Arrivals When the Feed Reports Positions but Not Delays: A Reproducible Three-Layer
+                  Method with an Open Reference Implementation},
+  howpublished = {Preprint, Zenodo},
+  year         = {2026},
+  doi          = {10.5281/zenodo.24285540}
+}
+
+@misc{garrido_comparison_2026,
+  author       = {Garrido, Yeray},
+  title        = {Accuracy of Open-Data versus Operator Real-Time Bus Arrival Predictions: A Paired Evaluation of the
+                  Bide+ Method in Biscay, Spain},
+  howpublished = {Preprint, Zenodo},
+  year         = {2026},
+  version      = {1.0},
+  doi          = {10.5281/zenodo.24286027}
+}
+```
+
+The DOI of paper 1 above always resolves to its latest version (1.1); version 1.0 is
+[10.5281/zenodo.24285541](https://doi.org/10.5281/zenodo.24285541) and version 1.1 is
+[10.5281/zenodo.24286302](https://doi.org/10.5281/zenodo.24286302).
+
+The full method, with every measurement, is in the technical report (in Spanish):
 
 > Garrido, Y. (2026). *Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados*
 > (Version 2.1) [Technical report]. Zenodo. https://doi.org/10.5281/zenodo.24041572

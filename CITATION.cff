@@ -23,6 +23,31 @@ keywords:
   - robust estimation
   - shrinkage
   - temporal validation
+references:
+  - type: article
+    title: "Predicting bus arrivals when the feed reports positions but not delays: a reproducible three-layer method with an open reference implementation"
+    authors:
+      - family-names: Garrido
+        given-names: Yeray
+        orcid: "https://orcid.org/0009-0008-0459-0294"
+    year: 2026
+    status: preprint
+    publisher:
+      name: Zenodo
+    doi: "10.5281/zenodo.24285540"
+    url: "https://doi.org/10.5281/zenodo.24285540"
+  - type: article
+    title: "Accuracy of open-data versus operator real-time bus arrival predictions: a paired evaluation of the Bide+ method in Biscay, Spain"
+    authors:
+      - family-names: Garrido
+        given-names: Yeray
+        orcid: "https://orcid.org/0009-0008-0459-0294"
+    year: 2026
+    status: preprint
+    publisher:
+      name: Zenodo
+    doi: "10.5281/zenodo.24286027"
+    url: "https://doi.org/10.5281/zenodo.24286027"
 preferred-citation:
   type: report
   title: "Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados"

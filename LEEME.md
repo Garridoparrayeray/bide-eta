@@ -17,9 +17,9 @@ El trabajo se publica en tres partes, cada una en su carpeta:
 
 | | Carpeta | Qué es | Estado |
 |---|---|---|---|
-| 1 | [`memoria/`](memoria/) | **Memoria técnica** (en castellano, APA 7): el método completo, las mediciones que hay detrás de cada constante, la evaluación entera y la implementación de referencia. Fuentes LaTeX y PDF. | Se publica primero |
-| 2 | [`articulo-metodo/`](articulo-metodo/) | **Artículo 1** (en inglés): el método reproducible, su evaluación en 23 días y la comparación con otros métodos. | Borrador |
-| 3 | [`articulo-comparacion/`](articulo-comparacion/) | **Artículo 2** (en inglés): el método frente a los tiempos de espera que muestra el propio Bizkaibus, en los mismos autobuses y paradas. La captura de una semana está en [`captura/`](articulo-comparacion/captura/). | Capturando datos |
+| 1 | [`memoria/`](memoria/) | **Memoria técnica** (en castellano, APA 7): el método completo, las mediciones que hay detrás de cada constante, la evaluación entera y la implementación de referencia. Fuentes LaTeX y PDF. | Publicada: [10.5281/zenodo.24041572](https://doi.org/10.5281/zenodo.24041572) |
+| 2 | [`articulo-metodo/`](articulo-metodo/) | **Artículo 1** (en inglés): el método reproducible, su evaluación en 23 días y la comparación con otros métodos. | Preprint: [10.5281/zenodo.24285540](https://doi.org/10.5281/zenodo.24285540) (última versión) |
+| 3 | [`articulo-comparacion/`](articulo-comparacion/) | **Artículo 2** (en inglés): el método frente a los tiempos de espera que muestra el propio Bizkaibus, en los mismos autobuses y paradas, durante una semana. El programa de captura está en [`captura/`](articulo-comparacion/captura/) y las capturas en bruto en la release [`comparacion-2026-11`](https://github.com/Garridoparrayeray/bide-eta/releases/tag/comparacion-2026-11). | Preprint: [10.5281/zenodo.24286027](https://doi.org/10.5281/zenodo.24286027) |
 
 Comunes a las tres:
 
@@ -59,7 +59,16 @@ veinte minutos, frente al 24 % y el 25 % del horario publicado.
 
 ## Para TFG, TFM e investigación
 
-Todo se puede usar y modificar citando la fuente. El método se cita por la memoria técnica, que tiene su propio DOI:
+Todo se puede usar y modificar citando la fuente. Cada publicación tiene su DOI; los artículos son preprints, todavía
+sin revisión por pares:
+
+> Garrido, Y. (2026). *Predicting bus arrivals when the feed reports positions but not delays: a reproducible
+> three-layer method with an open reference implementation* [Preprint]. Zenodo. https://doi.org/10.5281/zenodo.24285540
+
+> Garrido, Y. (2026). *Accuracy of open-data versus operator real-time bus arrival predictions: a paired evaluation of
+> the Bide+ method in Biscay, Spain* (Versión 1.0) [Preprint]. Zenodo. https://doi.org/10.5281/zenodo.24286027
+
+El método completo, con todas las mediciones, está en la memoria técnica:
 
 > Garrido, Y. (2026). *Predicción de llegadas de autobuses con posiciones en tiempo real y horarios interpolados*
 > (Versión 2.1) [Informe técnico]. Zenodo. https://doi.org/10.5281/zenodo.24041572
