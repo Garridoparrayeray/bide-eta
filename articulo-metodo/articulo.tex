@@ -39,7 +39,7 @@
 \def\ps@pprintTitle{%
   \let\@oddhead\@empty
   \let\@evenhead\@empty
-  \def\@oddfoot{\footnotesize\itshape Preprint, version 1.0 \hfill 7 November 2026}%
+  \def\@oddfoot{\footnotesize\itshape Preprint v1.0, November 2026. Not peer reviewed. Licence CC BY 4.0.\hfill}%
   \let\@evenfoot\@oddfoot}
 \makeatother
 
@@ -393,9 +393,22 @@ evaluator, the learned tables and the evaluation data are public, so that the me
 other networks and compared with new methods on equal terms. A comparison with the waiting times shown by the operator
 itself is under way with the same tools.
 
+\section*{Declaration of competing interest}
+The author designed the method and develops the independent Bizkaibus+ (Bide+) passenger information app that uses
+it, and therefore has an interest in its results. The app is free to use; it accepts voluntary donations, which are used
+to pay for the server that runs it, and the author receives no other income from it. To make the results checkable, the
+method is fully specified, and its reference implementation, test vectors, evaluator and evaluation data are public.
+The author has no relationship with Bizkaibus, the Diputación Foral de Bizkaia or the operators of the service.
+
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the public, commercial or not-for-profit
+sectors.
+
 \section*{Data and code availability}
-The technical report, reference implementation, test vectors, evaluator, learned tables and evaluation data are
-available at \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for text and data).
+The technical report is archived on Zenodo (\href{https://doi.org/10.5281/zenodo.24041572}{doi:10.5281/zenodo.24041572}).
+The reference implementation, test vectors, evaluator, learned tables and evaluation data are archived with this preprint
+on Zenodo and maintained at \url{https://github.com/Garridoparrayeray/bide-eta} (MIT licence for code, CC~BY~4.0 for
+text and data).
 The timetable and the live feed are open data from their respective publishers. The production engine of the app is
 not public.
 
