@@ -32,7 +32,7 @@ in the main analysis (\%).}
 \footnotesize
 \begin{tabular}{lrrr}
 \toprule
-Announced & Announcements & Paired & Main \\
+Announced & Announcements & Paired ($<$30 min) & Main \\
 \midrule
 \csname @@input\endcsname tablas/cobertura.tex 
 \bottomrule
@@ -229,7 +229,7 @@ Day & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$2 & Ea
 \addplot[gps, thick, dashed, mark=square*, mark size=0.9pt] table[x=antes, y=ofi] {figuras/ejemplo2.dat};
 \addplot[gris, thick, dotted] table[x=antes, y=hor] {figuras/ejemplo2.dat};
 \end{axis}
-\begin{axis}[ejemplo, name=e3, at={(e1.below south west)}, anchor=north west, yshift=-6mm,
+\begin{axis}[ejemplo, name=e3, at={(e1.below south west)}, anchor=north west, yshift=-14mm,
   title={Line 3641, stop 270, Thu 12}, ylabel={Predicted wait (min)}, xlabel={Minutes before the actual passage}]
 \addplot[gris, thin, domain=0:30] {x};
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo3.dat};
@@ -238,7 +238,7 @@ Day & Pairs & Med. & $\pm$2 & Early & Med. & $\pm$2 & Early & Med. & $\pm$2 & Ea
 \end{axis}
 \begin{axis}[ejemplo, at={(e3.east)}, anchor=west, xshift=8mm, title={Line 3911, stop 264, Thu 12},
   xlabel={Minutes before the actual passage},
-  legend style={font=\scriptsize, draw=none, fill=white, at={(0.02,0.98)}, anchor=north west}]
+  legend style={font=\scriptsize, draw=none, fill=white, at={(0.98,0.98)}, anchor=north east}]
 \addplot[gris, thin, domain=0:30] {x};
 \addlegendentry{Perfect}
 \addplot[ruta, thick, mark=*, mark size=0.9pt] table[x=antes, y=met] {figuras/ejemplo4.dat};

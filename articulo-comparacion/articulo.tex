@@ -18,7 +18,7 @@
 \definecolor{ruta}{HTML}{01573C}
 \definecolor{gps}{HTML}{C8102E}
 \definecolor{gris}{HTML}{6B7280}
-\usepackage[hidelinks]{hyperref}
+\usepackage[hidelinks,hypertexnames=false]{hyperref}
 \makeatletter\let\c@author\relax\makeatother
 \usepackage[style=authoryear,backend=biber,maxcitenames=2,maxbibnames=99,date=year,urldate=iso,seconds=false,uniquelist=false,uniquename=false,giveninits=true,doi=true,url=false]{biblatex}
 \addbibresource{referencias.bib}
@@ -27,9 +27,13 @@
 \def\ps@pprintTitle{%
   \let\@oddhead\@empty
   \let\@evenhead\@empty
-  \def\@oddfoot{\footnotesize\itshape Preprint, draft for review \hfill \today}%
+  \def\@oddfoot{\footnotesize\itshape Preprint v1, November 2026. Not peer reviewed. Licence CC BY 4.0.\hfill}%
   \let\@evenfoot\@oddfoot}
 \makeatother
+
+% DOI de los registros de Zenodo: se rellenan al depositar.
+\newcommand{\doidatos}{DOI pending}
+\newcommand{\doibrutos}{DOI pending}
 
 \begin{document}
 
@@ -38,12 +42,14 @@
 \title{Accuracy of open-data versus operator real-time bus arrival predictions: a paired evaluation of the Bide+ method
 in Biscay, Spain}
 
-\author[1]{Yeray Garrido\fnref{orcid}}
+\author[1]{Yeray Garrido\corref{cor}\fnref{orcid}}
+\cortext[cor]{Corresponding author.}
 \ead{garridoparrayeraytx@gmail.com}
 \fntext[orcid]{ORCID: \href{https://orcid.org/0009-0008-0459-0294}{0009-0008-0459-0294}.}
 \affiliation[1]{organization={Independent researcher}, city={Bilbao}, state={Biscay}, country={Spain}}
 
-\input{highlights.tex}
+% Los highlights (highlights.tex) se envían a la revista como fichero aparte; no van en el preprint.
+% \input{highlights.tex}
 
 \begin{abstract}
 \input{resumen.tex}

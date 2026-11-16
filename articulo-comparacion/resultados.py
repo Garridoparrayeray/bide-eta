@@ -20,6 +20,7 @@ import json
 import math
 import os
 import random
+import re
 import statistics
 import sys
 
@@ -506,7 +507,10 @@ def main():
             with open(os.path.join(a.tex, nombre), 'w', encoding='utf-8') as f:
                 if clave.endswith('_dat'):
                     f.write('s hor ofi met ofi10 met10\n')
-                f.write('\n'.join(filas) + '\n')
+                texto = '\n'.join(filas) + '\n'
+                if not clave.endswith('_dat'):
+                    texto = re.sub(r'(?<=& )-(?=\d)', '$-$', texto)   # signo menos tipográfico
+                f.write(texto)
 
 
 if __name__ == '__main__':

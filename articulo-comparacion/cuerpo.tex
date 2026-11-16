@@ -175,7 +175,8 @@ For a query sent at time $t$ to stop $s$, and the bus matched to it (Section~\re
         download: the newest position in each copy was a median of 77~s older than the download (10th and 90th
         percentiles 45 and 112~s), so Bide+ works with positions about one and a half minutes old. It uses the learned tables of Saturday 7 November,
         calibrated only with data from before the week and not updated during it. It is rounded to whole minutes from
-        $t$ as the app shows it, $\hat a_{\mathrm{B+}} = t + 60\max(0, [(\hat a - t)/60])$, halves away from zero.
+        $t$ as the app shows it, $\hat a_{\mathrm{B+}} = t + 60\max\bigl(0, \operatorname{round}((\hat a - t)/60)\bigr)$, with halves rounded away
+        from zero.
 \end{itemize}
 
 \subsection{The actual passage}
@@ -253,7 +254,7 @@ the share of missed buses and the expected wait including that cost, for announc
 Coverage is measured on the official announcements of the first bus of each line with an announced wait under 30
 minutes, on the six normal days: 838,087. Of these, 606,565 (72.4\%) could be paired with a bus whose actual passage
 was observed, and 450,630 (53.8\%) entered the main analysis; the rest were lost because the bus was not in the feed at
-$t$ or failed the identity check. The share entering the main analysis is lowest for announcements of 0--2 minutes
+$t$, failed the identity check, or was at the excluded stop or had a failed reconstruction. The share entering the main analysis is lowest for announcements of 0--2 minutes
 (42\%) and of 20--29 minutes (48\%) and highest at 3--9 minutes (61--63\%; Table~\ref{tab:coverage} in
 \ref{app:extra}). The main analysis, which also includes announcements of the second bus and of 30 minutes or more whose
 bus passed within 30 minutes, has 555,744 pairs: 29,296 passages of 10,472 trips, made by 320 vehicles on 73 lines, at
@@ -388,7 +389,7 @@ With the GPS-based passage as ground truth (546,485 pairs, re-binned by time to 
 minutes are 16\%, 40\% and 67\%, and below three minutes Bide+ is slightly ahead (93\% against 92\%; Table~\ref{tab:gps} in \ref{app:extra}). Shifting the feed-based passage
 (Figure~\ref{fig:shift} in \ref{app:extra}) shows that Bide+ fits best when the passage is taken 30~s earlier and the
 official real time when it is taken as is or 30~s later. Bide+ stays ahead unless the true passage were more than two minutes later than
-reconstructed, an offset that the agreement with the GPS-based passage rules out. The ranking is also unchanged in the
+reconstructed, an offset that the agreement with the GPS-based passage (90th percentile $+34$~s) makes unlikely. The ranking is also unchanged in the
 other 11 sensitivity analyses (Table~\ref{tab:sensitivity} in \ref{app:extra}): official minutes truncated rather than
 rounded, Bide+ in seconds or truncated, a stricter identity check or none, with the fallback pairs, without Zabalburu, with
 the excluded stop and failed passages, one random pair per passage, without the priority stops, and with live positions
@@ -444,7 +445,7 @@ predictions are more than ten minutes off, against 0.1--1.2\% for the official r
 \ref{app:extra}). Of these 1,795 errors, 626 occur at one Bilbao stop (Zabalburu, 305), and 71\% come from its
 fallback layers: the bus was in the feed, but the GPS layer abstained and Bide+ used the last reported stop or the
 corrected timetable. Without that stop the shares within two minutes are 39\% and
-65\% ( Table~\ref{tab:sensitivity}).
+65\% (Table~\ref{tab:sensitivity}).
 
 \subsection{Consequences for a passenger}
 
@@ -614,10 +615,10 @@ running faster than in the normal traffic its tables were learned from; this was
 
 On the buses compared, the published timetable is a poor guide to when the bus will come, the operator's real time removes
 part of its error, and Bide+, built only on the operator's open data, is within two minutes of the actual passage more
-often than the operator's real time from three minutes before arrival onwards. The gap is largest, about 31 percentage
+often than the operator's real time from three minutes before arrival onwards. The gap is largest, about 32 percentage
 points, with the bus 6 to 20 minutes away, the range in which a passenger decides when to leave for the stop. Below three
-minutes the two are equally often within two minutes, and below six minutes Bide+ has a small share of very large errors
-that the operator does not have, about a third of them at one stop.
+minutes the two are equally often within two minutes, and below six minutes Bide+ has a slightly larger share of very large errors
+than the operator (1.5--1.6\% against 0.1--1.2\%), about a third of them at one stop.
 
 \subsection{Possible explanations}
 
@@ -648,16 +649,16 @@ their accuracy; none was measured here.
         direction of any bias from them is unknown.
   \item \textbf{Ground truth.} The main ground truth comes from the feed field that Bide+ also uses, and its learned
         segment times were fitted on passages defined in the same way, so Bide+ is calibrated to this definition and is
-        more sensitive than the official real time to shifting it (Figure~\ref{fig:shift}). The GPS-based passage shares
-        the feed's vehicle-to-trip assignment and clock. The GPS-based passage, which does
-        not use that field, agrees with it to within a minute in 89\% of cases and gives the same ranking. Field
+        more sensitive than the official real time to shifting it (Figure~\ref{fig:shift}). The GPS-based passage, which
+        does not use that field, agrees with it to within a minute in 89\% of cases and gives the same ranking, although
+        it shares the feed's vehicle-to-trip assignment and clock. Field
         observation was not possible.
   \item \textbf{Matching.} The official service does not identify the vehicle it announces. The distance check compares
         a road distance with a straight-line one; stricter or no checks do not change the ranking, Bide+ is ahead in every
         decile of the distance ratio (Table~\ref{tab:ratio}), and across stops the gap is unrelated to the share of matches
         rejected (correlation $-0.05$). Some mismatches may remain, and they would count against the official source.
   \item \textbf{Selection of stops.} The stops were chosen by the author; 28 of them partly because the timetable deviates
-        most there. Results without them are the same (39\% and 65\%), but the stops are not a random sample of the
+        most there. Results without them are similar (39\% and 65\%, against 39\% and 64\%), but the stops are not a random sample of the
         network.
   \item \textbf{One week, one network.} Six normal days in November, one Saturday and one Sunday among them. Day-level variance cannot be
         estimated, and other seasons, networks or operators may differ.

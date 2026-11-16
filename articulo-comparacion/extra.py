@@ -18,6 +18,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -211,7 +212,7 @@ def main():
     if a.tex:
         for clave, filas in tex.items():
             with open(os.path.join(a.tex, clave + '.tex'), 'w', encoding='utf-8') as f:
-                f.write('\n'.join(filas) + '\n')
+                f.write(re.sub(r'(?<=& )-(?=\d)', '$-$', '\n'.join(filas)) + '\n')
 
 
 if __name__ == '__main__':
